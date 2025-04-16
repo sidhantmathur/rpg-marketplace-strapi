@@ -4,20 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@/hooks/useUser';
 
 export default function Home() {
-  const { user } = useUser(); // ✅ Moved inside the component
-
-  if (!user) {
-    return (
-      <main className="p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
-        <p className="text-gray-700">
-          Please log in to create or view sessions.
-        </p>
-      </main>
-    );
-  }
-  
-
+  const { user, loading } = useUser(); // ✅ Always first
   const [name, setName] = useState('');
   const [dms, setDms] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -26,6 +13,13 @@ export default function Home() {
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
 
+  // ✅ Always call hooks BEFORE rendering conditionally
+  useEffect(() => {
+    if (user) {
+      fetchDMs();
+      fetchSessions();
+    }
+  }, [user]);
 
   const fetchDMs = async () => {
     const res = await fetch('/api/dm');
@@ -39,11 +33,20 @@ export default function Home() {
     setSessions(data);
   };
 
-  useEffect(() => {
-    fetchDMs();
-    fetchSessions();
-  }, []);
+  // ✅ Conditional rendering AFTER all hooks
+  if (loading) return <p className="p-6">Loading...</p>;
 
+  if (!user) {
+    return (
+      <main className="p-6 max-w-xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
+        <p className="text-gray-700">
+          Please log in to create or view sessions.
+        </p>
+      </main>
+    );
+  }
+  
   const handleDmSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
