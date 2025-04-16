@@ -18,7 +18,7 @@ export default function HomePage() {
           <SignOutButton />
         ) : (
           <Link href="/login" className="text-blue-600 underline">
-            Log in / Sign up
+            Log in
           </Link>
         )}
       </div>
