@@ -1,8 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUser } from '@/hooks/useUser';
 
 export default function Home() {
+  const { user } = useUser(); // ✅ Moved inside the component
+
+  if (!user) {
+    return (
+      <main className="p-6 max-w-xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
+        <p className="text-gray-700">
+          Please log in to create or view sessions.
+        </p>
+      </main>
+    );
+  }
+  
+
   const [name, setName] = useState('');
   const [dms, setDms] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -10,6 +25,7 @@ export default function Home() {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
+
 
   const fetchDMs = async () => {
     const res = await fetch('/api/dm');
@@ -35,7 +51,10 @@ export default function Home() {
     const res = await fetch('/api/dm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({
+        name,
+        userId: user?.id,
+      }),
     });
 
     if (res.ok) {
@@ -55,6 +74,7 @@ export default function Home() {
         title: sessionTitle,
         date: sessionDate,
         dmId: selectedDm,
+        userId: user?.id,
       }),
     });
 

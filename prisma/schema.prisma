@@ -19,6 +19,7 @@ model DungeonMaster {
   name      String
   createdAt DateTime  @default(now())
   sessions  Session[]
+  userId    String
 }
 
 model Session {
@@ -28,4 +29,5 @@ model Session {
   createdAt DateTime  @default(now())
   dm        DungeonMaster @relation(fields: [dmId], references: [id])
   dmId      Int
+  userId    String
 }
