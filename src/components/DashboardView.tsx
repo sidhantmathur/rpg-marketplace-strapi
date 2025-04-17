@@ -27,6 +27,10 @@ export default function Home() {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
+  const [sessionDescription, setSessionDescription] = useState('');
+  const [sessionDuration, setSessionDuration] = useState('');
+  const [sessionImage, setSessionImage] = useState('');
+
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
   const [maxParticipants, setMaxParticipants] = useState(5);
 
@@ -153,8 +157,10 @@ export default function Home() {
         date: sessionDate,
         dmId: selectedDm,
         userId: user?.id,
-        maxParticipants,
-      }),
+        description: sessionDescription,
+        duration: sessionDuration,
+        imageUrl: sessionImage,
+      }),      
     });
 
     if (res.ok) {
@@ -227,6 +233,19 @@ export default function Home() {
               placeholder="Session title"
               className="border p-2 rounded"
             />
+            <textarea
+              value={sessionDescription}
+              onChange={(e) => setSessionDescription(e.target.value)}
+              placeholder="Description (optional)"
+              className="border p-2 rounded"
+            />
+            <input
+              type="url"
+              value={sessionImage}
+              onChange={(e) => setSessionImage(e.target.value)}
+              placeholder="Image URL (optional)"
+              className="border p-2 rounded"
+            />
             <input
               type="date"
               value={sessionDate}
@@ -239,6 +258,13 @@ export default function Home() {
               value={maxParticipants}
               onChange={(e) => setMaxParticipants(Number(e.target.value))}
               placeholder="Max participants"
+              className="border p-2 rounded"
+            />
+            <input
+              type="number"
+              value={sessionDuration}
+              onChange={(e) => setSessionDuration(e.target.value)}
+              placeholder="Duration in minutes"
               className="border p-2 rounded"
             />
             <select
