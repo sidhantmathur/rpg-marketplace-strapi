@@ -28,6 +28,8 @@ export default function Home() {
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
+  const [maxParticipants, setMaxParticipants] = useState(5);
+
 
   const fetchDMs = async () => {
     const res = await fetch('/api/dm');
@@ -151,6 +153,7 @@ export default function Home() {
         date: sessionDate,
         dmId: selectedDm,
         userId: user?.id,
+        maxParticipants,
       }),
     });
 
@@ -228,6 +231,14 @@ export default function Home() {
               type="date"
               value={sessionDate}
               onChange={(e) => setSessionDate(e.target.value)}
+              className="border p-2 rounded"
+            />
+            <input
+              type="number"
+              min={1}
+              value={maxParticipants}
+              onChange={(e) => setMaxParticipants(Number(e.target.value))}
+              placeholder="Max participants"
               className="border p-2 rounded"
             />
             <select
