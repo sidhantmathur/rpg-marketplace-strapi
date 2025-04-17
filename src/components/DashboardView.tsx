@@ -59,6 +59,21 @@ export default function Home() {
     }
   }, [user]);
 
+  const leaveSession = async (sessionId: number) => {
+    if (!user) return;
+  
+    const res = await fetch('/api/bookings', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+  
+    if (res.ok) {
+      setJoinedSessionIds((prev) => prev.filter((id) => id !== sessionId));
+    }
+  };
+  
+
   if (userLoading || profileLoading) {
     return <p className="p-6">Loading...</p>;
   }
@@ -244,17 +259,23 @@ export default function Home() {
       <section className="mt-10">
         <h2 className="font-semibold mb-2">My Joined Sessions</h2>
         <ul className="space-y-2">
-          {sessions
-            .filter((session) => joinedSessionIds.includes(session.id))
-            .map((session) => (
-              <li key={session.id} className="border p-2 rounded">
-                <div className="font-semibold">{session.title}</div>
-                <div className="text-sm text-gray-600">
-                  {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
-                </div>
-              </li>
-            ))}
-        </ul>
+        {sessions
+          .filter((session) => joinedSessionIds.includes(session.id))
+          .map((session) => (
+            <li key={session.id} className="border p-2 rounded">
+              <div className="font-semibold">{session.title}</div>
+              <div className="text-sm text-gray-600">
+                {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
+              </div>
+              <button
+                onClick={() => leaveSession(session.id)}
+                className="mt-2 text-sm text-red-600 underline"
+              >
+                Leave Session
+              </button>
+            </li>
+          ))}
+      </ul>
       </section>
       )}
     </main>
