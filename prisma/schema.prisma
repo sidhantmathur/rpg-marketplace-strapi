@@ -29,6 +29,7 @@ model Session {
   dm        DungeonMaster @relation(fields: [dmId], references: [id])
   dmId      Int
   userId    String
+  bookings  Booking[]
 }
 
 model Profile {
@@ -36,4 +37,14 @@ model Profile {
   email     String   @unique
   roles     String[] @default([])  // PostgreSQL text[] column
   createdAt DateTime @default(now())
+}
+
+model Booking {
+  id        Int      @id @default(autoincrement())
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, userId]) // Prevent double-joins
 }
