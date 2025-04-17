@@ -3,9 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-export async function GET(_: NextRequest, context: { params: { id: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+
   const profile = await prisma.profile.findUnique({
-    where: { id: context.params.id },
+    where: { id },
   });
 
   if (!profile) {
