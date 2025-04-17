@@ -105,70 +105,75 @@ export default function Home() {
     <main className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
       {profile ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-4">
           You are logged in as: <strong>{profile.roles.join(', ')}</strong>
         </p>
       ) : (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 mb-4">
           Profile not found — try refreshing or contact support.
         </p>
       )}
-      <section className="mb-8">
-        <h2 className="font-semibold mb-2">Add Dungeon Master</h2>
-        <form onSubmit={handleDmSubmit} className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter DM name"
-            className="border p-2 rounded w-full"
-          />
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-            Add
-          </button>
-        </form>
-        <ul className="space-y-1">
-          {dms.map((dm: any) => (
-            <li key={dm.id} className="border p-2 rounded">
-              {dm.name}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="font-semibold mb-2">Create Session</h2>
-        <form onSubmit={handleSessionSubmit} className="grid gap-2 mb-4">
-          <input
-            type="text"
-            value={sessionTitle}
-            onChange={(e) => setSessionTitle(e.target.value)}
-            placeholder="Session title"
-            className="border p-2 rounded"
-          />
-          <input
-            type="date"
-            value={sessionDate}
-            onChange={(e) => setSessionDate(e.target.value)}
-            className="border p-2 rounded"
-          />
-          <select
-            value={selectedDm}
-            onChange={(e) => setSelectedDm(e.target.value)}
-            className="border p-2 rounded bg-white text-black appearance-none"
-          >
-            <option value="">Select a DM</option>
+      {profile?.roles.includes('dm') && (
+        <section className="mb-8">
+          <h2 className="font-semibold mb-2">Add Dungeon Master</h2>
+          <form onSubmit={handleDmSubmit} className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter DM name"
+              className="border p-2 rounded w-full"
+            />
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+              Add
+            </button>
+          </form>
+          <ul className="space-y-1">
             {dms.map((dm: any) => (
-              <option key={dm.id} value={dm.id} className="text-black">
+              <li key={dm.id} className="border p-2 rounded">
                 {dm.name}
-              </option>
+              </li>
             ))}
-          </select>
-          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
-            Create Session
-          </button>
-        </form>
-
+          </ul>
+        </section>
+      )}
+      {profile?.roles.includes('dm') && (
+        <section className="mb-8">
+          <h2 className="font-semibold mb-2">Create Session</h2>
+          <form onSubmit={handleSessionSubmit} className="grid gap-2 mb-4">
+            <input
+              type="text"
+              value={sessionTitle}
+              onChange={(e) => setSessionTitle(e.target.value)}
+              placeholder="Session title"
+              className="border p-2 rounded"
+            />
+            <input
+              type="date"
+              value={sessionDate}
+              onChange={(e) => setSessionDate(e.target.value)}
+              className="border p-2 rounded"
+            />
+            <select
+              value={selectedDm}
+              onChange={(e) => setSelectedDm(e.target.value)}
+              className="border p-2 rounded bg-white text-black appearance-none"
+            >
+              <option value="">Select a DM</option>
+              {dms.map((dm: any) => (
+                <option key={dm.id} value={dm.id} className="text-black">
+                  {dm.name}
+                </option>
+              ))}
+            </select>
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
+              Create Session
+            </button>
+          </form>
+        </section>
+      )}
+      <section>
+        <h2 className="font-semibold mb-2">Available Sessions</h2>
         <ul className="space-y-2">
           {sessions.map((session: any) => (
             <li key={session.id} className="border p-2 rounded">
