@@ -22,14 +22,15 @@ model DungeonMaster {
 }
 
 model Session {
-  id        Int       @id @default(autoincrement())
-  title     String
-  date      DateTime
-  createdAt DateTime  @default(now())
-  dm        DungeonMaster @relation(fields: [dmId], references: [id])
-  dmId      Int
-  userId    String
-  bookings  Booking[]
+  id               Int              @id @default(autoincrement())
+  title            String
+  date             DateTime
+  createdAt        DateTime         @default(now())
+  dm               DungeonMaster    @relation(fields: [dmId], references: [id])
+  dmId             Int
+  userId           String
+  maxParticipants  Int              @default(5)
+  bookings         Booking[]        
 }
 
 model Profile {
