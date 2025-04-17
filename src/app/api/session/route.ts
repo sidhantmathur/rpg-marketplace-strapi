@@ -43,8 +43,13 @@ export async function GET() {
   return NextResponse.json(sessions);
 }
 
+
 export async function DELETE(req: NextRequest) {
   const { sessionId } = await req.json();
+
+  if (!sessionId) {
+    return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
+  }
 
   try {
     await prisma.session.delete({
@@ -52,7 +57,8 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (error) {
+    console.error('Error deleting session:', error);
     return NextResponse.json({ error: 'Could not delete session' }, { status: 500 });
   }
 }
