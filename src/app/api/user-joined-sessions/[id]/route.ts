@@ -3,11 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
 export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  { params }: Params
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const bookings = await prisma.booking.findMany({
     where: { userId: id },
     select: { sessionId: true },
