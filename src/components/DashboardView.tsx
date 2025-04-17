@@ -15,6 +15,7 @@ export default function Home() {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
+  const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
 
   const fetchDMs = async () => {
     const res = await fetch('/api/dm');
@@ -28,9 +29,20 @@ export default function Home() {
     setSessions(data);
   };
 
+  const fetchJoinedSessions = async () => {
+    if (!user) return;
+  
+    const res = await fetch(`/api/user-joined-sessions/${user.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setJoinedSessionIds(data.map((b: any) => b.sessionId));
+    }
+  };
+
   useEffect(() => {
     fetchDMs();
     fetchSessions();
+    fetchJoinedSessions();
   }, []);
 
   if (userLoading || profileLoading) {
