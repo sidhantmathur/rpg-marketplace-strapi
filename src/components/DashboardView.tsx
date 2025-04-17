@@ -77,6 +77,22 @@ export default function Home() {
     }
   };
   
+  const deleteSession = async (sessionId: number) => {
+    const res = await fetch('/api/session', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+  
+    if (res.ok) {
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    } else {
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('Failed to delete session:', error); // 👈 This is what we need
+      }
+    }
+  };  
 
   if (userLoading || profileLoading) {
     return <p className="p-6">Loading...</p>;
@@ -294,6 +310,17 @@ export default function Home() {
                   <div className="text-sm text-gray-600">
                     {new Date(session.date).toLocaleDateString()} — Hosted by you
                   </div>
+
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this session?')) {
+                        deleteSession(session.id);
+                      }
+                    }}
+                    className="mt-2 text-sm text-red-600 underline"
+                  >
+                    Delete Session
+                  </button>
                 </li>
               ))}
           </ul>

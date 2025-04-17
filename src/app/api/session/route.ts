@@ -52,13 +52,20 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
+    // 👇 Need to remove all bookings before able to delete a session
+    await prisma.booking.deleteMany({
+      where: { sessionId: Number(sessionId) },
+    });
     await prisma.session.delete({
-      where: { id: sessionId },
+      where: { id: Number(sessionId) },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting session:', error);
-    return NextResponse.json({ error: 'Could not delete session' }, { status: 500 });
+    console.error('API DELETE /session error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
