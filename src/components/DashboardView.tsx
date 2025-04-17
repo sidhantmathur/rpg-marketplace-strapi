@@ -11,7 +11,15 @@ export default function Home() {
 
   const [name, setName] = useState('');
   const [dms, setDms] = useState([]);
-  const [sessions, setSessions] = useState([]);
+  type Session = {
+    id: number;
+    title: string;
+    date: string;
+    dm: { name: string };
+  };
+  
+  const [sessions, setSessions] = useState<Session[]>([]);
+
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
@@ -25,9 +33,10 @@ export default function Home() {
 
   const fetchSessions = async () => {
     const res = await fetch('/api/session');
-    const data = await res.json();
+    const data: Session[] = await res.json();
     setSessions(data);
   };
+  
 
   useEffect(() => {
     fetchDMs();
@@ -230,6 +239,24 @@ export default function Home() {
           ))}
         </ul>
       </section>
+
+      {profile?.roles.includes('user') && joinedSessionIds.length > 0 && (
+      <section className="mt-10">
+        <h2 className="font-semibold mb-2">My Joined Sessions</h2>
+        <ul className="space-y-2">
+          {sessions
+            .filter((session) => joinedSessionIds.includes(session.id))
+            .map((session) => (
+              <li key={session.id} className="border p-2 rounded">
+                <div className="font-semibold">{session.title}</div>
+                <div className="text-sm text-gray-600">
+                  {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
+                </div>
+              </li>
+            ))}
+        </ul>
+      </section>
+      )}
     </main>
   );
 }
