@@ -5,14 +5,13 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
-
+  const { id } = context.params;
   const bookings = await prisma.booking.findMany({
     where: { userId: id },
     select: { sessionId: true },
   });
-
+  
   return NextResponse.json(bookings);
 }
