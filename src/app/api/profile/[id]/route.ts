@@ -1,18 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-
 const prisma = new PrismaClient();
 
-export async function GET(
-  _req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const id = context.params.id; // ✅ Do NOT destructure `params` inline
-
+export async function GET(_: NextRequest, context: { params: { id: string } }) {
   const profile = await prisma.profile.findUnique({
-    where: { id },
+    where: { id: context.params.id },
   });
 
   if (!profile) {
