@@ -4,25 +4,25 @@ import { NextRequest, NextResponse } from 'next/server';
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-    const body = await req.json();
-    const { title, date, dmId, userId } = body;
-  
-    if (!title || !date || !dmId || !userId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    }
-  
-    const session = await prisma.session.create({
-      data: {
-        title,
-        date: new Date(date),
-        dmId: Number(dmId),
-        userId,
-      },
-    });
-  
-    return NextResponse.json(session);
+  const body = await req.json();
+  const { title, date, dmId, userId, maxParticipants } = body;
+
+  if (!title || !date || !dmId || !userId) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
-  
+
+  const session = await prisma.session.create({
+    data: {
+      title,
+      date: new Date(date),
+      dmId: Number(dmId),
+      userId,
+      maxParticipants: maxParticipants ?? 5, // 👈 Default to 5 if not specified
+    },
+  });
+
+  return NextResponse.json(session);
+}
 
 export async function GET() {
   const sessions = await prisma.session.findMany({
@@ -33,16 +33,15 @@ export async function GET() {
         select: {
           userId: true,
           user: {
-            select: { email: true }
-          }
-        }
+            select: { email: true },
+          },
+        },
       },
     },
-  });  
+  });
 
   return NextResponse.json(sessions);
 }
-
 
 export async function DELETE(req: NextRequest) {
   const { sessionId } = await req.json();
@@ -52,7 +51,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    // 👇 Need to remove all bookings before able to delete a session
+    // Remove bookings first due to foreign key constraint
     await prisma.booking.deleteMany({
       where: { sessionId: Number(sessionId) },
     });
