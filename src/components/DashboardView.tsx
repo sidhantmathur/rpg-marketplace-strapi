@@ -260,16 +260,23 @@ export default function Home() {
         </section>
       )}
       <section>
-        <h2 className="font-semibold mb-2">Available Sessions</h2>
-        <ul className="space-y-2">
-          {sessions.map((session: any) => (
+      <h2 className="font-semibold mb-2">Available Sessions</h2>
+      <ul className="space-y-2">
+        {sessions.map((session: any) => {
+          const isFull = session.bookings.length >= session.maxParticipants;
+          const hasJoined = joinedSessionIds.includes(session.id);
+
+          return (
             <li key={session.id} className="border p-2 rounded">
               <div className="font-semibold">{session.title}</div>
               <div className="text-sm text-gray-600">
                 {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
               </div>
+              <div className="text-sm text-gray-500">
+                {session.bookings.length} / {session.maxParticipants} participants
+              </div>
 
-              {profile?.roles.includes('user') && !joinedSessionIds.includes(session.id) && (
+              {profile?.roles.includes('user') && !hasJoined && !isFull && (
                 <button
                   onClick={() => joinSession(session.id)}
                   className="mt-2 inline-block text-sm text-blue-600 underline"
@@ -278,65 +285,76 @@ export default function Home() {
                 </button>
               )}
 
-              {profile?.roles.includes('user') && joinedSessionIds.includes(session.id) && (
+              {profile?.roles.includes('user') && hasJoined && (
                 <div className="mt-2 text-sm text-green-600">✓ You’ve joined this session</div>
               )}
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      {profile?.roles.includes('user') && joinedSessionIds.length > 0 && (
+              {profile?.roles.includes('user') && !hasJoined && isFull && (
+                <div className="mt-2 text-sm text-red-600">Session is full</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+
+    {profile?.roles.includes('user') && joinedSessionIds.length > 0 && (
       <section className="mt-10">
         <h2 className="font-semibold mb-2">My Joined Sessions</h2>
         <ul className="space-y-2">
-        {sessions
-          .filter((session) => joinedSessionIds.includes(session.id))
-          .map((session) => (
-            <li key={session.id} className="border p-2 rounded">
-              <div className="font-semibold">{session.title}</div>
-              <div className="text-sm text-gray-600">
-                {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
-              </div>
-              <button
-                onClick={() => leaveSession(session.id)}
-                className="mt-2 text-sm text-red-600 underline"
-              >
-                Leave Session
-              </button>
-            </li>
-          ))}
-      </ul>
+          {sessions
+            .filter((session) => joinedSessionIds.includes(session.id))
+            .map((session) => (
+              <li key={session.id} className="border p-2 rounded">
+                <div className="font-semibold">{session.title}</div>
+                <div className="text-sm text-gray-600">
+                  {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
+                </div>
+                <div className="text-sm text-gray-500 mb-1">
+                  {session.bookings.length} / {session.maxParticipants} participants
+                </div>
+                <button
+                  onClick={() => leaveSession(session.id)}
+                  className="mt-1 text-sm text-red-600 underline"
+                >
+                  Leave Session
+                </button>
+              </li>
+            ))}
+        </ul>
       </section>
-      )}
-      {profile?.roles.includes('dm') && (
-        <section className="mt-10">
-          <h2 className="font-semibold mb-2">Sessions You’re Hosting</h2>
-          <ul className="space-y-2">
-            {sessions
-              .filter((session) => session.userId === user.id)
-              .map((session) => (
-                <li key={session.id} className="border p-2 rounded">
-                  <div className="font-semibold">{session.title}</div>
-                  <div className="text-sm text-gray-600">
-                    {new Date(session.date).toLocaleDateString()} — Hosted by you
-                  </div>
+    )}
 
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this session?')) {
-                        deleteSession(session.id);
-                      }
-                    }}
-                    className="mt-2 text-sm text-red-600 underline"
-                  >
-                    Delete Session
-                  </button>
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
+    {profile?.roles.includes('dm') && (
+      <section className="mt-10">
+        <h2 className="font-semibold mb-2">Sessions You’re Hosting</h2>
+        <ul className="space-y-2">
+          {sessions
+            .filter((session) => session.userId === user.id)
+            .map((session) => (
+              <li key={session.id} className="border p-2 rounded">
+                <div className="font-semibold">{session.title}</div>
+                <div className="text-sm text-gray-600">
+                  {new Date(session.date).toLocaleDateString()} — Hosted by you
+                </div>
+                <div className="text-sm text-gray-500 mb-1">
+                  {session.bookings.length} / {session.maxParticipants} participants
+                </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this session?')) {
+                      deleteSession(session.id);
+                    }
+                  }}
+                  className="mt-1 text-sm text-red-600 underline"
+                >
+                  Delete Session
+                </button>
+              </li>
+            ))}
+        </ul>
+      </section>
+    )}
     </main>
   );
 }
