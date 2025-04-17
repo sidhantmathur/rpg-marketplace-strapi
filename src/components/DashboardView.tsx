@@ -29,6 +29,11 @@ export default function Home() {
     setSessions(data);
   };
 
+  useEffect(() => {
+    fetchDMs();
+    fetchSessions();
+  }, []);
+
   const fetchJoinedSessions = async () => {
     if (!user) return;
   
@@ -40,10 +45,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchDMs();
-    fetchSessions();
-    fetchJoinedSessions();
-  }, []);
+    if (user) {
+      fetchJoinedSessions();
+    }
+  }, [user]);
 
   if (userLoading || profileLoading) {
     return <p className="p-6">Loading...</p>;
