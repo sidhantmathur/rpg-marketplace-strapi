@@ -5,8 +5,11 @@ export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
-export async function GET(_req: NextRequest, context: { params: { id: string } }) {
-  const { id } = context.params;
+export async function GET(
+  _req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id; // ✅ Do NOT destructure `params` inline
 
   const profile = await prisma.profile.findUnique({
     where: { id },
