@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { title, date, dmId, userId, maxParticipants } = body;
+  const { title, date, dmId, userId, description, duration, maxParticipants, imageUrl } = body;
 
   if (!title || !date || !dmId || !userId) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -17,7 +17,10 @@ export async function POST(req: Request) {
       date: new Date(date),
       dmId: Number(dmId),
       userId,
-      maxParticipants: maxParticipants ?? 5, // 👈 Default to 5 if not specified
+      maxParticipants: maxParticipants ?? 5,
+      description,
+      duration: duration ? Number(duration) : null,
+      imageUrl,
     },
   });
 

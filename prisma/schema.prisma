@@ -24,7 +24,10 @@ model DungeonMaster {
 model Session {
   id              Int           @id @default(autoincrement())
   title           String
+  description     String?
   date            DateTime
+  duration        Int?
+  imageUrl        String?
   createdAt       DateTime      @default(now())
   dm              DungeonMaster @relation(fields: [dmId], references: [id])
   dmId            Int
