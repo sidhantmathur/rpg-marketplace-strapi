@@ -4,29 +4,38 @@ import { NextRequest, NextResponse } from 'next/server';
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
-  const { sessionId, userId } = await req.json();
-
-  if (!sessionId || !userId) {
-    return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-  }
-
-  try {
+    const { sessionId, userId } = await req.json();
+  
+    if (!sessionId || !userId) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+    const session = await prisma.session.findUnique({
+      where: { id: Number(sessionId) },
+      include: {
+        bookings: true,
+      },
+    });
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+    // Check if already joined
+    const alreadyJoined = session.bookings.some((b) => b.userId === userId);
+    if (alreadyJoined) {
+      return NextResponse.json({ error: 'You already joined this session' }, { status: 400 });
+    }
+  
+    // Check if full
+    if (session.bookings.length >= session.maxParticipants) {
+      return NextResponse.json({ error: 'Session is full' }, { status: 400 });
+    }
     const booking = await prisma.booking.create({
       data: {
-        sessionId,
+        sessionId: Number(sessionId),
         userId,
       },
     });
-
     return NextResponse.json(booking);
-  } catch (err: any) {
-    if (err.code === 'P2002') {
-      return NextResponse.json({ error: 'Already joined' }, { status: 409 });
-    }
-
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
-}
 
 export async function DELETE(req: NextRequest) {
   const { sessionId, userId } = await req.json();
