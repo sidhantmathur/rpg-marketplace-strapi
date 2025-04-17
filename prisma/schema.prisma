@@ -8,7 +8,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -30,4 +29,11 @@ model Session {
   dm        DungeonMaster @relation(fields: [dmId], references: [id])
   dmId      Int
   userId    String
+}
+
+model Profile {
+  id        String   @id            // Supabase user.id
+  email     String   @unique
+  roles     String[] @default([])  // PostgreSQL text[] column
+  createdAt DateTime @default(now())
 }
