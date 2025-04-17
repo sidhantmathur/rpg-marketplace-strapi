@@ -2,24 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@/hooks/useUser';
+import { useProfile } from '@/hooks/useProfile';
+
 
 export default function Home() {
-  const { user, loading } = useUser(); // ✅ Always first
+  const { user, loading: userLoading } = useUser();
+  const { profile, loading: profileLoading } = useProfile();
+
   const [name, setName] = useState('');
   const [dms, setDms] = useState([]);
   const [sessions, setSessions] = useState([]);
-
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [selectedDm, setSelectedDm] = useState('');
-
-  // ✅ Always call hooks BEFORE rendering conditionally
-  useEffect(() => {
-    if (user) {
-      fetchDMs();
-      fetchSessions();
-    }
-  }, [user]);
 
   const fetchDMs = async () => {
     const res = await fetch('/api/dm');
@@ -33,8 +28,25 @@ export default function Home() {
     setSessions(data);
   };
 
-  // ✅ Conditional rendering AFTER all hooks
-  if (loading) return <p className="p-6">Loading...</p>;
+  useEffect(() => {
+    fetchDMs();
+    fetchSessions();
+  }, []);
+
+  if (userLoading || profileLoading) {
+    return <p className="p-6">Loading...</p>;
+  }
+
+  if (!user) {
+    return (
+      <main className="p-6 max-w-xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
+        <p className="text-gray-700">
+          Please log in to create or view sessions.
+        </p>
+      </main>
+    );
+  }
 
   if (!user) {
     return (
@@ -92,7 +104,15 @@ export default function Home() {
   return (
     <main className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
-
+      {profile ? (
+        <p className="text-sm text-gray-600">
+          You are logged in as: <strong>{profile.roles.join(', ')}</strong>
+        </p>
+      ) : (
+        <p className="text-sm text-red-600">
+          Profile not found — try refreshing or contact support.
+        </p>
+      )}
       <section className="mb-8">
         <h2 className="font-semibold mb-2">Add Dungeon Master</h2>
         <form onSubmit={handleDmSubmit} className="flex gap-2 mb-4">

@@ -11,6 +11,7 @@ export function useProfile() {
     const fetchProfile = async () => {
       const { data: authData } = await supabase.auth.getUser();
       const user = authData.user;
+      // console.log('User ID:', user?.id);
       if (!user) {
         setLoading(false);
         return;
