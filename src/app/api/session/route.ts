@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
@@ -26,11 +26,33 @@ export async function POST(req: Request) {
 
 export async function GET() {
   const sessions = await prisma.session.findMany({
-    include: {
-      dm: true,
-    },
     orderBy: { date: 'asc' },
-  });
+    include: {
+      dm: { select: { name: true } },
+      bookings: {
+        select: {
+          userId: true,
+          user: {
+            select: { email: true }
+          }
+        }
+      },
+    },
+  });  
 
   return NextResponse.json(sessions);
+}
+
+export async function DELETE(req: NextRequest) {
+  const { sessionId } = await req.json();
+
+  try {
+    await prisma.session.delete({
+      where: { id: sessionId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: 'Could not delete session' }, { status: 500 });
+  }
 }

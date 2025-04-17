@@ -16,8 +16,11 @@ export default function Home() {
     title: string;
     date: string;
     userId: string;
+    maxParticipants: number;
     dm: { name: string };
-  };  
+    bookings: { userId: string; user?: { email: string } }[];
+  };
+  
   
   const [sessions, setSessions] = useState<Session[]>([]);
 
