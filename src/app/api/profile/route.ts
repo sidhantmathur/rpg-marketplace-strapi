@@ -4,20 +4,29 @@ import { NextResponse } from 'next/server';
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { id, email, roles } = body;
-
-  if (!id || !email || !roles) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const body = await req.json();
+    const { id, email, roles } = body;
+  
+    if (!id || !email || !roles) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+  
+    try {
+      const profile = await prisma.profile.create({
+        data: {
+          id,
+          email,
+          roles,
+        },
+      });
+  
+      return NextResponse.json(profile);
+    } catch (error) {
+      console.error('Profile creation error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
   }
-
-  const profile = await prisma.profile.create({
-    data: {
-      id,
-      email,
-      roles,
-    },
-  });
-
-  return NextResponse.json(profile);
-}
+  

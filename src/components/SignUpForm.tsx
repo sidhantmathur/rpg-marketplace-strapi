@@ -58,6 +58,7 @@ export default function SignupPage() {
   
     const roles = isDm ? ['dm'] : ['user'];
   
+    console.log('Creating profile with:', { userId, userEmail, roles });
     // Step 4: Check if profile already exists
     const existingRes = await fetch(`/api/profile/${userId}`);
     if (existingRes.ok) {
@@ -80,6 +81,9 @@ export default function SignupPage() {
       setError('Error creating profile.');
       return;
     }
+
+    const errorData = await res.json();
+    console.error('Profile creation failed:', errorData);
   
     router.push('/');
   };  

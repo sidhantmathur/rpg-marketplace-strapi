@@ -39,7 +39,7 @@ model Session {
 model Profile {
   id        String    @id // Supabase user.id
   email     String    @unique
-  roles     String[]  @default([]) // PostgreSQL text[] column
+  roles     String[]  @default([])
   createdAt DateTime  @default(now())
   Booking   Booking[]
 }
@@ -52,5 +52,5 @@ model Booking {
   user      Profile  @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 
-  @@unique([sessionId, userId]) // Prevent double-joins
+  @@unique([sessionId, userId])
 }
