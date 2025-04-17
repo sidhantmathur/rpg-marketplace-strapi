@@ -113,6 +113,21 @@ export default function Home() {
     }
   };
 
+  const joinSession = async (sessionId: number) => {
+    if (!user) return;
+  
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+  
+    if (res.ok) {
+      setJoinedSessionIds(prev => [...prev, sessionId]);
+    }
+  };
+  
+
   return (
     <main className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
@@ -193,6 +208,19 @@ export default function Home() {
               <div className="text-sm text-gray-600">
                 {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
               </div>
+
+              {profile?.roles.includes('user') && !joinedSessionIds.includes(session.id) && (
+                <button
+                  onClick={() => joinSession(session.id)}
+                  className="mt-2 inline-block text-sm text-blue-600 underline"
+                >
+                  Join Session
+                </button>
+              )}
+
+              {profile?.roles.includes('user') && joinedSessionIds.includes(session.id) && (
+                <div className="mt-2 text-sm text-green-600">✓ You’ve joined this session</div>
+              )}
             </li>
           ))}
         </ul>
