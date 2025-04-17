@@ -15,8 +15,9 @@ export default function Home() {
     id: number;
     title: string;
     date: string;
+    userId: string;
     dm: { name: string };
-  };
+  };  
   
   const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -277,6 +278,23 @@ export default function Home() {
           ))}
       </ul>
       </section>
+      )}
+      {profile?.roles.includes('dm') && (
+        <section className="mt-10">
+          <h2 className="font-semibold mb-2">Sessions You’re Hosting</h2>
+          <ul className="space-y-2">
+            {sessions
+              .filter((session) => session.userId === user.id)
+              .map((session) => (
+                <li key={session.id} className="border p-2 rounded">
+                  <div className="font-semibold">{session.title}</div>
+                  <div className="text-sm text-gray-600">
+                    {new Date(session.date).toLocaleDateString()} — Hosted by you
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </section>
       )}
     </main>
   );
