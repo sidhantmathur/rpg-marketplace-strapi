@@ -25,35 +25,47 @@ export default function SignupPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+  
+    // Step 1: Sign up
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-
+  
     if (error) {
       setError(error.message);
       return;
     }
-
-    const userId = data.user?.id;
-    const userEmail = data.user?.email;
-
+  
+    // Step 2: Try to use returned user info immediately (if available)
+    let userId = data.user?.id;
+    let userEmail = data.user?.email;
+  
+    // Step 3: If not available, attempt to get current session after confirmation
     if (!userId || !userEmail) {
-      setError('Failed to get user info after sign up.');
-      return;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+  
+      userId = session?.user?.id;
+      userEmail = session?.user?.email;
+  
+      if (!userId || !userEmail) {
+        setError('Please check your email to confirm your account, then log in.');
+        return;
+      }
     }
-
+  
     const roles = isDm ? ['dm'] : ['user'];
-
-    // ✅ Don't create profile if it already exists
+  
+    // Step 4: Check if profile already exists
     const existingRes = await fetch(`/api/profile/${userId}`);
     if (existingRes.ok) {
       router.push('/');
       return;
     }
-
-    // ✅ Create profile only if not found
+  
+    // Step 5: Create profile
     const res = await fetch('/api/profile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,14 +75,14 @@ export default function SignupPage() {
         roles,
       }),
     });
-
+  
     if (!res.ok) {
       setError('Error creating profile.');
       return;
     }
-
+  
     router.push('/');
-  };
+  };  
 
   // ✅ Optionally block the form while user state is loading
   if (loading || user) return null;
