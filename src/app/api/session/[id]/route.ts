@@ -2,43 +2,72 @@
 import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Prisma singleton (same as your other files)
+// Prisma singleton
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 const prisma = globalForPrisma.prisma || new PrismaClient()
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// GET /api/session/[id]
-export async function GET(request: NextRequest, context: any) {
-  const id = Number(context.params.id)
-  const session = await prisma.session.findUnique({
-    where: { id },
-    include: { dm: true, bookings: { include: { user: true } } },
-  })
-  if (!session) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(session)
+async function handleError(err: unknown) {
+  console.error('🔥 [api/session/[id]] uncaught error:', err)
+  const message =
+    err instanceof Error
+      ? err.message
+      : typeof err === 'string'
+      ? err
+      : 'Unknown error'
+  return NextResponse.json({ error: message }, { status: 500 })
 }
 
-// PATCH /api/session/[id]
-export async function PATCH(request: NextRequest, context: any) {
-  const id = Number(context.params.id)
-  const { imageUrl } = await request.json()
-  if (!imageUrl) {
-    return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 })
-  }
+export async function GET(request: NextRequest, context: any) {
   try {
+    const rawId = context.params.id
+    console.log('🛰  GET /api/session/[id] → id=', rawId)
+    const id = Number(rawId)
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id },
+      include: { dm: true, bookings: { include: { user: true } } },
+    })
+    if (!session) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    return NextResponse.json(session)
+  } catch (err) {
+    return handleError(err)
+  }
+}
+
+export async function PATCH(request: NextRequest, context: any) {
+  try {
+    const rawId = context.params.id
+    console.log('✏️  PATCH /api/session/[id] → id=', rawId)
+    const id = Number(rawId)
+    const { imageUrl } = await request.json()
+    if (!imageUrl) {
+      return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 })
+    }
+
     const updated = await prisma.session.update({
       where: { id },
       data: { imageUrl },
     })
     return NextResponse.json(updated)
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err) {
+    return handleError(err)
   }
 }
 
-// DELETE /api/session/[id]
 export async function DELETE(request: NextRequest, context: any) {
-  const id = Number(context.params.id)
-  await prisma.session.delete({ where: { id } })
-  return NextResponse.json(null, { status: 204 })
+  try {
+    const rawId = context.params.id
+    console.log('❌ DELETE /api/session/[id] → id=', rawId)
+    const id = Number(rawId)
+    await prisma.session.delete({ where: { id } })
+    return NextResponse.json(null, { status: 204 })
+  } catch (err) {
+    return handleError(err)
+  }
 }
