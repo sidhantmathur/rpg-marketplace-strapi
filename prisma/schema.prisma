@@ -36,6 +36,7 @@ model Profile {
   roles     String[]  @default([])
   createdAt DateTime  @default(now())
   Booking   Booking[]
+  avatarUrl String?
 }
 
 model Booking {
