@@ -1,32 +1,57 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
 import prisma from '@/lib/prisma';
 
-
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { title, date, dmId, userId, description, duration, maxParticipants, imageUrl } = body;
-
-  if (!title || !date || !dmId || !userId) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-  }
-
-  const session = await prisma.session.create({
-    data: {
+  try {
+    const {
       title,
-      date: new Date(date),
-      dmId: Number(dmId),
-      userId,
-      maxParticipants: maxParticipants ?? 5,
+      date,
+      dmId,      // DungeonMaster.id
+      userId,    // host’s Profile.id  (author of the session)
       description,
-      duration: duration ? Number(duration) : null,
+      duration,
+      maxParticipants = 5,
       imageUrl,
-    },
-  });
+    } = await req.json();
 
-  return NextResponse.json(session);
+    if (!title || !date || !dmId || !userId) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    // one transaction: create session ➜ create host booking
+    const session = await prisma.$transaction(async (tx) => {
+      const created = await tx.session.create({
+        data: {
+          title,
+          date: new Date(date),
+          dmId: Number(dmId),
+          userId,
+          maxParticipants,
+          description,
+          duration: duration ? Number(duration) : null,
+          imageUrl,
+        },
+      });
+
+      // auto‑book the host so reviews work later
+      await tx.booking.create({
+        data: {
+          sessionId: created.id,
+          userId,               // host’s Profile.id
+        },
+      });
+
+      return created;
+    });
+
+    return NextResponse.json(session, { status: 201 });
+  } catch (err) {
+    console.error('POST /api/session error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
+
 
 export async function GET() {
   const sessions = await prisma.session.findMany({

@@ -347,6 +347,10 @@ export default function Home() {
           {sessions.map(session => {
             const isFull = session.bookings.length >= session.maxParticipants;
             const hasJoined = joinedSessionIds.includes(session.id);
+            const isHost    = session.userId === user.id;               // you created it
+            const isPlayer  = profile?.roles.includes('user') || profile?.roles.includes('dm'); // can join
+            const canBook   = isPlayer && !hasJoined && !isFull && !isHost;
+
             return (
               <li key={session.id} className="border p-2 rounded">
                 {session.imageUrl && (
@@ -366,26 +370,27 @@ export default function Home() {
                 <div className="text-sm text-gray-500">
                   {session.bookings.length} / {session.maxParticipants} participants
                 </div>
-                {profile?.roles.includes('user') && !hasJoined && !isFull && (
-                  <button
-                    onClick={() => joinSession(session.id)}
-                    className="mt-2 text-sm text-blue-600 underline"
+                {canBook && (
+                <button
+                  onClick={() => joinSession(session.id)}
+                  className="mt-2 text-sm text-blue-600 underline"
                   >
                     Join Session
                   </button>
                 )}
-                {profile?.roles.includes('user') && hasJoined && (
+
+                {isPlayer && hasJoined && (
                   <div className="mt-2 text-sm text-green-600">
                     ✓ You’ve joined this session
                   </div>
                 )}
-                {profile?.roles.includes('user') && !hasJoined && isFull && (
-                  <div className="mt-2 text-sm text-red-600">
-                    Session is full
-                  </div>
+
+                {isPlayer && !hasJoined && isFull && (
+                  <div className="mt-2 text-sm text-red-600">Session is full</div>
                 )}
-                {/* Review section for players */}
-                {profile?.roles.includes('user') &&
+
+                {/* ——— REVIEW SECTION ——— */}
+                {isPlayer &&
                   hasJoined &&
                   new Date(session.date) < new Date() && (
                     <div className="mt-2">
@@ -400,7 +405,7 @@ export default function Home() {
                         </button>
                       )}
                     </div>
-                )}
+                  )}
               </li>
             );
           })}
