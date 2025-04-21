@@ -6,6 +6,17 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/hooks/useUser';
 import { useProfile } from '@/hooks/useProfile';
+import RatingBadge from '@/components/RatingBadge';
+import ReviewModal from '@/components/ReviewModal';
+
+type Review = {
+  id: number;
+  rating: number;
+  comment?: string;
+  authorId: string;
+  author: { email: string };
+  createdAt: string;
+};
 
 // Session type with optional fields
 type Session = {
@@ -17,8 +28,8 @@ type Session = {
   imageUrl?: string;
   userId: string;
   maxParticipants: number;
-  dm: { name: string };
-  bookings: { userId: string; user?: { email: string } }[];
+  dm: { name: string; userId: string; ratingAvg: number; ratingCount: number };  bookings: { userId: string; user?: { email: string } }[];
+  reviews: Review[];
 };
 
 export default function Home() {
@@ -33,6 +44,9 @@ export default function Home() {
   // Sessions state
   const [sessions, setSessions] = useState<Session[]>([]);
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
+
+  // NEW: review modal state
+  const [activeReview, setActiveReview] = useState<Session | null>(null);
 
   // Create Session form state
   const [sessionTitle, setSessionTitle] = useState('');
@@ -346,7 +360,8 @@ export default function Home() {
                 )}
                 <div className="font-semibold">{session.title}</div>
                 <div className="text-sm text-gray-600">
-                  {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
+                  {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}{' '}
+                  <RatingBadge avg={session.dm.ratingAvg} count={session.dm.ratingCount} />
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.bookings.length} / {session.maxParticipants} participants
@@ -368,6 +383,23 @@ export default function Home() {
                   <div className="mt-2 text-sm text-red-600">
                     Session is full
                   </div>
+                )}
+                {/* Review section for players */}
+                {profile?.roles.includes('user') &&
+                  hasJoined &&
+                  new Date(session.date) < new Date() && (
+                    <div className="mt-2">
+                      {session.reviews.some((r) => r.authorId === user.id) ? (
+                        <p className="text-sm text-green-700">✓ Review submitted</p>
+                      ) : (
+                        <button
+                          onClick={() => setActiveReview(session)}   // state you add below
+                          className="text-sm text-blue-600 underline"
+                        >
+                          Leave a review
+                        </button>
+                      )}
+                    </div>
                 )}
               </li>
             );
@@ -449,6 +481,18 @@ export default function Home() {
               ))}
           </ul>
         </section>
+      )}
+      {activeReview && (
+        <ReviewModal
+          open={!!activeReview}
+          onClose={() => setActiveReview(null)}
+          sessionId={activeReview.id}
+          targetId={activeReview.dm.userId}
+          authorId={user.id}
+          onSuccess={() => {
+            fetchSessions(); // refresh list to show new rating
+          }}
+        />
       )}
     </main>
   );
