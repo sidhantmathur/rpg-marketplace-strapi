@@ -28,15 +28,23 @@ model Session {
   maxParticipants Int           @default(5)
   bookings        Booking[]
   dm              DungeonMaster @relation(fields: [dmId], references: [id])
+  user            Profile       @relation("ProfileSessions", fields: [userId], references: [id])
+  reviews         Review[]
 }
 
 model Profile {
-  id        String    @id
-  email     String    @unique
-  roles     String[]  @default([])
-  createdAt DateTime  @default(now())
-  Booking   Booking[]
-  avatarUrl String?
+  id              String         @id
+  email           String         @unique
+  roles           String[]       @default([])
+  createdAt       DateTime       @default(now())
+  avatarUrl       String?
+  ratingAvg       Float          @default(0)
+  ratingCount     Int            @default(0)
+  Booking         Booking[]
+  sessions        Session[]      @relation("ProfileSessions")
+  reviewsAuthored Review[]       @relation("ReviewAuthor")
+  reviewsReceived Review[]       @relation("ReviewTarget")
+  reviewReports   ReviewReport[]
 }
 
 model Booking {
@@ -46,6 +54,32 @@ model Booking {
   createdAt DateTime @default(now())
   session   Session  @relation(fields: [sessionId], references: [id])
   user      Profile  @relation(fields: [userId], references: [id])
-
   @@unique([sessionId, userId])
+}
+
+model Review {
+  id        Int            @id @default(autoincrement())
+  rating    Int            @db.SmallInt /// 1–5 (enforce in API/Zod)
+  comment   String?        @db.VarChar(1000)
+  deleted   Boolean        @default(false)
+  authorId  String
+  targetId  String
+  sessionId Int
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  author    Profile        @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target    Profile        @relation("ReviewTarget", fields: [targetId], references: [id])
+  session   Session        @relation(fields: [sessionId], references: [id])
+  reports   ReviewReport[]
+  @@unique([authorId, targetId, sessionId]) /// one review per pair per session
+}
+
+model ReviewReport {
+  id         Int      @id @default(autoincrement())
+  reviewId   Int
+  reporterId String
+  reason     String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+  review     Review   @relation(fields: [reviewId], references: [id])
+  reporter   Profile  @relation(fields: [reporterId], references: [id])
 }
