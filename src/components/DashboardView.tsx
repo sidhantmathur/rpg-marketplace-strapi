@@ -29,7 +29,7 @@ type Session = {
   userId: string;
   maxParticipants: number;
   dm: { name: string; userId: string; ratingAvg: number; ratingCount: number };  bookings: { userId: string; user?: { email: string } }[];
-  reviews: Review[];
+  reviews?: Review[];
 };
 
 export default function Home() {
@@ -389,11 +389,11 @@ export default function Home() {
                   hasJoined &&
                   new Date(session.date) < new Date() && (
                     <div className="mt-2">
-                      {session.reviews.some((r) => r.authorId === user.id) ? (
+                      {session.reviews?.some((r) => r.authorId === user.id) ? (
                         <p className="text-sm text-green-700">✓ Review submitted</p>
                       ) : (
                         <button
-                          onClick={() => setActiveReview(session)}   // state you add below
+                          onClick={() => setActiveReview(session)}
                           className="text-sm text-blue-600 underline"
                         >
                           Leave a review
