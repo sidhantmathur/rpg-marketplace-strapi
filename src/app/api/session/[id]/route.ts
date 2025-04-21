@@ -29,8 +29,17 @@ export async function GET(request: NextRequest, context: any) {
 
     const session = await prisma.session.findUnique({
       where: { id },
-      include: { dm: true, bookings: { include: { user: true } } },
-    })
+      include: {
+        dm: true,
+        bookings: { include: { user: true } },
+        reviews: {                        // ← NEW
+          where: { deleted: false },
+          orderBy: { createdAt: 'desc' },
+          include: { author: true },
+        },
+      },
+    });
+    
     if (!session) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
