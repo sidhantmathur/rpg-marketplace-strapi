@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, context: any) {
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
     const id = Number(context.params.id);
