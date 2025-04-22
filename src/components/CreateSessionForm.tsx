@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/hooks/useUser';
+import { Session } from '@prisma/client';
 
 const GAME_OPTIONS = [
   'D&D 5e',
@@ -37,26 +38,29 @@ const EXPERIENCE_LEVELS = [
 interface CreateSessionFormProps {
   onCancel: () => void;
   onSuccess?: () => void;
+  session?: Session & {
+    tags: { name: string }[];
+  };
 }
 
-export default function CreateSessionForm({ onCancel, onSuccess }: CreateSessionFormProps) {
+export default function CreateSessionForm({ onCancel, onSuccess, session }: CreateSessionFormProps) {
   const router = useRouter();
   const { user } = useUser();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    time: '',
-    duration: '',
-    game: '',
-    genre: '',
-    experienceLevel: '',
-    maxParticipants: '5',
-    tags: [] as string[],
-    imageUrl: '',
+    title: session?.title || '',
+    description: session?.description || '',
+    date: session?.date ? new Date(session.date).toISOString().split('T')[0] : '',
+    time: session?.date ? new Date(session.date).toISOString().split('T')[1].slice(0, 5) : '',
+    duration: session?.duration?.toString() || '120',
+    game: session?.game || '',
+    genre: session?.genre || '',
+    experienceLevel: session?.experienceLevel || '',
+    maxParticipants: session?.maxParticipants.toString() || '5',
+    tags: session?.tags?.map(tag => tag.name) || [] as string[],
+    imageUrl: session?.imageUrl || '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(session?.imageUrl || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,52 +70,107 @@ export default function CreateSessionForm({ onCancel, onSuccess }: CreateSession
     setError(null);
 
     try {
-      // Create session without image first
-      const sessionResponse = await fetch('/api/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          userId: user?.id,
-        }),
-      });
-
-      if (!sessionResponse.ok) {
-        throw new Error('Failed to create session');
-      }
-
-      const sessionData = await sessionResponse.json();
-
-      // If there's an image, upload it and update the session
-      if (imageFile) {
-        const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
-
-        const { data: uploadData, error } = await supabase
-          .storage
-          .from('sessions')
-          .upload(path, imageFile, { cacheControl: '3600', upsert: false });
-
-        if (error) {
-          console.error('Upload error:', error);
-          throw new Error('Image upload failed');
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase
-          .storage
-          .from('sessions')
-          .getPublicUrl(uploadData.path);
-
-        // Update session with image URL
-        await fetch(`/api/session/${sessionData.id}`, {
+      if (session) {
+        // Update existing session
+        const response = await fetch(`/api/session/${session.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ imageUrl: publicUrl }),
+          body: JSON.stringify({
+            ...formData,
+            date: new Date(`${formData.date}T${formData.time}`).toISOString(),
+            duration: parseInt(formData.duration),
+            maxParticipants: parseInt(formData.maxParticipants),
+            tags: formData.tags,
+          }),
         });
+
+        if (!response.ok) {
+          throw new Error('Failed to update session');
+        }
+
+        // If there's a new image, upload it
+        if (imageFile) {
+          const path = `${user?.id}/session/${session.id}/${Date.now()}-${imageFile.name}`;
+
+          const { data: uploadData, error } = await supabase
+            .storage
+            .from('sessions')
+            .upload(path, imageFile, { cacheControl: '3600', upsert: false });
+
+          if (error) {
+            console.error('Upload error:', error);
+            throw new Error('Image upload failed');
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase
+            .storage
+            .from('sessions')
+            .getPublicUrl(uploadData.path);
+
+          // Update session with new image URL
+          await fetch(`/api/session/${session.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ imageUrl: publicUrl }),
+          });
+        }
+      } else {
+        // Create new session
+        const sessionResponse = await fetch('/api/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            date: new Date(`${formData.date}T${formData.time}`).toISOString(),
+            duration: parseInt(formData.duration),
+            maxParticipants: parseInt(formData.maxParticipants),
+            tags: formData.tags,
+            userId: user?.id,
+          }),
+        });
+
+        if (!sessionResponse.ok) {
+          throw new Error('Failed to create session');
+        }
+
+        const sessionData = await sessionResponse.json();
+
+        // If there's an image, upload it
+        if (imageFile) {
+          const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
+
+          const { data: uploadData, error } = await supabase
+            .storage
+            .from('sessions')
+            .upload(path, imageFile, { cacheControl: '3600', upsert: false });
+
+          if (error) {
+            console.error('Upload error:', error);
+            throw new Error('Image upload failed');
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase
+            .storage
+            .from('sessions')
+            .getPublicUrl(uploadData.path);
+
+          // Update session with image URL
+          await fetch(`/api/session/${sessionData.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ imageUrl: publicUrl }),
+          });
+        }
       }
 
       // Reset form and close
@@ -124,7 +183,7 @@ export default function CreateSessionForm({ onCancel, onSuccess }: CreateSession
         game: '',
         genre: '',
         experienceLevel: '',
-        maxParticipants: '4',
+        maxParticipants: '5',
         tags: [] as string[],
         imageUrl: '',
       });

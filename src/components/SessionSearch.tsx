@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CreateSessionForm from './CreateSessionForm';
+import { useUser } from '@/hooks/useUser';
+import { Session as PrismaSession } from '@prisma/client';
 
 const GAME_OPTIONS = [
   'D&D 5e',
@@ -33,16 +35,7 @@ const EXPERIENCE_LEVELS = [
   'All Levels'
 ];
 
-interface Session {
-  id: number;
-  title: string;
-  description: string | null;
-  date: string;
-  duration: number | null;
-  game: string | null;
-  genre: string | null;
-  experienceLevel: string | null;
-  maxParticipants: number;
+interface Session extends Omit<PrismaSession, 'imageUrl'> {
   dm: {
     name: string;
   };
@@ -56,7 +49,7 @@ interface Session {
     id: number;
     name: string;
   }>;
-  imageUrl?: string;
+  imageUrl: string | null;
 }
 
 export default function SessionSearch() {
@@ -64,6 +57,7 @@ export default function SessionSearch() {
   const searchParams = useSearchParams();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     game: '',
@@ -73,6 +67,8 @@ export default function SessionSearch() {
     dateTo: '',
     tags: [] as string[],
   });
+
+  const { user } = useUser();
 
   const fetchSessions = async () => {
     const params = new URLSearchParams();
@@ -106,6 +102,32 @@ export default function SessionSearch() {
   const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const tags = e.target.value.split(',').map(tag => tag.trim());
     setFilters(prev => ({ ...prev, tags }));
+  };
+
+  const handleDeleteSession = async (sessionId: number) => {
+    if (!confirm('Are you sure you want to delete this session?')) return;
+
+    try {
+      const response = await fetch(`/api/session/${sessionId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete session');
+      }
+
+      // Refresh the session list
+      fetchSessions();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete session');
+    }
+  };
+
+  const handleEditSession = (session: Session) => {
+    setEditingSession(session);
   };
 
   return (
@@ -257,7 +279,7 @@ export default function SessionSearch() {
                   <span className="font-medium">Date:</span> {new Date(session.date).toLocaleString()}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {session.tags.map(tag => (
                   <span
                     key={tag.id}
@@ -267,10 +289,43 @@ export default function SessionSearch() {
                   </span>
                 ))}
               </div>
+              {user?.id === session.userId && (
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => handleEditSession(session)}
+                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSession(session.id)}
+                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Session Modal */}
+      {editingSession && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold mb-4">Edit Session</h3>
+            <CreateSessionForm
+              session={editingSession}
+              onCancel={() => setEditingSession(null)}
+              onSuccess={() => {
+                setEditingSession(null);
+                fetchSessions();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

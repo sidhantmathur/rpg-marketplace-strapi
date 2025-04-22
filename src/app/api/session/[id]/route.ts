@@ -83,9 +83,31 @@ export async function DELETE(request: NextRequest, context: any) {
     const rawId = context.params.id
     console.log('❌ DELETE /api/session/[id] → id=', rawId)
     const id = Number(rawId)
+
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
+    }
+
+    // First delete all related bookings
+    console.log('Deleting related bookings...')
+    await prismaSingleton.booking.deleteMany({
+      where: { sessionId: id }
+    })
+
+    // Delete all related reviews
+    console.log('Deleting related reviews...')
+    await prismaSingleton.review.deleteMany({
+      where: { sessionId: id }
+    })
+
+    // Finally delete the session (this will cascade delete the tags relation)
+    console.log('Deleting session...')
     await prismaSingleton.session.delete({ where: { id } })
-    return NextResponse.json(null, { status: 204 })
+    
+    console.log('Session deleted successfully')
+    return NextResponse.json({ success: true }, { status: 200 })
   } catch (err) {
+    console.error('Error in DELETE /api/session/[id]:', err)
     return handleError(err)
   }
 }
