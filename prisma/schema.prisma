@@ -30,6 +30,11 @@ model Session {
   dm              DungeonMaster @relation(fields: [dmId], references: [id])
   user            Profile       @relation("ProfileSessions", fields: [userId], references: [id])
   reviews         Review[]
+  game            String?       // e.g., "D&D 5e", "Pathfinder", "Call of Cthulhu"
+  genre           String?       // e.g., "Fantasy", "Horror", "Sci-Fi"
+  experienceLevel String?       // e.g., "Beginner", "Intermediate", "Advanced"
+  tags            Tag[]         @relation("SessionTags")
+  status          String        @default("upcoming") // "upcoming", "in-progress", "completed", "cancelled"
 }
 
 model Profile {
@@ -82,4 +87,11 @@ model ReviewReport {
   createdAt  DateTime @default(now())
   review     Review   @relation(fields: [reviewId], references: [id])
   reporter   Profile  @relation(fields: [reporterId], references: [id])
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  sessions  Session[] @relation("SessionTags")
+  createdAt DateTime  @default(now())
 }

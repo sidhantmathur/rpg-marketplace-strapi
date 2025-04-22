@@ -2,7 +2,7 @@
 
 import { useUser } from '@/hooks/useUser';
 import { SignOutButton } from '@/components/SignOutButton';
-import DashboardView from '@/components/DashboardView';
+import SessionSearch from '@/components/SessionSearch';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -11,7 +11,7 @@ export default function HomePage() {
   if (loading) return <p className="p-6">Loading...</p>;
 
   return (
-    <main className="p-6 max-w-xl mx-auto">
+    <main className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">RPG Marketplace</h1>
         {user ? (
@@ -26,7 +26,7 @@ export default function HomePage() {
       {user ? (
         <>
           <p className="mb-4 text-sm text-gray-600">Welcome, {user.email}</p>
-          <DashboardView />
+          <SessionSearch />
         </>
       ) : (
         <p className="text-gray-700">
