@@ -1,11 +1,12 @@
 // app/api/session/[id]/route.ts
 import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
 
 // Prisma singleton
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
-const prisma = globalForPrisma.prisma || new PrismaClient()
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+const prismaSingleton = globalForPrisma.prisma || new PrismaClient()
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prismaSingleton
 
 async function handleError(err: unknown) {
   console.error('🔥 [api/session/[id]] uncaught error:', err)
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest, context: any) {
       return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
     }
 
-    const session = await prisma.session.findUnique({
+    const session = await prismaSingleton.session.findUnique({
       where: { id },
       include: {
         dm: true,
@@ -49,23 +50,31 @@ export async function GET(request: NextRequest, context: any) {
   }
 }
 
-export async function PATCH(request: NextRequest, context: any) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const rawId = context.params.id
-    console.log('✏️  PATCH /api/session/[id] → id=', rawId)
-    const id = Number(rawId)
-    const { imageUrl } = await request.json()
+    const { id } = params;
+    const body = await request.json();
+    const { imageUrl } = body;
+
     if (!imageUrl) {
-      return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing imageUrl' }, { status: 400 });
     }
 
-    const updated = await prisma.session.update({
-      where: { id },
+    const updatedSession = await prismaSingleton.session.update({
+      where: { id: parseInt(id) },
       data: { imageUrl },
-    })
-    return NextResponse.json(updated)
-  } catch (err) {
-    return handleError(err)
+    });
+
+    return NextResponse.json(updatedSession);
+  } catch (error) {
+    console.error('Error updating session:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -74,7 +83,7 @@ export async function DELETE(request: NextRequest, context: any) {
     const rawId = context.params.id
     console.log('❌ DELETE /api/session/[id] → id=', rawId)
     const id = Number(rawId)
-    await prisma.session.delete({ where: { id } })
+    await prismaSingleton.session.delete({ where: { id } })
     return NextResponse.json(null, { status: 204 })
   } catch (err) {
     return handleError(err)

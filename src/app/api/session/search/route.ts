@@ -9,12 +9,8 @@ const searchParamsSchema = z.object({
   game: z.string().optional(),
   genre: z.string().optional(),
   experienceLevel: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  tags: z.string().optional(),
   searchTerm: z.string().optional(),
-  dmId: z.string().optional(),
-  availableOnly: z.string().optional(),
-  sortBy: z.enum(['date', 'title', 'createdAt']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -55,19 +51,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Tags filter
-    if (validatedParams.tags && validatedParams.tags.length > 0) {
+    if (validatedParams.tags) {
+      const tags = validatedParams.tags.split(',').map(tag => tag.trim());
       where.tags = {
         some: {
           name: {
-            in: validatedParams.tags,
+            in: tags,
           },
         },
       };
-    }
-
-    // DM filter
-    if (validatedParams.dmId) {
-      where.dmId = Number(validatedParams.dmId);
     }
 
     // Search term filter (searches in title and description)
@@ -78,31 +70,10 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Available slots filter
-    if (validatedParams.availableOnly === 'true') {
-      where.bookings = {
-        some: {
-          NOT: {
-            userId: {
-              equals: where.userId,
-            },
-          },
-        },
-      };
-    }
-
-    // Build the orderBy clause
-    const orderBy: any = {};
-    if (validatedParams.sortBy) {
-      orderBy[validatedParams.sortBy] = validatedParams.sortOrder || 'asc';
-    } else {
-      orderBy.date = 'asc'; // Default sorting
-    }
-
     // Execute the query
     const sessions = await prisma.session.findMany({
       where,
-      orderBy,
+      orderBy: { date: 'asc' },
       include: {
         dm: { select: { name: true } },
         bookings: {

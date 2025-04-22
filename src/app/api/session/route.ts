@@ -1,57 +1,93 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
 
-export async function POST(req: Request) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
     const {
       title,
-      date,
-      dmId,      // DungeonMaster.id
-      userId,    // host’s Profile.id  (author of the session)
       description,
+      date,
       duration,
-      maxParticipants = 5,
+      game,
+      genre,
+      experienceLevel,
+      maxParticipants,
+      tags,
       imageUrl,
-    } = await req.json();
+      userId
+    } = body;
 
-    if (!title || !date || !dmId || !userId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!title || !date || !userId) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // one transaction: create session ➜ create host booking
-    const session = await prisma.$transaction(async (tx) => {
-      const created = await tx.session.create({
-        data: {
-          title,
-          date: new Date(date),
-          dmId: Number(dmId),
-          userId,
-          maxParticipants,
-          description,
-          duration: duration ? Number(duration) : null,
-          imageUrl,
-        },
-      });
-
-      // auto‑book the host so reviews work later
-      await tx.booking.create({
-        data: {
-          sessionId: created.id,
-          userId,               // host’s Profile.id
-        },
-      });
-
-      return created;
+    // First, get or create the DungeonMaster record
+    let dm = await prisma.dungeonMaster.findFirst({
+      where: { userId },
     });
 
-    return NextResponse.json(session, { status: 201 });
-  } catch (err) {
-    console.error('POST /api/session error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (!dm) {
+      // Get user profile to get the name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!profile) {
+        return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+      }
+
+      dm = await prisma.dungeonMaster.create({
+        data: {
+          name: profile.email.split('@')[0], // Use email username as default name
+          userId,
+        },
+      });
+    }
+
+    // Create the session
+    const newSession = await prisma.session.create({
+      data: {
+        title,
+        description,
+        date: new Date(date),
+        duration: duration ? parseInt(duration) : null,
+        game,
+        genre,
+        experienceLevel,
+        maxParticipants: parseInt(maxParticipants),
+        imageUrl,
+        userId,
+        dmId: dm.id,
+        status: 'upcoming',
+        tags: {
+          create: tags.map((tag: string) => ({
+            name: tag,
+          })),
+        },
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    return NextResponse.json(newSession);
+  } catch (error) {
+    console.error('Error creating session:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-
 
 export async function GET() {
   const sessions = await prisma.session.findMany({

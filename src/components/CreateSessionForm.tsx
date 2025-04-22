@@ -2,13 +2,46 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
+import { useUser } from '@/hooks/useUser';
+
+const GAME_OPTIONS = [
+  'D&D 5e',
+  'Pathfinder',
+  'Call of Cthulhu',
+  'Starfinder',
+  'Shadowrun',
+  'Cyberpunk Red',
+  'Vampire: The Masquerade',
+  'Other'
+];
+
+const GENRE_OPTIONS = [
+  'Fantasy',
+  'Horror',
+  'Sci-Fi',
+  'Modern',
+  'Historical',
+  'Post-Apocalyptic',
+  'Superhero',
+  'Other'
+];
+
+const EXPERIENCE_LEVELS = [
+  'Beginner',
+  'Intermediate',
+  'Advanced',
+  'All Levels'
+];
 
 export default function CreateSessionForm({ onCancel }: { onCancel: () => void }) {
   const router = useRouter();
+  const { user } = useUser();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
+    time: '',
     duration: '',
     game: '',
     genre: '',
@@ -17,58 +50,84 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
     tags: [] as string[],
     imageUrl: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) return;
+
     try {
-      const response = await fetch('/api/session', {
+      // Combine date and time
+      const dateTime = new Date(`${formData.date}T${formData.time}`);
+      
+      // 1) Create session without imageUrl
+      const createRes = await fetch('/api/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
-          date: new Date(formData.date).toISOString(),
+          date: dateTime.toISOString(),
           duration: formData.duration ? parseInt(formData.duration) : null,
           maxParticipants: parseInt(formData.maxParticipants),
+          userId: user.id,
         }),
       });
 
-      if (response.ok) {
-        router.refresh();
-        onCancel();
-      } else {
-        console.error('Failed to create session');
+      if (!createRes.ok) {
+        throw new Error('Failed to create session');
       }
+
+      const { id: sessionId } = await createRes.json();
+
+      // 2) Upload image if selected
+      if (imageFile) {
+        const path = `${user.id}/session/${sessionId}/${Date.now()}-${imageFile.name}`;
+
+        const { data: uploadData, error } = await supabase
+          .storage
+          .from('sessions')
+          .upload(path, imageFile, { cacheControl: '3600', upsert: false });
+
+        if (error) {
+          console.error('Upload error:', error);
+          throw new Error('Image upload failed');
+        }
+
+        // 3) Get public URL
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from('sessions')
+          .getPublicUrl(uploadData.path);
+
+        // 4) Update session with imageUrl
+        await fetch(`/api/session/${sessionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: publicUrl }),
+        });
+      }
+
+      router.refresh();
+      onCancel();
     } catch (error) {
       console.error('Error creating session:', error);
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      // Create a FormData object
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Upload the image
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFormData(prev => ({ ...prev, imageUrl: data.url }));
-      } else {
-        console.error('Failed to upload image');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Max file size is 2 MB.');
+      return;
     }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   return (
@@ -98,26 +157,55 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
         <div>
           <label className="block text-sm font-medium text-gray-900">Date</label>
           <input
-            type="datetime-local"
+            type="date"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             required
+            min={new Date().toISOString().split('T')[0]}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-900">Time</label>
+          <input
+            type="time"
+            value={formData.time}
+            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-900">Duration (minutes)</label>
           <input
             type="number"
             value={formData.duration}
             onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+            min="30"
+            max="480"
+            step="30"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900">Max Participants</label>
+          <input
+            type="number"
+            value={formData.maxParticipants}
+            onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
+            min="1"
+            max="20"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-900">Game</label>
           <select
@@ -127,9 +215,9 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="">Select a game</option>
-            <option value="D&D 5e">D&D 5e</option>
-            <option value="Pathfinder">Pathfinder</option>
-            <option value="Call of Cthulhu">Call of Cthulhu</option>
+            {GAME_OPTIONS.map(game => (
+              <option key={game} value={game}>{game}</option>
+            ))}
           </select>
         </div>
 
@@ -142,59 +230,53 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="">Select a genre</option>
-            <option value="Fantasy">Fantasy</option>
-            <option value="Horror">Horror</option>
-            <option value="Sci-Fi">Sci-Fi</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Experience Level</label>
-          <select
-            value={formData.experienceLevel}
-            onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            <option value="">Select level</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
+            {GENRE_OPTIONS.map(genre => (
+              <option key={genre} value={genre}>{genre}</option>
+            ))}
           </select>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900">Max Participants</label>
-        <input
-          type="number"
-          value={formData.maxParticipants}
-          onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
-          min="1"
-          max="20"
+        <label className="block text-sm font-medium text-gray-900">Experience Level</label>
+        <select
+          value={formData.experienceLevel}
+          onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
           required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+        >
+          <option value="">Select experience level</option>
+          {EXPERIENCE_LEVELS.map(level => (
+            <option key={level} value={level}>{level}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-900">Tags (comma separated)</label>
+        <input
+          type="text"
+          value={formData.tags.join(', ')}
+          onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()) })}
+          placeholder="e.g. roleplay, combat, exploration"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-900">Session Image</label>
-        <div className="mt-1 flex items-center">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+        />
+        {imagePreview && (
+          <img
+            src={imagePreview}
+            alt="Preview"
+            className="mt-2 w-32 h-32 object-cover rounded"
           />
-        </div>
-        {formData.imageUrl && (
-          <div className="mt-2">
-            <img
-              src={formData.imageUrl}
-              alt="Session preview"
-              className="h-32 w-32 object-cover rounded-md"
-            />
-          </div>
         )}
       </div>
 

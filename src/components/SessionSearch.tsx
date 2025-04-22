@@ -4,6 +4,35 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CreateSessionForm from './CreateSessionForm';
 
+const GAME_OPTIONS = [
+  'D&D 5e',
+  'Pathfinder',
+  'Call of Cthulhu',
+  'Starfinder',
+  'Shadowrun',
+  'Cyberpunk Red',
+  'Vampire: The Masquerade',
+  'Other'
+];
+
+const GENRE_OPTIONS = [
+  'Fantasy',
+  'Horror',
+  'Sci-Fi',
+  'Modern',
+  'Historical',
+  'Post-Apocalyptic',
+  'Superhero',
+  'Other'
+];
+
+const EXPERIENCE_LEVELS = [
+  'Beginner',
+  'Intermediate',
+  'Advanced',
+  'All Levels'
+];
+
 interface Session {
   id: number;
   title: string;
@@ -34,49 +63,45 @@ export default function SessionSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [filters, setFilters] = useState({
-    game: searchParams.get('game') || '',
-    genre: searchParams.get('genre') || '',
-    experienceLevel: searchParams.get('experienceLevel') || '',
-    searchTerm: searchParams.get('searchTerm') || '',
-    availableOnly: searchParams.get('availableOnly') === 'true',
+    searchTerm: '',
+    game: '',
+    genre: '',
+    experienceLevel: '',
+    dateFrom: '',
+    dateTo: '',
+    tags: [] as string[],
   });
 
   useEffect(() => {
     const fetchSessions = async () => {
-      try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value.toString());
-        });
+      const params = new URLSearchParams();
+      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+      if (filters.game) params.append('game', filters.game);
+      if (filters.genre) params.append('genre', filters.genre);
+      if (filters.experienceLevel) params.append('experienceLevel', filters.experienceLevel);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters.tags.length > 0) params.append('tags', filters.tags.join(','));
 
-        const response = await fetch(`/api/session/search?${params.toString()}`);
-        const data = await response.json();
-        setSessions(data);
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-      } finally {
-        setLoading(false);
-      }
+      const response = await fetch(`/api/session/search?${params.toString()}`);
+      const data = await response.json();
+      setSessions(data);
     };
 
     fetchSessions();
   }, [filters]);
 
-  const handleFilterChange = (key: string, value: string | boolean) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set(key, value.toString());
-    } else {
-      params.delete(key);
-    }
-    router.push(`?${params.toString()}`);
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  if (loading) return <div className="p-4 text-gray-900">Loading sessions...</div>;
+  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim());
+    setFilters(prev => ({ ...prev, tags }));
+  };
 
   return (
     <div className="space-y-6">
@@ -98,129 +123,138 @@ export default function SessionSearch() {
       )}
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Game</label>
-          <select
-            value={filters.game}
-            onChange={(e) => handleFilterChange('game', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            <option value="">All Games</option>
-            <option value="D&D 5e">D&D 5e</option>
-            <option value="Pathfinder">Pathfinder</option>
-            <option value="Call of Cthulhu">Call of Cthulhu</option>
-          </select>
-        </div>
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900">Search Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Search</label>
+            <input
+              type="text"
+              name="searchTerm"
+              value={filters.searchTerm}
+              onChange={handleFilterChange}
+              placeholder="Search sessions..."
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Genre</label>
-          <select
-            value={filters.genre}
-            onChange={(e) => handleFilterChange('genre', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            <option value="">All Genres</option>
-            <option value="Fantasy">Fantasy</option>
-            <option value="Horror">Horror</option>
-            <option value="Sci-Fi">Sci-Fi</option>
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Game</label>
+            <select
+              name="game"
+              value={filters.game}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            >
+              <option value="">All Games</option>
+              {GAME_OPTIONS.map(game => (
+                <option key={game} value={game} className="text-gray-900">{game}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Experience Level</label>
-          <select
-            value={filters.experienceLevel}
-            onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            <option value="">All Levels</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Genre</label>
+            <select
+              name="genre"
+              value={filters.genre}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            >
+              <option value="">All Genres</option>
+              {GENRE_OPTIONS.map(genre => (
+                <option key={genre} value={genre} className="text-gray-900">{genre}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Search</label>
-          <input
-            type="text"
-            value={filters.searchTerm}
-            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-            placeholder="Search sessions..."
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Experience Level</label>
+            <select
+              name="experienceLevel"
+              value={filters.experienceLevel}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            >
+              <option value="">All Levels</option>
+              {EXPERIENCE_LEVELS.map(level => (
+                <option key={level} value={level} className="text-gray-900">{level}</option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="availableOnly"
-            checked={filters.availableOnly}
-            onChange={(e) => handleFilterChange('availableOnly', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="availableOnly" className="ml-2 block text-sm text-gray-900">
-            Show only available sessions
-          </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Date From</label>
+            <input
+              type="date"
+              name="dateFrom"
+              value={filters.dateFrom}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Date To</label>
+            <input
+              type="date"
+              name="dateTo"
+              value={filters.dateTo}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            />
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-700">Tags</label>
+            <input
+              type="text"
+              value={filters.tags.join(', ')}
+              onChange={handleTagChange}
+              placeholder="e.g. roleplay, combat, exploration"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+            />
+          </div>
         </div>
       </div>
 
       {/* Session List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sessions.map((session) => (
-          <div key={session.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="space-y-4">
+        {sessions.map(session => (
+          <div key={session.id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             {session.imageUrl && (
-              <div className="mb-4">
-                <img
-                  src={session.imageUrl}
-                  alt={session.title}
-                  className="w-full h-48 object-cover rounded-md"
-                />
-              </div>
+              <img
+                src={session.imageUrl}
+                alt={session.title}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
             )}
-            <h3 className="text-lg font-semibold mb-2 text-gray-900">{session.title}</h3>
-            <div className="text-sm text-gray-700 mb-2">
-              DM: {session.dm.name}
+            <h3 className="text-xl font-semibold text-gray-900">{session.title}</h3>
+            <p className="text-gray-600 mt-2">{session.description}</p>
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-500">
+              <div>
+                <span className="font-medium">Game:</span> {session.game}
+              </div>
+              <div>
+                <span className="font-medium">Genre:</span> {session.genre}
+              </div>
+              <div>
+                <span className="font-medium">Level:</span> {session.experienceLevel}
+              </div>
+              <div>
+                <span className="font-medium">Date:</span> {new Date(session.date).toLocaleString()}
+              </div>
             </div>
-            <div className="text-sm text-gray-700 mb-2">
-              Date: {new Date(session.date).toLocaleDateString()}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {session.tags.map(tag => (
+                <span
+                  key={tag.id}
+                  className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                >
+                  {tag.name}
+                </span>
+              ))}
             </div>
-            {session.game && (
-              <div className="text-sm text-gray-700 mb-2">
-                Game: {session.game}
-              </div>
-            )}
-            {session.genre && (
-              <div className="text-sm text-gray-700 mb-2">
-                Genre: {session.genre}
-              </div>
-            )}
-            {session.experienceLevel && (
-              <div className="text-sm text-gray-700 mb-2">
-                Level: {session.experienceLevel}
-              </div>
-            )}
-            <div className="text-sm text-gray-700 mb-2">
-              Players: {session.bookings.length}/{session.maxParticipants}
-            </div>
-            {session.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {session.tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            )}
-            {session.description && (
-              <p className="mt-2 text-sm text-gray-700 line-clamp-2">
-                {session.description}
-              </p>
-            )}
           </div>
         ))}
       </div>
