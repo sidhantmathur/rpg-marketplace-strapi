@@ -34,7 +34,12 @@ const EXPERIENCE_LEVELS = [
   'All Levels'
 ];
 
-export default function CreateSessionForm({ onCancel }: { onCancel: () => void }) {
+interface CreateSessionFormProps {
+  onCancel: () => void;
+  onSuccess?: () => void;
+}
+
+export default function CreateSessionForm({ onCancel, onSuccess }: CreateSessionFormProps) {
   const router = useRouter();
   const { user } = useUser();
   const [formData, setFormData] = useState({
@@ -52,39 +57,36 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) return;
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // Combine date and time
-      const dateTime = new Date(`${formData.date}T${formData.time}`);
-      
-      // 1) Create session without imageUrl
-      const createRes = await fetch('/api/session', {
+      // Create session without image first
+      const sessionResponse = await fetch('/api/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
-          date: dateTime.toISOString(),
-          duration: formData.duration ? parseInt(formData.duration) : null,
-          maxParticipants: parseInt(formData.maxParticipants),
-          userId: user.id,
+          userId: user?.id,
         }),
       });
 
-      if (!createRes.ok) {
+      if (!sessionResponse.ok) {
         throw new Error('Failed to create session');
       }
 
-      const { id: sessionId } = await createRes.json();
+      const sessionData = await sessionResponse.json();
 
-      // 2) Upload image if selected
+      // If there's an image, upload it and update the session
       if (imageFile) {
-        const path = `${user.id}/session/${sessionId}/${Date.now()}-${imageFile.name}`;
+        const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
 
         const { data: uploadData, error } = await supabase
           .storage
@@ -96,24 +98,43 @@ export default function CreateSessionForm({ onCancel }: { onCancel: () => void }
           throw new Error('Image upload failed');
         }
 
-        // 3) Get public URL
+        // Get public URL
         const { data: { publicUrl } } = supabase
           .storage
           .from('sessions')
           .getPublicUrl(uploadData.path);
 
-        // 4) Update session with imageUrl
-        await fetch(`/api/session/${sessionId}`, {
+        // Update session with image URL
+        await fetch(`/api/session/${sessionData.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ imageUrl: publicUrl }),
         });
       }
 
-      router.refresh();
-      onCancel();
-    } catch (error) {
-      console.error('Error creating session:', error);
+      // Reset form and close
+      setFormData({
+        title: '',
+        description: '',
+        date: '',
+        time: '',
+        duration: '120',
+        game: '',
+        genre: '',
+        experienceLevel: '',
+        maxParticipants: '4',
+        tags: [] as string[],
+        imageUrl: '',
+      });
+      setImageFile(null);
+      setImagePreview(null);
+      onSuccess?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
