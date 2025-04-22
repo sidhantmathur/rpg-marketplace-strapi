@@ -55,24 +55,55 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-    const body = await request.json();
-    const { imageUrl } = body;
-
-    if (!imageUrl) {
-      return NextResponse.json({ error: 'Missing imageUrl' }, { status: 400 });
+    const id = Number(params.id);
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 });
     }
 
+    const body = await request.json();
+    const {
+      title,
+      description,
+      date,
+      duration,
+      game,
+      genre,
+      experienceLevel,
+      maxParticipants,
+      tags,
+      imageUrl
+    } = body;
+
+    // Update the session
     const updatedSession = await prismaSingleton.session.update({
-      where: { id: parseInt(id) },
-      data: { imageUrl },
+      where: { id },
+      data: {
+        title,
+        description,
+        date: date ? new Date(date) : undefined,
+        duration: duration ? parseInt(duration) : undefined,
+        game,
+        genre,
+        experienceLevel,
+        maxParticipants: maxParticipants ? parseInt(maxParticipants) : undefined,
+        imageUrl,
+        tags: tags ? {
+          deleteMany: {}, // Remove all existing tags
+          create: tags.map((tag: string) => ({
+            name: tag,
+          })),
+        } : undefined,
+      },
+      include: {
+        tags: true,
+      },
     });
 
     return NextResponse.json(updatedSession);
   } catch (error) {
     console.error('Error updating session:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }
