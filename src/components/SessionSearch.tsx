@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import CreateSessionForm from './CreateSessionForm';
 
 interface Session {
   id: number;
@@ -26,6 +27,7 @@ interface Session {
     id: number;
     name: string;
   }>;
+  imageUrl?: string;
 }
 
 export default function SessionSearch() {
@@ -33,6 +35,7 @@ export default function SessionSearch() {
   const searchParams = useSearchParams();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [filters, setFilters] = useState({
     game: searchParams.get('game') || '',
     genre: searchParams.get('genre') || '',
@@ -73,18 +76,35 @@ export default function SessionSearch() {
     router.push(`?${params.toString()}`);
   };
 
-  if (loading) return <div className="p-4">Loading sessions...</div>;
+  if (loading) return <div className="p-4 text-gray-900">Loading sessions...</div>;
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-900">Sessions</h2>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          {showCreateForm ? 'Cancel' : 'Create New Session'}
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">Create New Session</h3>
+          <CreateSessionForm onCancel={() => setShowCreateForm(false)} />
+        </div>
+      )}
+
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Game</label>
+          <label className="block text-sm font-medium text-gray-900">Game</label>
           <select
             value={filters.game}
             onChange={(e) => handleFilterChange('game', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="">All Games</option>
             <option value="D&D 5e">D&D 5e</option>
@@ -94,11 +114,11 @@ export default function SessionSearch() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Genre</label>
+          <label className="block text-sm font-medium text-gray-900">Genre</label>
           <select
             value={filters.genre}
             onChange={(e) => handleFilterChange('genre', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="">All Genres</option>
             <option value="Fantasy">Fantasy</option>
@@ -108,11 +128,11 @@ export default function SessionSearch() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Experience Level</label>
+          <label className="block text-sm font-medium text-gray-900">Experience Level</label>
           <select
             value={filters.experienceLevel}
             onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="">All Levels</option>
             <option value="Beginner">Beginner</option>
@@ -122,13 +142,13 @@ export default function SessionSearch() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Search</label>
+          <label className="block text-sm font-medium text-gray-900">Search</label>
           <input
             type="text"
             value={filters.searchTerm}
             onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
             placeholder="Search sessions..."
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
 
@@ -140,7 +160,7 @@ export default function SessionSearch() {
             onChange={(e) => handleFilterChange('availableOnly', e.target.checked)}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="availableOnly" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="availableOnly" className="ml-2 block text-sm text-gray-900">
             Show only available sessions
           </label>
         </div>
@@ -149,30 +169,39 @@ export default function SessionSearch() {
       {/* Session List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sessions.map((session) => (
-          <div key={session.id} className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-2">{session.title}</h3>
-            <div className="text-sm text-gray-600 mb-2">
+          <div key={session.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            {session.imageUrl && (
+              <div className="mb-4">
+                <img
+                  src={session.imageUrl}
+                  alt={session.title}
+                  className="w-full h-48 object-cover rounded-md"
+                />
+              </div>
+            )}
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">{session.title}</h3>
+            <div className="text-sm text-gray-700 mb-2">
               DM: {session.dm.name}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-gray-700 mb-2">
               Date: {new Date(session.date).toLocaleDateString()}
             </div>
             {session.game && (
-              <div className="text-sm text-gray-600 mb-2">
+              <div className="text-sm text-gray-700 mb-2">
                 Game: {session.game}
               </div>
             )}
             {session.genre && (
-              <div className="text-sm text-gray-600 mb-2">
+              <div className="text-sm text-gray-700 mb-2">
                 Genre: {session.genre}
               </div>
             )}
             {session.experienceLevel && (
-              <div className="text-sm text-gray-600 mb-2">
+              <div className="text-sm text-gray-700 mb-2">
                 Level: {session.experienceLevel}
               </div>
             )}
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-gray-700 mb-2">
               Players: {session.bookings.length}/{session.maxParticipants}
             </div>
             {session.tags.length > 0 && (
