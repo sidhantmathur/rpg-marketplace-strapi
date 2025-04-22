@@ -52,10 +52,10 @@ export async function GET(request: NextRequest, context: any) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: 'Invalid session id' }, { status: 400 });
     }
