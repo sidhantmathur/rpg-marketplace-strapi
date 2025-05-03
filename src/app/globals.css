@@ -1,85 +1,158 @@
+/* Fantasy-themed font imports */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=Uncial+Antiqua&display=swap');
+
 @import "tailwindcss";
 
 :root {
-  /* Light theme */
-  --background: #ffffff;
-  --foreground: #171717;
-  --muted: #f5f5f5;
-  --muted-foreground: #525252;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --primary: #171717;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #171717;
-  --accent: #f5f5f5;
-  --accent-foreground: #171717;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --ring: #171717;
+  /* Light Parchment Theme */
+  --parchment-light: #f8f1e5;
+  --parchment-light-dark: #e8e1d5;
+  --parchment-light-darker: #d8d1c5;
+  --ink-light: #2c1810;
+  --ink-light-light: #4a2c1a;
+  --ruby-light: #8b0000;
+  --ruby-light-light: #a52a2a;
+  --amber-light: #d4af37;
+  --amber-light-light: #ffd700;
+  --forest-light: #0d2b1e;
+  --forest-light-light: #1b4d3e;
+  --royal-light: #4b0082;
+  --royal-light-light: #663399;
+
+  /* Dark Parchment Theme */
+  --parchment-dark: #2a2418;
+  --parchment-dark-dark: #1a1408;
+  --parchment-dark-darker: #0a0400;
+  --ink-dark: #e6d5b3;
+  --ink-dark-light: #f4e5c3;
+  --ruby-dark: #ff4d4d;
+  --ruby-dark-light: #ff6666;
+  --amber-dark: #ffd700;
+  --amber-dark-light: #ffeb3b;
+  --forest-dark: #0d2b1e;
+  --forest-dark-light: #1b4d3e;
+  --royal-dark: #9c27b0;
+  --royal-dark-light: #ab47bc;
+  
+  /* Default to Light Theme */
+  --parchment: var(--parchment-light);
+  --parchment-dark: var(--parchment-light-dark);
+  --parchment-darker: var(--parchment-light-darker);
+  --ink: var(--ink-light);
+  --ink-light: var(--ink-light-light);
+  --ruby: var(--ruby-light);
+  --ruby-light: var(--ruby-light-light);
+  --amber: var(--amber-light);
+  --amber-light: var(--amber-light-light);
+  --forest: var(--forest-light);
+  --forest-light: var(--forest-light-light);
+  --royal: var(--royal-light);
+  --royal-light: var(--royal-light-light);
+  
+  /* UI Colors */
+  --background: var(--parchment);
+  --foreground: var(--ink);
+  --muted: var(--parchment-dark);
+  --muted-foreground: var(--ink-light);
+  --popover: var(--parchment);
+  --popover-foreground: var(--ink);
+  --card: var(--parchment);
+  --card-foreground: var(--ink);
+  --border: var(--parchment-darker);
+  --input: var(--parchment);
+  --primary: var(--forest);
+  --primary-foreground: var(--parchment);
+  --secondary: var(--amber);
+  --secondary-foreground: var(--ink);
+  --accent: var(--ruby);
+  --accent-foreground: var(--parchment);
+  --destructive: var(--ruby);
+  --destructive-foreground: var(--parchment);
+  --ring: var(--amber);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Cinzel', serif;
+  --font-mono: 'MedievalSharp', cursive;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark theme */
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --muted: #262626;
-    --muted-foreground: #a3a3a3;
-    --popover: #0a0a0a;
-    --popover-foreground: #ededed;
-    --card: #0a0a0a;
-    --card-foreground: #ededed;
-    --border: #262626;
-    --input: #262626;
-    --primary: #ededed;
-    --primary-foreground: #0a0a0a;
-    --secondary: #262626;
-    --secondary-foreground: #ededed;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --ring: #ededed;
-  }
+/* Dark Theme */
+.dark {
+  --parchment: var(--parchment-dark);
+  --parchment-dark: var(--parchment-dark-dark);
+  --parchment-darker: var(--parchment-dark-darker);
+  --ink: var(--ink-dark);
+  --ink-light: var(--ink-dark-light);
+  --ruby: var(--ruby-dark);
+  --ruby-light: var(--ruby-dark-light);
+  --amber: var(--amber-dark);
+  --amber-light: var(--amber-dark-light);
+  --forest: var(--forest-dark);
+  --forest-light: var(--forest-dark-light);
+  --royal: var(--royal-dark);
+  --royal-light: var(--royal-dark-light);
 }
 
+/* Base styles */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), serif;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23e6d5b3' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--parchment-dark);
+  border: 2px solid var(--ink-light);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--forest);
+  border: 2px solid var(--ink-light);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--forest-light);
 }
 
 /* Base styles for UI elements */
 select, input, button, textarea {
   background-color: var(--input);
   color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
+  border: 2px solid var(--border);
+  border-radius: 4px;
   padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 select:focus, input:focus, button:focus, textarea:focus {
   outline: none;
-  ring: 2px;
-  ring-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--amber), 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Dropdown specific styles */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232c1810' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 2rem;
+}
+
 select option {
   background-color: var(--popover);
   color: var(--popover-foreground);
+  font-family: var(--font-sans);
 }
 
 /* Button styles */
@@ -87,17 +160,122 @@ button {
   background-color: var(--primary);
   color: var(--primary-foreground);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  opacity: 0.9;
+  background-color: var(--ruby-light);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+/* Fantasy Utility Classes */
+.fantasy-border {
+  border: 2px solid var(--ink-light);
+  border-radius: 4px;
+  position: relative;
+  padding: 1rem;
+}
+
+.fantasy-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px solid var(--amber);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.scroll-container {
+  background: var(--parchment);
+  border: 2px solid var(--ink-light);
+  border-radius: 4px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--parchment), transparent);
+  pointer-events: none;
+}
+
+.scroll-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to top, var(--parchment), transparent);
+  pointer-events: none;
+}
+
+.fantasy-button {
+  background: linear-gradient(to bottom, var(--ruby), var(--ruby-light));
+  color: var(--parchment);
+  border: 2px solid var(--ink-light);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fantasy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.fantasy-button:hover::before {
+  left: 100%;
 }
 
 /* Card styles */
 .card {
   background-color: var(--card);
   color: var(--card-foreground);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
+  border: 2px solid var(--border);
+  border-radius: 4px;
   padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+  pointer-events: none;
 }
