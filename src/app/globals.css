@@ -10,14 +10,14 @@
   --parchment-light-darker: #d8d1c5;
   --ink-light: #2c1810;
   --ink-light-light: #4a2c1a;
-  --ruby-light: #8b0000;
-  --ruby-light-light: #a52a2a;
+  --ruby-light: #ff4d4d;
+  --ruby-light-light: #ff6666;
   --amber-light: #d4af37;
   --amber-light-light: #ffd700;
   --forest-light: #0d2b1e;
   --forest-light-light: #1b4d3e;
-  --royal-light: #4b0082;
-  --royal-light-light: #663399;
+  --parchment-text-light: #f8f1e5;
+  --parchment-text-light-hover: #e8e1d5;
 
   /* Dark Parchment Theme */
   --parchment-dark: #2a2418;
@@ -31,8 +31,8 @@
   --amber-dark-light: #ffeb3b;
   --forest-dark: #0d2b1e;
   --forest-dark-light: #1b4d3e;
-  --royal-dark: #9c27b0;
-  --royal-dark-light: #ab47bc;
+  --copper-dark: #d27d46;
+  --copper-dark-light: #e68a52;
   
   /* Default to Light Theme */
   --parchment: var(--parchment-light);
@@ -46,8 +46,6 @@
   --amber-light: var(--amber-light-light);
   --forest: var(--forest-light);
   --forest-light: var(--forest-light-light);
-  --royal: var(--royal-light);
-  --royal-light: var(--royal-light-light);
   
   /* UI Colors */
   --background: var(--parchment);
@@ -61,14 +59,24 @@
   --border: var(--parchment-darker);
   --input: var(--parchment);
   --primary: var(--forest);
-  --primary-foreground: var(--parchment);
+  --primary-foreground: var(--parchment-text-light);
   --secondary: var(--amber);
   --secondary-foreground: var(--ink);
-  --accent: var(--ruby);
+  --accent: var(--parchment-text-light);
   --accent-foreground: var(--parchment);
   --destructive: var(--ruby);
   --destructive-foreground: var(--parchment);
   --ring: var(--amber);
+
+  /* Text Colors */
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-light);
+  --text-muted: var(--ink-light);
+  --text-link: var(--parchment-text-light);
+  --text-link-hover: var(--parchment-text-light-hover);
+  --text-success: var(--forest);
+  --text-error: var(--ruby);
+  --text-warning: var(--amber);
 }
 
 @theme inline {
@@ -91,8 +99,39 @@
   --amber-light: var(--amber-dark-light);
   --forest: var(--forest-dark);
   --forest-light: var(--forest-dark-light);
-  --royal: var(--royal-dark);
-  --royal-light: var(--royal-dark-light);
+  --copper: var(--copper-dark);
+  --copper-light: var(--copper-dark-light);
+
+  /* Dark Theme UI Colors */
+  --background: var(--parchment-dark);
+  --foreground: var(--ink-dark);
+  --muted: var(--parchment-dark-dark);
+  --muted-foreground: var(--ink-dark-light);
+  --popover: var(--parchment-dark);
+  --popover-foreground: var(--ink-dark);
+  --card: var(--parchment-dark);
+  --card-foreground: var(--ink-dark);
+  --border: var(--parchment-dark-darker);
+  --input: var(--parchment-dark);
+  --primary: var(--forest-dark);
+  --primary-foreground: var(--ink-dark-light);
+  --secondary: var(--amber-dark);
+  --secondary-foreground: var(--ink-dark);
+  --accent: var(--ink-dark-light);
+  --accent-foreground: var(--parchment-dark);
+  --destructive: var(--ruby-dark);
+  --destructive-foreground: var(--parchment-dark);
+  --ring: var(--amber-dark);
+
+  /* Dark Theme Text Colors */
+  --text-primary: var(--ink-dark);
+  --text-secondary: var(--ink-dark-light);
+  --text-muted: var(--ink-dark-light);
+  --text-link: var(--ink-dark-light);
+  --text-link-hover: var(--ink-dark);
+  --text-success: var(--forest-dark);
+  --text-error: var(--ruby-dark);
+  --text-warning: var(--amber-dark);
 }
 
 /* Base styles */
@@ -278,4 +317,37 @@ button:active {
   bottom: 0;
   background: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
   pointer-events: none;
+}
+
+/* Text Color Utilities */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-link {
+  color: var(--text-link);
+}
+
+.text-link:hover {
+  color: var(--text-link-hover);
+}
+
+.text-success {
+  color: var(--text-success);
+}
+
+.text-error {
+  color: var(--text-error);
+}
+
+.text-warning {
+  color: var(--text-warning);
 }

@@ -133,113 +133,113 @@ export default function SessionSearch() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">Sessions</h2>
+        <h2 className="text-xl font-semibold text-primary">Sessions</h2>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
         >
           {showCreateForm ? 'Cancel' : 'Create New Session'}
         </button>
       </div>
 
       {showCreateForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">Create New Session</h3>
+        <div className="bg-card p-6 rounded-lg shadow-md border border-border">
+          <h3 className="text-lg font-semibold mb-4 text-primary">Create New Session</h3>
           <CreateSessionForm onCancel={() => setShowCreateForm(false)} onSuccess={handleSessionCreated} />
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Search Filters</h3>
+      <div className="bg-card p-6 rounded-lg shadow-md border border-border">
+        <h3 className="text-lg font-semibold mb-4 text-primary">Search Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Search</label>
+            <label className="block text-sm font-medium text-secondary">Search</label>
             <input
               type="text"
               name="searchTerm"
               value={filters.searchTerm}
               onChange={handleFilterChange}
               placeholder="Search sessions..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Game</label>
+            <label className="block text-sm font-medium text-secondary">Game</label>
             <select
               name="game"
               value={filters.game}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             >
               <option value="">All Games</option>
               {GAME_OPTIONS.map(game => (
-                <option key={game} value={game} className="text-gray-900">{game}</option>
+                <option key={game} value={game} className="text-primary">{game}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Genre</label>
+            <label className="block text-sm font-medium text-secondary">Genre</label>
             <select
               name="genre"
               value={filters.genre}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             >
               <option value="">All Genres</option>
               {GENRE_OPTIONS.map(genre => (
-                <option key={genre} value={genre} className="text-gray-900">{genre}</option>
+                <option key={genre} value={genre} className="text-primary">{genre}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Experience Level</label>
+            <label className="block text-sm font-medium text-secondary">Experience Level</label>
             <select
               name="experienceLevel"
               value={filters.experienceLevel}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             >
               <option value="">All Levels</option>
               {EXPERIENCE_LEVELS.map(level => (
-                <option key={level} value={level} className="text-gray-900">{level}</option>
+                <option key={level} value={level} className="text-primary">{level}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date From</label>
+            <label className="block text-sm font-medium text-secondary">Date From</label>
             <input
               type="date"
               name="dateFrom"
               value={filters.dateFrom}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date To</label>
+            <label className="block text-sm font-medium text-secondary">Date To</label>
             <input
               type="date"
               name="dateTo"
               value={filters.dateTo}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             />
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700">Tags</label>
+            <label className="block text-sm font-medium text-secondary">Tags</label>
             <input
               type="text"
               value={filters.tags.join(', ')}
               onChange={handleTagChange}
               placeholder="e.g. roleplay, combat, exploration"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+              className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
             />
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function SessionSearch() {
       {/* Session List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sessions.map(session => (
-          <div key={session.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          <div key={session.id} className="bg-card rounded-lg shadow-md border border-border overflow-hidden">
             <div className="aspect-w-16 aspect-h-9">
               {session.imageUrl ? (
                 <img
@@ -257,15 +257,15 @@ export default function SessionSearch() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">No image</span>
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <span className="text-muted">No image</span>
                 </div>
               )}
             </div>
             <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{session.title}</h3>
-              <p className="text-gray-600 mb-4 line-clamp-2">{session.description}</p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-4">
+              <h3 className="text-xl font-semibold text-primary mb-2">{session.title}</h3>
+              <p className="text-secondary mb-4 line-clamp-2">{session.description}</p>
+              <div className="grid grid-cols-2 gap-2 text-sm text-muted mb-4">
                 <div>
                   <span className="font-medium">Game:</span> {session.game}
                 </div>
@@ -283,7 +283,7 @@ export default function SessionSearch() {
                 {session.tags.map(tag => (
                   <span
                     key={tag.id}
-                    className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                    className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
                   >
                     {tag.name}
                   </span>
@@ -293,13 +293,13 @@ export default function SessionSearch() {
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={() => handleEditSession(session)}
-                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                    className="px-3 py-1 text-sm text-link hover:text-link-hover"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteSession(session.id)}
-                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                    className="px-3 py-1 text-sm text-error hover:text-error"
                   >
                     Delete
                   </button>

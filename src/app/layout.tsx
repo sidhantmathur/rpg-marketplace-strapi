@@ -30,15 +30,15 @@ export default function RootLayout({
         <header className="border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <Link href="/" className="text-xl font-bold text-primary">
                 RPG Marketplace
               </Link>
               <div className="flex items-center gap-4">
                 <nav className="flex items-center gap-4">
-                  <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                  <Link href="/" className="text-secondary hover:text-primary">
                     Home
                   </Link>
-                  <Link href="/sessions" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                  <Link href="/sessions" className="text-secondary hover:text-primary">
                     Sessions
                   </Link>
                 </nav>
