@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/hooks/useUser';
 import { Session } from '@prisma/client';
+import SessionCalendar from './SessionCalendar';
 
 const GAME_OPTIONS = [
   'D&D 5e',
@@ -49,13 +50,13 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
   const [formData, setFormData] = useState({
     title: session?.title || '',
     description: session?.description || '',
-    date: session?.date ? new Date(session.date).toISOString().split('T')[0] : '',
+    date: session?.date ? new Date(session.date) : new Date(),
     time: session?.date ? new Date(session.date).toISOString().split('T')[1].slice(0, 5) : '',
-    duration: session?.duration?.toString() || '120',
+    duration: session?.duration || 120,
     game: session?.game || '',
     genre: session?.genre || '',
     experienceLevel: session?.experienceLevel || '',
-    maxParticipants: session?.maxParticipants.toString() || '5',
+    maxParticipants: session?.maxParticipants || 5,
     tags: session?.tags?.map(tag => tag.name) || [] as string[],
     imageUrl: session?.imageUrl || '',
   });
@@ -63,6 +64,26 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
   const [imagePreview, setImagePreview] = useState<string | null>(session?.imageUrl || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingSessions, setExistingSessions] = useState<Date[]>([]);
+
+  // Fetch existing sessions for the DM
+  useEffect(() => {
+    const fetchExistingSessions = async () => {
+      if (!user?.id) return;
+
+      try {
+        const response = await fetch(`/api/session/search?dmId=${user.id}`);
+        if (!response.ok) throw new Error('Failed to fetch sessions');
+        
+        const sessions = await response.json();
+        setExistingSessions(sessions.map((s: any) => new Date(s.date)));
+      } catch (err) {
+        console.error('Error fetching sessions:', err);
+      }
+    };
+
+    fetchExistingSessions();
+  }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,12 +101,12 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
           body: JSON.stringify({
             title: formData.title,
             description: formData.description,
-            date: new Date(`${formData.date}T${formData.time}`).toISOString(),
-            duration: parseInt(formData.duration),
+            date: new Date(`${formData.date.toISOString().split('T')[0]}T${formData.time}`).toISOString(),
+            duration: parseInt(formData.duration.toString()),
             game: formData.game,
             genre: formData.genre,
             experienceLevel: formData.experienceLevel,
-            maxParticipants: parseInt(formData.maxParticipants),
+            maxParticipants: parseInt(formData.maxParticipants.toString()),
             tags: formData.tags,
           }),
         });
@@ -132,9 +153,9 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
           },
           body: JSON.stringify({
             ...formData,
-            date: new Date(`${formData.date}T${formData.time}`).toISOString(),
-            duration: parseInt(formData.duration),
-            maxParticipants: parseInt(formData.maxParticipants),
+            date: new Date(`${formData.date.toISOString().split('T')[0]}T${formData.time}`).toISOString(),
+            duration: parseInt(formData.duration.toString()),
+            maxParticipants: parseInt(formData.maxParticipants.toString()),
             tags: formData.tags,
             userId: user?.id,
           }),
@@ -181,13 +202,13 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       setFormData({
         title: '',
         description: '',
-        date: '',
+        date: new Date(),
         time: '',
-        duration: '120',
+        duration: 120,
         game: '',
         genre: '',
         experienceLevel: '',
-        maxParticipants: '5',
+        maxParticipants: 5,
         tags: [] as string[],
         imageUrl: '',
       });
@@ -214,6 +235,18 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
     setImagePreview(URL.createObjectURL(file));
   };
 
+  const handleDateSelect = (date: Date) => {
+    setFormData({ ...formData, date });
+  };
+
+  const handleTimeSelect = (time: string) => {
+    setFormData({ ...formData, time });
+  };
+
+  const handleDurationSelect = (duration: number) => {
+    setFormData({ ...formData, duration });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -237,51 +270,24 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Date</label>
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            required
-            min={new Date().toISOString().split('T')[0]}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Time</label>
-          <input
-            type="time"
-            value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-2">Session Schedule</label>
+        <SessionCalendar
+          onDateSelect={handleDateSelect}
+          onTimeSelect={handleTimeSelect}
+          onDurationSelect={handleDurationSelect}
+          timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+          existingSessions={existingSessions}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-900">Duration (minutes)</label>
-          <input
-            type="number"
-            value={formData.duration}
-            onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-            min="30"
-            max="480"
-            step="30"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
-          />
-        </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-900">Max Participants</label>
           <input
             type="number"
             value={formData.maxParticipants}
-            onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
             min="1"
             max="20"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
