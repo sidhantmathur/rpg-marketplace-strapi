@@ -103,6 +103,7 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
           {timeSlots.map((time) => (
             <button
               key={time}
+              type="button"
               onClick={() => handleTimeChange(time)}
               className={`p-2 rounded ${
                 selectedTime === time
