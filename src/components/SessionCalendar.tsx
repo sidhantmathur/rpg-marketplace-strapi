@@ -23,6 +23,7 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [duration, setDuration] = useState<number>(120); // Default 2 hours
+  const [isSlotBooked, setIsSlotBooked] = useState<boolean>(false);
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
@@ -36,16 +37,36 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
     { value: 240, label: '4 hours' }
   ];
 
+  const formatTimeDisplay = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return format(date, 'h:mm a');
+  };
+
   const handleDateChange: CalendarProps['onChange'] = (value) => {
     if (!value || Array.isArray(value)) return;
     const zonedDate = toZonedTime(value, timezone);
     setSelectedDate(zonedDate);
     onDateSelect(zonedDate);
+    setIsSlotBooked(false); // Reset booked state when date changes
   };
 
   const handleTimeChange = (time: string) => {
     setSelectedTime(time);
     onTimeSelect(time);
+    
+    // Check if the selected time slot is booked
+    const [hours, minutes] = time.split(':').map(Number);
+    const slotDate = new Date(selectedDate);
+    slotDate.setHours(hours, minutes, 0, 0);
+    
+    const isBooked = existingSessions.some(session => {
+      const sessionDate = new Date(session);
+      return sessionDate.getTime() === slotDate.getTime();
+    });
+    
+    setIsSlotBooked(isBooked);
   };
 
   const handleDurationChange = (value: number) => {
@@ -83,19 +104,25 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
             <button
               key={time}
               onClick={() => handleTimeChange(time)}
-              disabled={isTimeSlotBooked(time)}
               className={`p-2 rounded ${
                 selectedTime === time
-                  ? 'bg-blue-500 text-white'
+                  ? isTimeSlotBooked(time)
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-blue-500 text-white'
                   : isTimeSlotBooked(time)
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
               }`}
             >
-              {time}
+              {formatTimeDisplay(time)}
             </button>
           ))}
         </div>
+        {isSlotBooked && (
+          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+            Note: You already have a session booked at this time
+          </div>
+        )}
       </div>
 
       <div className="mb-4">

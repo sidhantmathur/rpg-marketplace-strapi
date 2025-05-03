@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@/hooks/useUser';
 import { Session } from '@prisma/client';
 import SessionCalendar from './SessionCalendar';
+import { addMinutes } from 'date-fns';
 
 const GAME_OPTIONS = [
   'D&D 5e',
@@ -65,6 +66,7 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingSessions, setExistingSessions] = useState<Date[]>([]);
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
   // Fetch existing sessions for the DM
   useEffect(() => {
@@ -235,16 +237,59 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
     setImagePreview(URL.createObjectURL(file));
   };
 
+  const checkForConflicts = async (date: Date, time: string, duration: number) => {
+    if (!user?.id) return;
+
+    try {
+      const [hours, minutes] = time.split(':').map(Number);
+      const sessionDate = new Date(date);
+      sessionDate.setHours(hours, minutes, 0, 0);
+      const sessionEnd = addMinutes(sessionDate, duration);
+
+      const response = await fetch(`/api/session/search?dmId=${user.id}`);
+      if (!response.ok) return;
+      
+      const sessions = await response.json();
+      const conflicts = sessions.filter((s: any) => {
+        const sessionStart = new Date(s.date);
+        const sessionEndTime = s.duration 
+          ? addMinutes(sessionStart, s.duration)
+          : addMinutes(sessionStart, 120);
+
+        return (
+          (sessionStart <= sessionDate && sessionEndTime > sessionDate) ||
+          (sessionStart < sessionEnd && sessionEndTime >= sessionEnd) ||
+          (sessionDate <= sessionStart && sessionEnd >= sessionEndTime)
+        );
+      });
+
+      if (conflicts.length > 0) {
+        setConflictWarning(`Warning: This time slot overlaps with ${conflicts.length} existing session${conflicts.length > 1 ? 's' : ''}.`);
+      } else {
+        setConflictWarning(null);
+      }
+    } catch (err) {
+      console.error('Error checking for conflicts:', err);
+    }
+  };
+
   const handleDateSelect = (date: Date) => {
     setFormData({ ...formData, date });
+    if (formData.time) {
+      checkForConflicts(date, formData.time, formData.duration);
+    }
   };
 
   const handleTimeSelect = (time: string) => {
     setFormData({ ...formData, time });
+    checkForConflicts(formData.date, time, formData.duration);
   };
 
   const handleDurationSelect = (duration: number) => {
     setFormData({ ...formData, duration });
+    if (formData.time) {
+      checkForConflicts(formData.date, formData.time, duration);
+    }
   };
 
   return (
@@ -279,6 +324,11 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
           timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
           existingSessions={existingSessions}
         />
+        {conflictWarning && (
+          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+            {conflictWarning}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
