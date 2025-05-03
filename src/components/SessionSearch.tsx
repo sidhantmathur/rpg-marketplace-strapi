@@ -74,6 +74,7 @@ export default function SessionSearch() {
     tags: [] as string[],
   });
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
+  const [managingSession, setManagingSession] = useState<Session | null>(null);
 
   const { user } = useUser();
 
@@ -194,6 +195,56 @@ export default function SessionSearch() {
     });
     if (res.ok) {
       fetchSessions();
+    }
+  };
+
+  const handleManageSession = (session: Session) => {
+    setManagingSession(session);
+  };
+
+  const removeParticipant = async (sessionId: number, userId: string) => {
+    if (!confirm('Are you sure you want to remove this participant?')) return;
+    
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove participant');
+      }
+
+      // Refresh sessions and close management modal
+      fetchSessions();
+      setManagingSession(null);
+    } catch (error) {
+      console.error('Error removing participant:', error);
+      alert(error instanceof Error ? error.message : 'Failed to remove participant');
+    }
+  };
+
+  const removeFromWaitlist = async (sessionId: number, userId: string) => {
+    if (!confirm('Are you sure you want to remove this user from the waitlist?')) return;
+    
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove from waitlist');
+      }
+
+      // Refresh sessions and close management modal
+      fetchSessions();
+      setManagingSession(null);
+    } catch (error) {
+      console.error('Error removing from waitlist:', error);
+      alert(error instanceof Error ? error.message : 'Failed to remove from waitlist');
     }
   };
 
@@ -395,6 +446,12 @@ export default function SessionSearch() {
               {user?.id === session.userId && (
                 <div className="flex justify-end space-x-2">
                   <button
+                    onClick={() => handleManageSession(session)}
+                    className="px-3 py-1 text-sm text-link hover:text-link-hover"
+                  >
+                    Manage
+                  </button>
+                  <button
                     onClick={() => handleEditSession(session)}
                     className="px-3 py-1 text-sm text-link hover:text-link-hover"
                   >
@@ -412,6 +469,65 @@ export default function SessionSearch() {
           </div>
         ))}
       </div>
+
+      {/* Session Management Modal */}
+      {managingSession && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-primary">Manage Session: {managingSession.title}</h3>
+              <button
+                onClick={() => setManagingSession(null)}
+                className="text-secondary hover:text-primary"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Participants Section */}
+              <div>
+                <h4 className="text-md font-semibold mb-2">Participants ({managingSession.bookings.length}/{managingSession.maxParticipants})</h4>
+                <div className="space-y-2">
+                  {managingSession.bookings.map(booking => (
+                    <div key={booking.userId} className="flex justify-between items-center p-2 bg-card rounded">
+                      <span>{booking.user?.email}</span>
+                      <button
+                        onClick={() => removeParticipant(managingSession.id, booking.userId)}
+                        className="px-2 py-1 text-sm text-error hover:text-error"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Waitlist Section */}
+              {managingSession.waitlist.length > 0 && (
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Waitlist ({managingSession.waitlist.length})</h4>
+                  <div className="space-y-2">
+                    {managingSession.waitlist.map(waitlist => (
+                      <div key={waitlist.userId} className="flex justify-between items-center p-2 bg-card rounded">
+                        <span>{waitlist.user?.email}</span>
+                        <button
+                          onClick={() => removeFromWaitlist(managingSession.id, waitlist.userId)}
+                          className="px-2 py-1 text-sm text-error hover:text-error"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Session Modal */}
       {editingSession && (
