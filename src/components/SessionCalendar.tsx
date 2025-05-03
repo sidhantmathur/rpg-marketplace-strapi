@@ -88,17 +88,17 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
   return (
     <div className="space-y-4">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-gray-900">Select Date</h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Select Date</h3>
         <Calendar
           onChange={handleDateChange}
           value={selectedDate}
           minDate={new Date()}
-          className="border rounded-lg p-2 [&_.react-calendar__tile]:text-gray-900 [&_.react-calendar__tile--weekend]:text-gray-900 [&_.react-calendar__tile--now]:text-gray-900 [&_.react-calendar__tile--active]:text-white [&_.react-calendar__tile--hasActive]:text-white"
+          className="border border-border rounded-lg p-2 [&_.react-calendar__tile]:text-primary [&_.react-calendar__tile--weekend]:text-primary [&_.react-calendar__tile--now]:text-primary [&_.react-calendar__tile--active]:text-primary-foreground [&_.react-calendar__tile--hasActive]:text-primary-foreground [&_.react-calendar__tile--active]:bg-primary [&_.react-calendar__tile--hasActive]:bg-primary"
         />
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-gray-900">Select Time</h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Select Time</h3>
         <div className="grid grid-cols-4 gap-2">
           {timeSlots.map((time) => (
             <button
@@ -107,11 +107,11 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
               className={`p-2 rounded ${
                 selectedTime === time
                   ? isTimeSlotBooked(time)
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-blue-500 text-white'
+                    ? 'bg-warning text-primary-foreground'
+                    : 'bg-primary text-primary-foreground'
                   : isTimeSlotBooked(time)
-                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                  ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                  : 'bg-card hover:bg-muted text-primary'
               }`}
             >
               {formatTimeDisplay(time)}
@@ -119,28 +119,28 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
           ))}
         </div>
         {isSlotBooked && (
-          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+          <div className="mt-2 p-2 bg-warning/10 border border-warning/20 rounded text-warning">
             Note: You already have a session booked at this time
           </div>
         )}
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-gray-900">Session Duration</h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Session Duration</h3>
         <select
           value={duration}
           onChange={(e) => handleDurationChange(Number(e.target.value))}
-          className="w-full p-2 border rounded text-gray-900"
+          className="w-full p-2 border border-border rounded text-primary bg-input"
         >
           {durationOptions.map((option) => (
-            <option key={option.value} value={option.value} className="text-gray-900">
+            <option key={option.value} value={option.value} className="text-primary">
               {option.label}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="text-sm text-gray-700">
+      <div className="text-sm text-secondary">
         Timezone: {timezone}
       </div>
     </div>

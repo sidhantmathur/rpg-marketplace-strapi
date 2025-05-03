@@ -295,28 +295,28 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-900">Title</label>
+        <label className="block text-sm font-medium text-secondary">Title</label>
         <input
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900">Description</label>
+        <label className="block text-sm font-medium text-secondary">Description</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           rows={3}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Session Schedule</label>
+        <label className="block text-sm font-medium text-secondary mb-2">Session Schedule</label>
         <SessionCalendar
           onDateSelect={handleDateSelect}
           onTimeSelect={handleTimeSelect}
@@ -325,7 +325,7 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
           existingSessions={existingSessions}
         />
         {conflictWarning && (
-          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+          <div className="mt-2 p-2 bg-warning/10 border border-warning/20 rounded text-warning">
             {conflictWarning}
           </div>
         )}
@@ -333,26 +333,26 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900">Max Participants</label>
+          <label className="block text-sm font-medium text-secondary">Max Participants</label>
           <input
             type="number"
             value={formData.maxParticipants}
             onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
             min="1"
             max="20"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+            className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900">Game</label>
+          <label className="block text-sm font-medium text-secondary">Game</label>
           <select
             value={formData.game}
             onChange={(e) => setFormData({ ...formData, game: e.target.value })}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+            className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           >
             <option value="">Select a game</option>
             {GAME_OPTIONS.map(game => (
@@ -362,12 +362,12 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-900">Genre</label>
+          <label className="block text-sm font-medium text-secondary">Genre</label>
           <select
             value={formData.genre}
             onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+            className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           >
             <option value="">Select a genre</option>
             {GENRE_OPTIONS.map(genre => (
@@ -378,12 +378,12 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900">Experience Level</label>
+        <label className="block text-sm font-medium text-secondary">Experience Level</label>
         <select
           value={formData.experienceLevel}
           onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         >
           <option value="">Select experience level</option>
           {EXPERIENCE_LEVELS.map(level => (
@@ -393,23 +393,23 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900">Tags (comma separated)</label>
+        <label className="block text-sm font-medium text-secondary">Tags (comma separated)</label>
         <input
           type="text"
           value={formData.tags.join(', ')}
           onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()) })}
           placeholder="e.g. roleplay, combat, exploration"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900">Session Image</label>
+        <label className="block text-sm font-medium text-secondary">Session Image</label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
+          className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
         {imagePreview && (
           <img
@@ -424,15 +424,15 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 text-sm font-medium text-secondary bg-card border border-border rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          Create Session
+          {session ? 'Update Session' : 'Create Session'}
         </button>
       </div>
     </form>
