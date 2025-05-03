@@ -81,44 +81,67 @@ export async function POST(req: NextRequest) {
 
 
 export async function DELETE(req: NextRequest) {
-  const { sessionId, userId } = await req.json();
-
-  if (!sessionId || !userId) {
-    return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-  }
-
   try {
-    const booking = await prisma.booking.delete({
-      where: { sessionId_userId: { sessionId, userId } },
-    });
+    const { sessionId, userId } = await req.json();
 
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { dm: true },
-    });
-
-    const [user, dmProfile] = await Promise.all([
-      prisma.profile.findUnique({ where: { id: userId } }),
-      prisma.profile.findUnique({ where: { id: session?.dm.userId } }),
-    ]);
-
-    if (session && user && dmProfile) {
-      await sendEmail({
-        to: user.email,
-        subject: `Booking Cancelled: ${session.title}`,
-        html: `<p>You have successfully left the session <strong>${session.title}</strong> scheduled on ${new Date(session.date).toLocaleString()}.</p>`,
-      });
-
-      await sendEmail({
-        to: dmProfile.email,
-        subject: `Booking Cancelled: ${session.title}`,
-        html: `<p>${user.email} cancelled their booking for your session <strong>${session.title}</strong> scheduled on ${new Date(session.date).toLocaleString()}.</p>`,
-      });
+    if (!sessionId || !userId) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error('Booking cancellation error:', err);
-    return NextResponse.json({ error: 'Could not leave session' }, { status: 500 });
+    const session = await prisma.session.findUnique({
+      where: { id: Number(sessionId) },
+      include: { bookings: true, waitlist: true },
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    const booking = await prisma.booking.delete({
+      where: {
+        sessionId_userId: {
+          sessionId: Number(sessionId),
+          userId,
+        },
+      },
+    });
+
+    // If there are people on the waitlist, notify the first person
+    if (session.waitlist.length > 0) {
+      const firstWaitlistEntry = session.waitlist[0];
+      const waitlistUser = await prisma.profile.findUnique({
+        where: { id: firstWaitlistEntry.userId },
+      });
+
+      if (waitlistUser) {
+        // Send notification to waitlist user
+        await sendEmail({
+          to: waitlistUser.email,
+          subject: 'Session Spot Available',
+          html: `
+            <p>A spot has opened up in the session "${session.title}"!</p>
+            <p>Click <a href="/session/${session.id}">here</a> to book your spot before it's gone.</p>
+          `,
+        });
+
+        // Remove from waitlist
+        await prisma.waitlist.delete({
+          where: {
+            sessionId_userId: {
+              sessionId: Number(sessionId),
+              userId: firstWaitlistEntry.userId,
+            },
+          },
+        });
+      }
+    }
+
+    return NextResponse.json(booking);
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

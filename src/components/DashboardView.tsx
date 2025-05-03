@@ -28,11 +28,14 @@ type Session = {
   imageUrl?: string;
   userId: string;
   maxParticipants: number;
-  dm: { name: string; userId: string; ratingAvg: number; ratingCount: number };  bookings: { userId: string; user?: { email: string } }[];
+  dm: { name: string; userId: string; ratingAvg: number; ratingCount: number };
+  bookings: { userId: string; user?: { email: string } }[];
+  waitlist: { userId: string; user?: { email: string } }[];
   reviews?: Review[];
 };
 
 export default function Home() {
+  console.log('DashboardView component rendered');
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading } = useProfile();
@@ -69,9 +72,10 @@ export default function Home() {
 
   // Fetch all sessions
   const fetchSessions = async () => {
-    const res = await fetch('/api/session');
+    const res = await fetch('/api/session/search');
     if (res.ok) {
       const data: Session[] = await res.json();
+      console.log('Fetched sessions:', data);
       setSessions(data);
     }
   };
@@ -82,16 +86,19 @@ export default function Home() {
     const res = await fetch(`/api/user-joined-sessions/${user.id}`);
     if (res.ok) {
       const data = await res.json();
-      setJoinedSessionIds(data.map((b: any) => b.sessionId));
+      console.log('Fetched joined sessions:', data);
+      setJoinedSessionIds(data.map((b: any) => b.session.id));
     }
   };
 
   useEffect(() => {
+    console.log('useEffect running, user:', user);
     fetchDMs();
     fetchSessions();
   }, []);
 
   useEffect(() => {
+    console.log('useEffect for user running, user:', user);
     if (user) fetchJoinedSessions();
   }, [user]);
 
@@ -195,7 +202,10 @@ export default function Home() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, userId: user.id }),
     });
-    if (res.ok) setJoinedSessionIds(prev => [...prev, sessionId]);
+    if (res.ok) {
+      setJoinedSessionIds(prev => [...prev, sessionId]);
+      fetchSessions(); // Refresh sessions to update participant count
+    }
   };
 
   // Leave a session
@@ -207,6 +217,34 @@ export default function Home() {
       body: JSON.stringify({ sessionId, userId: user.id }),
     });
     if (res.ok) setJoinedSessionIds(prev => prev.filter(id => id !== sessionId));
+  };
+
+  // Join waitlist
+  const joinWaitlist = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      // Refresh sessions to update waitlist status
+      fetchSessions();
+    }
+  };
+
+  // Leave waitlist
+  const leaveWaitlist = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/waitlist', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      // Refresh sessions to update waitlist status
+      fetchSessions();
+    }
   };
 
   // Delete a session (DM only)
@@ -347,9 +385,25 @@ export default function Home() {
           {sessions.map(session => {
             const isFull = session.bookings.length >= session.maxParticipants;
             const hasJoined = joinedSessionIds.includes(session.id);
-            const isHost    = session.userId === user.id;               // you created it
-            const isPlayer  = profile?.roles.includes('user') || profile?.roles.includes('dm'); // can join
-            const canBook   = isPlayer && !hasJoined && !isFull && !isHost;
+            const isOnWaitlist = session.waitlist.some(w => w.userId === user?.id);
+            const isHost = session.userId === user?.id;
+            const isPlayer = profile?.roles.includes('user') || profile?.roles.includes('dm');
+            const canBook = !hasJoined && !isFull && !isHost && !isOnWaitlist;
+            const canJoinWaitlist = !hasJoined && isFull && !isHost && !isOnWaitlist;
+
+            console.log('Session conditions:', {
+              sessionId: session.id,
+              isFull,
+              hasJoined,
+              isOnWaitlist,
+              isHost,
+              canBook,
+              canJoinWaitlist,
+              bookings: session.bookings,
+              maxParticipants: session.maxParticipants,
+              userId: user?.id,
+              sessionUserId: session.userId
+            });
 
             return (
               <li key={session.id} className="border p-2 rounded">
@@ -369,23 +423,49 @@ export default function Home() {
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.bookings.length} / {session.maxParticipants} participants
+                  {session.waitlist.length > 0 && (
+                    <span className="ml-2 text-yellow-600">
+                      ({session.waitlist.length} on waitlist)
+                    </span>
+                  )}
                 </div>
                 {canBook && (
-                <button
-                  onClick={() => joinSession(session.id)}
-                  className="mt-2 text-sm text-blue-600 underline"
+                  <button
+                    onClick={() => joinSession(session.id)}
+                    className="mt-2 text-sm text-blue-600 underline"
                   >
                     Join Session
                   </button>
                 )}
 
-                {isPlayer && hasJoined && (
-                  <div className="mt-2 text-sm text-green-600">
-                    ✓ You’ve joined this session
+                {canJoinWaitlist && (
+                  <button
+                    onClick={() => joinWaitlist(session.id)}
+                    className="mt-2 text-sm text-yellow-600 underline"
+                  >
+                    Join Waitlist
+                  </button>
+                )}
+
+                {isOnWaitlist && (
+                  <div className="mt-2">
+                    <span className="text-sm text-yellow-600">✓ You're on the waitlist</span>
+                    <button
+                      onClick={() => leaveWaitlist(session.id)}
+                      className="ml-2 text-sm text-red-600 underline"
+                    >
+                      Leave Waitlist
+                    </button>
                   </div>
                 )}
 
-                {isPlayer && !hasJoined && isFull && (
+                {isPlayer && hasJoined && (
+                  <div className="mt-2 text-sm text-green-600">
+                    ✓ You've joined this session
+                  </div>
+                )}
+
+                {isPlayer && !hasJoined && isFull && !isOnWaitlist && (
                   <div className="mt-2 text-sm text-red-600">Session is full</div>
                 )}
 
@@ -449,10 +529,10 @@ export default function Home() {
         </section>
       )}
 
-      {/* Sessions You’re Hosting */}
+      {/* Sessions You're Hosting */}
       {profile?.roles.includes('dm') && (
         <section className="mt-10">
-          <h2 className="font-semibold mb-2">Sessions You’re Hosting</h2>
+          <h2 className="font-semibold mb-2">Sessions You're Hosting</h2>
           <ul className="space-y-2">
             {sessions
               .filter(session => session.userId === user.id)

@@ -45,6 +45,12 @@ interface Session extends Omit<PrismaSession, 'imageUrl'> {
       email: string;
     };
   }>;
+  waitlist: Array<{
+    userId: string;
+    user: {
+      email: string;
+    };
+  }>;
   tags: Array<{
     id: number;
     name: string;
@@ -67,6 +73,7 @@ export default function SessionSearch() {
     dateTo: '',
     tags: [] as string[],
   });
+  const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
 
   const { user } = useUser();
 
@@ -85,9 +92,19 @@ export default function SessionSearch() {
     setSessions(data);
   };
 
+  const fetchJoinedSessions = async () => {
+    if (!user) return;
+    const res = await fetch(`/api/user-joined-sessions/${user.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setJoinedSessionIds(data.map((b: any) => b.session.id));
+    }
+  };
+
   useEffect(() => {
     fetchSessions();
-  }, [filters]);
+    if (user) fetchJoinedSessions();
+  }, [filters, user]);
 
   const handleSessionCreated = () => {
     setShowCreateForm(false);
@@ -128,6 +145,56 @@ export default function SessionSearch() {
 
   const handleEditSession = (session: Session) => {
     setEditingSession(session);
+  };
+
+  const joinSession = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      setJoinedSessionIds(prev => [...prev, sessionId]);
+      fetchSessions();
+    }
+  };
+
+  const leaveSession = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/bookings', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      setJoinedSessionIds(prev => prev.filter(id => id !== sessionId));
+      fetchSessions();
+    }
+  };
+
+  const joinWaitlist = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      fetchSessions();
+    }
+  };
+
+  const leaveWaitlist = async (sessionId: number) => {
+    if (!user) return;
+    const res = await fetch('/api/waitlist', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, userId: user.id }),
+    });
+    if (res.ok) {
+      fetchSessions();
+    }
   };
 
   return (
@@ -289,6 +356,42 @@ export default function SessionSearch() {
                   </span>
                 ))}
               </div>
+              <div className="text-sm text-muted mb-2">
+                {session.bookings.length} / {session.maxParticipants} participants
+                {session.waitlist.length > 0 && (
+                  <span className="ml-2 text-yellow-600">
+                    ({session.waitlist.length} on waitlist)
+                  </span>
+                )}
+              </div>
+              {user?.id !== session.userId && (
+                <div className="flex justify-end space-x-2">
+                  {!joinedSessionIds.includes(session.id) && session.bookings.length < session.maxParticipants && (
+                    <button
+                      onClick={() => joinSession(session.id)}
+                      className="px-3 py-1 text-sm text-link hover:text-link-hover"
+                    >
+                      Join Session
+                    </button>
+                  )}
+                  {!joinedSessionIds.includes(session.id) && session.bookings.length >= session.maxParticipants && (
+                    <button
+                      onClick={() => joinWaitlist(session.id)}
+                      className="px-3 py-1 text-sm text-yellow-600 hover:text-yellow-700"
+                    >
+                      Join Waitlist
+                    </button>
+                  )}
+                  {joinedSessionIds.includes(session.id) && (
+                    <button
+                      onClick={() => leaveSession(session.id)}
+                      className="px-3 py-1 text-sm text-error hover:text-error"
+                    >
+                      Leave Session
+                    </button>
+                  )}
+                </div>
+              )}
               {user?.id === session.userId && (
                 <div className="flex justify-end space-x-2">
                   <button

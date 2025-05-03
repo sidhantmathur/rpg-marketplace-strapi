@@ -102,6 +102,14 @@ export async function GET() {
           },
         },
       },
+      waitlist: {
+        select: {
+          userId: true,
+          user: {
+            select: { email: true },
+          },
+        },
+      },
     },
   });
 

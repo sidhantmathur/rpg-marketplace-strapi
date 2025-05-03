@@ -13,46 +13,36 @@ const searchParamsSchema = z.object({
   searchTerm: z.string().optional(),
 });
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    // Parse and validate search parameters
-    const searchParams = Object.fromEntries(request.nextUrl.searchParams);
-    const validatedParams = searchParamsSchema.parse(searchParams);
+    const searchParams = req.nextUrl.searchParams;
+    const searchTerm = searchParams.get('searchTerm');
+    const game = searchParams.get('game');
+    const genre = searchParams.get('genre');
+    const experienceLevel = searchParams.get('experienceLevel');
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    const tags = searchParams.get('tags')?.split(',') || [];
+    const dmId = searchParams.get('dmId');
 
-    // Build the where clause for Prisma
     const where: any = {
-      status: 'upcoming', // Only show upcoming sessions by default
+      status: 'upcoming',
     };
 
-    // Date range filter
-    if (validatedParams.dateFrom || validatedParams.dateTo) {
-      where.date = {};
-      if (validatedParams.dateFrom) {
-        where.date.gte = new Date(validatedParams.dateFrom);
-      }
-      if (validatedParams.dateTo) {
-        where.date.lte = new Date(validatedParams.dateTo);
-      }
+    if (searchTerm) {
+      where.OR = [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+      ];
     }
 
-    // Game filter
-    if (validatedParams.game) {
-      where.game = validatedParams.game;
-    }
-
-    // Genre filter
-    if (validatedParams.genre) {
-      where.genre = validatedParams.genre;
-    }
-
-    // Experience level filter
-    if (validatedParams.experienceLevel) {
-      where.experienceLevel = validatedParams.experienceLevel;
-    }
-
-    // Tags filter
-    if (validatedParams.tags) {
-      const tags = validatedParams.tags.split(',').map(tag => tag.trim());
+    if (game) where.game = game;
+    if (genre) where.genre = genre;
+    if (experienceLevel) where.experienceLevel = experienceLevel;
+    if (dateFrom) where.date = { ...where.date, gte: new Date(dateFrom) };
+    if (dateTo) where.date = { ...where.date, lte: new Date(dateTo) };
+    if (dmId) where.dmId = Number(dmId);
+    if (tags.length > 0) {
       where.tags = {
         some: {
           name: {
@@ -62,48 +52,40 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Search term filter (searches in title and description)
-    if (validatedParams.searchTerm) {
-      where.OR = [
-        { title: { contains: validatedParams.searchTerm, mode: 'insensitive' } },
-        { description: { contains: validatedParams.searchTerm, mode: 'insensitive' } },
-      ];
-    }
-
-    // Execute the query
     const sessions = await prisma.session.findMany({
       where,
-      orderBy: { date: 'asc' },
       include: {
-        dm: { select: { name: true } },
+        dm: true,
         bookings: {
-          select: {
-            userId: true,
+          include: {
             user: {
-              select: { email: true },
+              select: {
+                email: true,
+              },
             },
           },
         },
-        tags: {
-          select: {
-            id: true,
-            name: true,
+        waitlist: {
+          include: {
+            user: {
+              select: {
+                email: true,
+              },
+            },
           },
         },
+        tags: true,
+      },
+      orderBy: {
+        date: 'asc',
       },
     });
 
     return NextResponse.json(sessions);
   } catch (error) {
-    console.error('Search error:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid search parameters', details: error.errors },
-        { status: 400 }
-      );
-    }
+    console.error('Error searching sessions:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

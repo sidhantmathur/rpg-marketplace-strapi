@@ -27,6 +27,7 @@ model Session {
   userId          String
   maxParticipants Int           @default(5)
   bookings        Booking[]
+  waitlist        Waitlist[]
   dm              DungeonMaster @relation(fields: [dmId], references: [id])
   user            Profile       @relation("ProfileSessions", fields: [userId], references: [id])
   reviews         Review[]
@@ -50,6 +51,7 @@ model Profile {
   reviewsAuthored Review[]       @relation("ReviewAuthor")
   reviewsReceived Review[]       @relation("ReviewTarget")
   reviewReports   ReviewReport[]
+  waitlist        Waitlist[]
 }
 
 model Booking {
@@ -94,4 +96,15 @@ model Tag {
   name      String    @unique
   sessions  Session[] @relation("SessionTags")
   createdAt DateTime  @default(now())
+}
+
+model Waitlist {
+  id        Int      @id @default(autoincrement())
+  sessionId Int
+  userId    String
+  createdAt DateTime @default(now())
+  session   Session  @relation(fields: [sessionId], references: [id])
+  user      Profile  @relation(fields: [userId], references: [id])
+
+  @@unique([sessionId, userId])
 }
