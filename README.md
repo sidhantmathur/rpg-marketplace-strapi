@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RPG Marketplace
 
-## Getting Started
+A modern platform for connecting Dungeon Masters with players for tabletop role-playing game sessions.
 
-First, run the development server:
+## 🚀 Current Status
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The platform is in active development with core features implemented. We're working towards a complete MVP by the end of Month 1.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ✅ Implemented Features
+- Basic marketplace structure
+- Session search and filtering
+- Categories and tags system
+- Basic booking system
+- Email notifications
+- Basic review system
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🚧 In Development
+- Session scheduling and capacity management
+- Payment integration
+- User profiles and dashboards
+- Mobile responsiveness
+- Enhanced DM profiles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎯 Upcoming Features
+- Community forums
+- In-app messaging
+- Advanced analytics
+- Internationalization support
+- Progressive Web App capabilities
 
-## Learn More
+## 🛠️ Tech Stack
+- **Frontend**: Next.js, React, TailwindCSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: Supabase
+- **Email**: Resend
+- **Payments**: Coming soon
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Getting Started
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📅 Development Timeline
+- **Month 1**: MVP Development (Current)
+- **Month 2**: Feature Enhancement
+- **Month 3**: Polish and Scale
 
-## Deploy on Vercel
+## 🤝 Contributing
+Currently, this is a private project. We'll open up contributions once we reach a stable release.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+Private - All rights reserved
