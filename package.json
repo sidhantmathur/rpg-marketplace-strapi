@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint:strict": "eslint . --ext .ts,.tsx --max-warnings 0",
     "postinstall": "prisma generate",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
@@ -19,7 +21,8 @@
     "test:coverage": "jest --coverage",
     "analyze": "ANALYZE=true next build",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "predeploy": "npm run lint:strict && npm run type-check && npm run format:check && npm run test"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
