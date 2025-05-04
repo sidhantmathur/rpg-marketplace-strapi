@@ -2,6 +2,7 @@
 import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { sendEmail } from '@/utils/sendEmail'
 
 // Prisma singleton
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
@@ -119,6 +120,49 @@ export async function DELETE(request: NextRequest, context: any) {
       return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
     }
 
+    // Check if this is a user removal request
+    const { userId } = await request.json();
+    if (userId) {
+      // Get session and user info for notifications
+      const [session, user] = await Promise.all([
+        prismaSingleton.session.findUnique({
+          where: { id },
+          include: { dm: true }
+        }),
+        prismaSingleton.profile.findUnique({
+          where: { id: userId }
+        })
+      ]);
+
+      if (!session) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+
+      // Delete the booking
+      await prismaSingleton.booking.delete({
+        where: {
+          sessionId_userId: {
+            sessionId: id,
+            userId
+          }
+        }
+      });
+
+      // Send notification to the removed user
+      if (user?.email) {
+        await sendEmail({
+          to: user.email,
+          subject: `Removed from Session: ${session.title}`,
+          html: `<p>You have been removed from the session <strong>${session.title}</strong> scheduled on ${new Date(
+            session.date
+          ).toLocaleString()}.</p>`,
+        });
+      }
+
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+
+    // If no userId provided, delete the entire session
     // First delete all related bookings
     console.log('Deleting related bookings...')
     await prismaSingleton.booking.deleteMany({

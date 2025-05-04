@@ -46,7 +46,9 @@ export async function POST(req: NextRequest) {
 
     const [user, dmProfile] = await Promise.all([
       prisma.profile.findUnique({ where: { id: userId } }),
-      prisma.profile.findUnique({ where: { id: session.dm.userId } }),
+      prisma.dungeonMaster.findUnique({
+        where: { id: session.dmId },
+      }).then(dm => dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null),
     ]);
 
     if (user && dmProfile) {
@@ -106,33 +108,47 @@ export async function DELETE(req: NextRequest) {
       },
     });
 
-    // If there are people on the waitlist, notify the first person
+    // Get user and DM info for notifications
+    const [user, dmProfile] = await Promise.all([
+      prisma.profile.findUnique({ where: { id: userId } }),
+      prisma.dungeonMaster.findUnique({
+        where: { id: session.dmId },
+      }).then(dm => dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null),
+    ]);
+
+    // Notify DM that user left
+    if (dmProfile?.email && user) {
+      await sendEmail({
+        to: dmProfile.email,
+        subject: `User Left Session: ${session.title}`,
+        html: `<p>${user.email} has left your session <strong>${session.title}</strong> scheduled on ${new Date(
+          session.date
+        ).toLocaleString()}.</p>`,
+      });
+    }
+
+    // If there are people on the waitlist, notify all of them
     if (session.waitlist.length > 0) {
-      const firstWaitlistEntry = session.waitlist[0];
-      const waitlistUser = await prisma.profile.findUnique({
-        where: { id: firstWaitlistEntry.userId },
+      const waitlistUsers = await prisma.profile.findMany({
+        where: {
+          id: {
+            in: session.waitlist.map(w => w.userId)
+          }
+        }
       });
 
-      if (waitlistUser) {
-        // Send notification to waitlist user
-        await sendEmail({
-          to: waitlistUser.email,
-          subject: 'Session Spot Available',
-          html: `
-            <p>A spot has opened up in the session "${session.title}"!</p>
-            <p>Click <a href="/session/${session.id}">here</a> to book your spot before it's gone.</p>
-          `,
-        });
-
-        // Remove from waitlist
-        await prisma.waitlist.delete({
-          where: {
-            sessionId_userId: {
-              sessionId: Number(sessionId),
-              userId: firstWaitlistEntry.userId,
-            },
-          },
-        });
+      // Send notification to all waitlist users
+      for (const waitlistUser of waitlistUsers) {
+        if (waitlistUser.email) {
+          await sendEmail({
+            to: waitlistUser.email,
+            subject: 'Session Spot Available',
+            html: `<p>A spot has become available in the session <strong>${session.title}</strong> scheduled on ${new Date(
+              session.date
+            ).toLocaleString()}.</p>
+            <p>Hurry to book your spot!</p>`,
+          });
+        }
       }
     }
 
