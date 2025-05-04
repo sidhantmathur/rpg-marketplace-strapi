@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import CreateSessionForm from "./CreateSessionForm";
 import { useUser } from "@/hooks/useUser";
 import { Session as PrismaSession } from "@prisma/client";
+import Image from "next/image";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -413,10 +414,13 @@ export default function SessionSearch() {
           >
             <div className="aspect-w-16 aspect-h-9">
               {session.imageUrl ? (
-                <img
-                  src={session.imageUrl}
+                <Image
+                  src={session.imageUrl || "/placeholder.png"}
                   alt={session.title}
-                  className="w-full h-full object-cover"
+                  width={400}
+                  height={400}
+                  quality={100}
+                  className="w-full h-full object-cover rounded"
                 />
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">

@@ -85,7 +85,9 @@ export default function SignupPage() {
     }
 
     const errorData = await res.json();
-    console.error("Profile creation failed:", errorData);
+    if (errorData) {
+      console.error("Error creating profile:", errorData);
+    }
 
     router.push("/");
   };

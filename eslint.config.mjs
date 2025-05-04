@@ -87,7 +87,19 @@ export default [
       globals: {
         React: "readonly",
         JSX: "readonly",
-        NodeJS: "readonly"
+        NodeJS: "readonly",
+        process: "readonly",
+        console: "readonly",
+        document: "readonly",
+        window: "readonly",
+        localStorage: "readonly",
+        fetch: "readonly",
+        alert: "readonly",
+        confirm: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly"
       }
     },
     plugins: {
@@ -125,13 +137,18 @@ export default [
   },
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-    },
+    languageOptions: {
+      globals: {
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        jest: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly"
+      }
+    }
   },
   {
     files: ["src/generated/**/*.ts"],

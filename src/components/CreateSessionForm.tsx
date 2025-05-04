@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { Session } from "@prisma/client";
 import SessionCalendar from "./SessionCalendar";
 import { addMinutes } from "date-fns";
+import Image from "next/image";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -466,10 +467,13 @@ export default function CreateSessionForm({
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
         {imagePreview && (
-          <img
+          <Image
             src={imagePreview}
             alt="Preview"
-            className="mt-2 w-32 h-32 object-cover rounded"
+            width={400}
+            height={400}
+            quality={100}
+            className="w-full h-full object-cover rounded"
           />
         )}
       </div>

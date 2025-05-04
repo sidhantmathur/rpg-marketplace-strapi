@@ -35,7 +35,6 @@ type Session = {
 };
 
 export default function Home() {
-  console.log("DashboardView component rendered");
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading } = useProfile();
@@ -75,8 +74,11 @@ export default function Home() {
     const res = await fetch("/api/session/search");
     if (res.ok) {
       const data: Session[] = await res.json();
-      console.log("Fetched sessions:", data);
-      setSessions(data);
+      if (error) {
+        console.error("Error fetching sessions:", error);
+      } else {
+        setSessions(data);
+      }
     }
   };
 
@@ -86,19 +88,20 @@ export default function Home() {
     const res = await fetch(`/api/user-joined-sessions/${user.id}`);
     if (res.ok) {
       const data = await res.json();
-      console.log("Fetched joined sessions:", data);
-      setJoinedSessionIds(data.map((b: any) => b.session.id));
+      if (error) {
+        console.error("Error fetching joined sessions:", error);
+      } else {
+        setJoinedSessionIds(data.map((b: any) => b.session.id));
+      }
     }
   };
 
   useEffect(() => {
-    console.log("useEffect running, user:", user);
     fetchDMs();
     fetchSessions();
   }, []);
 
   useEffect(() => {
-    console.log("useEffect for user running, user:", user);
     if (user) fetchJoinedSessions();
   }, [user]);
 
@@ -333,10 +336,12 @@ export default function Home() {
               className="border p-2 rounded"
             />
             {sessionPreview && (
-              <img
+              <Image
                 src={sessionPreview}
                 alt="Preview"
-                className="w-32 h-32 object-cover rounded"
+                width={100}
+                height={100}
+                className="w-24 h-24 object-cover rounded"
               />
             )}
             <input
@@ -399,29 +404,16 @@ export default function Home() {
             const canJoinWaitlist =
               !hasJoined && isFull && !isHost && !isOnWaitlist;
 
-            console.log("Session conditions:", {
-              sessionId: session.id,
-              isFull,
-              hasJoined,
-              isOnWaitlist,
-              isHost,
-              canBook,
-              canJoinWaitlist,
-              bookings: session.bookings,
-              maxParticipants: session.maxParticipants,
-              userId: user?.id,
-              sessionUserId: session.userId,
-            });
-
             return (
               <li key={session.id} className="border p-2 rounded">
                 {session.imageUrl && (
                   <Image
-                    src={session.imageUrl}
+                    src={session.imageUrl || "/placeholder.png"}
                     alt={session.title}
                     width={400}
-                    height={200}
-                    className="object-cover rounded mb-2"
+                    height={400}
+                    quality={100}
+                    className="w-full h-full object-cover rounded"
                   />
                 )}
                 <div className="font-semibold">{session.title}</div>
@@ -522,11 +514,12 @@ export default function Home() {
                 <li key={session.id} className="border p-2 rounded">
                   {session.imageUrl && (
                     <Image
-                      src={session.imageUrl}
+                      src={session.imageUrl || "/placeholder.png"}
                       alt={session.title}
                       width={400}
-                      height={200}
-                      className="object-cover rounded mb-2"
+                      height={400}
+                      quality={100}
+                      className="w-full h-full object-cover rounded"
                     />
                   )}
                   <div className="font-semibold">{session.title}</div>
@@ -561,11 +554,12 @@ export default function Home() {
                 <li key={session.id} className="border p-2 rounded">
                   {session.imageUrl && (
                     <Image
-                      src={session.imageUrl}
+                      src={session.imageUrl || "/placeholder.png"}
                       alt={session.title}
                       width={400}
-                      height={200}
-                      className="object-cover rounded mb-2"
+                      height={400}
+                      quality={100}
+                      className="w-full h-full object-cover rounded"
                     />
                   )}
                   <div className="font-semibold">{session.title}</div>
