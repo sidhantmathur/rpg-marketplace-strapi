@@ -78,7 +78,16 @@ export default [
       
       // React rules
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn"
+      "react-hooks/exhaustive-deps": "warn",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+      
+      // Next.js rules
+      "@next/next/no-html-link-for-pages": "error",
+      "@next/next/no-img-element": "warn",
+      "@next/next/no-page-custom-font": "warn",
+      "@next/next/no-sync-scripts": "warn",
+      "@next/next/no-typos": "error"
     }
   },
   {

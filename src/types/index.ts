@@ -1,10 +1,10 @@
 export interface Profile {
   id: string;
-  username: string;
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-  updated_at: string;
-  rating: number;
-  total_reviews: number;
+  email: string;
+  roles: string[];
+  createdAt: string;
+  updatedAt: string;
+  avatarUrl?: string;
+  ratingAvg: number;
+  ratingCount: number;
 }

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { useProfile } from "@/hooks/useProfile";
-import RatingBadge from "@/components/RatingBadge";
 import ReviewModal from "@/components/ReviewModal";
 
 type Review = {
@@ -37,7 +36,7 @@ type Session = {
 export default function Home() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading } = useProfile(user?.id);
 
   // DM state
   const [name, setName] = useState("");
@@ -61,7 +60,7 @@ export default function Home() {
   const [sessionPreview, setSessionPreview] = useState<string | null>(null);
 
   // Fetch all sessions
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       const res = await fetch("/api/session/search");
       if (!res.ok) {
@@ -72,10 +71,10 @@ export default function Home() {
     } catch (err) {
       console.error("Error fetching sessions:", err);
     }
-  };
+  }, []);
 
   // Fetch all DMs
-  const fetchDMs = async () => {
+  const fetchDMs = useCallback(async () => {
     try {
       const res = await fetch("/api/dm");
       if (!res.ok) {
@@ -86,7 +85,22 @@ export default function Home() {
     } catch (err) {
       console.error("Error fetching DMs:", err);
     }
-  };
+  }, []);
+
+  // Add fetchJoinedSessions function
+  const fetchJoinedSessions = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/user-joined-sessions/${user.id}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json() as { session: { id: number } }[];
+      setJoinedSessionIds(data.map(booking => booking.session.id));
+    } catch (err) {
+      console.error("Error fetching joined sessions:", err);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     void (async () => {
@@ -96,26 +110,117 @@ export default function Home() {
         console.error("Error in initial data fetch:", err);
       }
     })();
-  }, []);
+  }, [fetchDMs, fetchSessions]);
 
   useEffect(() => {
-    if (user) {
-      const fetchJoinedSessions = async () => {
-        try {
-          const res = await fetch(`/api/user-joined-sessions/${user.id}`);
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          const data = await res.json() as { session: { id: number } }[];
-          setJoinedSessionIds(data.map(booking => booking.session.id));
-        } catch (err) {
-          console.error("Error fetching joined sessions:", err);
-        }
-      };
-
+    if (user?.id) {
       void fetchJoinedSessions();
     }
-  }, [user]);
+  }, [user?.id, fetchJoinedSessions]);
+
+  // Fix useCallback dependencies
+  const joinSession = useCallback(async (sessionId: number) => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to join session: ${res.status}`);
+      }
+      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+    } catch (err) {
+      console.error("Error joining session:", err instanceof Error ? err.message : "Unknown error");
+    }
+  }, [user?.id, fetchSessions, fetchJoinedSessions]);
+
+  const leaveSession = useCallback(async (sessionId: number) => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to leave session: ${res.status}`);
+      }
+      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+    } catch (err) {
+      console.error("Error leaving session:", err instanceof Error ? err.message : "Unknown error");
+    }
+  }, [user?.id, fetchSessions, fetchJoinedSessions]);
+
+  const joinWaitlist = useCallback(async (sessionId: number) => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/waitlist/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to join waitlist: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error joining waitlist:", err instanceof Error ? err.message : "Unknown error");
+    }
+  }, [user?.id, fetchSessions]);
+
+  const leaveWaitlist = useCallback(async (sessionId: number) => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/waitlist/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to leave waitlist: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error leaving waitlist:", err instanceof Error ? err.message : "Unknown error");
+    }
+  }, [user?.id, fetchSessions]);
+
+  const deleteSession = useCallback(async (sessionId: number) => {
+    try {
+      const res = await fetch(`/api/session/${sessionId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to delete session: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error deleting session:", err instanceof Error ? err.message : "Unknown error");
+    }
+  }, [fetchSessions]);
+
+  // Handle session actions
+  const handleJoinSession = useCallback(async (sessionId: number) => {
+    await joinSession(sessionId);
+  }, [joinSession]);
+
+  const handleLeaveSession = useCallback(async (sessionId: number) => {
+    await leaveSession(sessionId);
+  }, [leaveSession]);
+
+  const handleJoinWaitlist = useCallback(async (sessionId: number) => {
+    await joinWaitlist(sessionId);
+  }, [joinWaitlist]);
+
+  const handleLeaveWaitlist = useCallback(async (sessionId: number) => {
+    await leaveWaitlist(sessionId);
+  }, [leaveWaitlist]);
+
+  const handleDeleteSession = useCallback(async (sessionId: number) => {
+    await deleteSession(sessionId);
+  }, [deleteSession]);
 
   // Add a new DM
   const handleDmSubmit = async (e: FormEvent) => {
@@ -155,83 +260,76 @@ export default function Home() {
   // Create a new session
   const handleSessionSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!sessionTitle || !sessionDate || !selectedDm) return;
+    if (!sessionTitle || !sessionDate || !selectedDm || !user?.id) return;
 
-    // 1) Create session without imageUrl
-    const createRes = await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: sessionTitle,
-        date: sessionDate,
-        dmId: selectedDm,
-        userId: user?.id,
-        description: sessionDescription,
-        duration: parseInt(sessionDuration, 10),
-        maxParticipants,
-      }),
-    });
-    const { id: sessionId } = await createRes.json();
+    try {
+      // 1) Create session without imageUrl
+      const createRes = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: sessionTitle,
+          date: sessionDate,
+          dmId: selectedDm,
+          userId: user.id,
+          description: sessionDescription,
+          duration: parseInt(sessionDuration, 10),
+          maxParticipants,
+        }),
+      });
 
-    // 2) Upload image if selected
-    if (sessionFile) {
-      const path = `${user.id}/session/${sessionId}/${Date.now()}-${sessionFile.name}`;
-
-      const { data: uploadData, error } = await supabase.storage
-        .from("sessions")
-        .upload(path, sessionFile, { cacheControl: "3600", upsert: false });
-
-      if (error) {
-        console.error("Upload error:", error);
-        alert("Image upload failed.");
-      } else {
-        // 3) Get public URL
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
-
-        // 4) Patch session record with imageUrl
-        await fetch(`/api/session/${sessionId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl: publicUrl }),
-        });
+      if (!createRes.ok) {
+        throw new Error(`Failed to create session: ${createRes.status}`);
       }
+
+      const { id: sessionId } = (await createRes.json()) as { id: number };
+
+      // 2) Upload image if selected
+      if (sessionFile) {
+        const path = `${user.id}/session/${sessionId}/${Date.now()}-${sessionFile.name}`;
+
+        const { data: uploadData, error } = await supabase.storage
+          .from("sessions")
+          .upload(path, sessionFile, { cacheControl: "3600", upsert: false });
+
+        if (error) {
+          console.error("Upload error:", error);
+          alert("Image upload failed.");
+        } else {
+          // 3) Get public URL
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
+
+          // 4) Patch session record with imageUrl
+          const patchRes = await fetch(`/api/session/${sessionId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageUrl: publicUrl }),
+          });
+
+          if (!patchRes.ok) {
+            console.error("Failed to update session with image URL");
+          }
+        }
+      }
+
+      // Reset form and refresh list
+      setSessionTitle("");
+      setSessionDate("");
+      setSelectedDm("");
+      setSessionDescription("");
+      setSessionDuration("");
+      setMaxParticipants(5);
+      setSessionFile(null);
+      setSessionPreview(null);
+      void fetchSessions();
+      router.push("/");
+    } catch (err) {
+      console.error("Error creating session:", err);
+      alert("Failed to create session. Please try again.");
     }
-
-    // Reset form and refresh list
-    setSessionTitle("");
-    setSessionDate("");
-    setSelectedDm("");
-    setSessionDescription("");
-    setSessionDuration("");
-    setMaxParticipants(5);
-    setSessionFile(null);
-    setSessionPreview(null);
-    fetchSessions();
-    router.push("/");
   };
-
-  // Handle session actions
-  const handleJoinSession = useCallback(async (sessionId: number) => {
-    await joinSession(sessionId);
-  }, [joinSession]);
-
-  const handleLeaveSession = useCallback(async (sessionId: number) => {
-    await leaveSession(sessionId);
-  }, [leaveSession]);
-
-  const handleJoinWaitlist = useCallback(async (sessionId: number) => {
-    await joinWaitlist(sessionId);
-  }, [joinWaitlist]);
-
-  const handleLeaveWaitlist = useCallback(async (sessionId: number) => {
-    await leaveWaitlist(sessionId);
-  }, [leaveWaitlist]);
-
-  const handleDeleteSession = useCallback(async (sessionId: number) => {
-    await deleteSession(sessionId);
-  }, [deleteSession]);
 
   // Render functions
   const renderSessionActions = (session: Session) => {
@@ -294,17 +392,6 @@ export default function Home() {
     );
   };
 
-  // Handle error display
-  const handleError = (error: unknown): string => {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === "string") {
-      return error;
-    }
-    return "An unknown error occurred";
-  };
-
   // Handle session status
   const getSessionStatus = (session: Session): { text: string; color: string } => {
     const isJoined = joinedSessionIds.includes(session.id);
@@ -321,93 +408,6 @@ export default function Home() {
       return { text: "Session is full", color: "text-red-600" };
     }
     return { text: "", color: "" };
-  };
-
-  // Join a session
-  const joinSession = async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to join session: ${res.status}`);
-      }
-      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
-    } catch (err) {
-      console.error("Error joining session:", handleError(err));
-    }
-  };
-
-  // Leave a session
-  const leaveSession = async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to leave session: ${res.status}`);
-      }
-      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
-    } catch (err) {
-      console.error("Error leaving session:", handleError(err));
-    }
-  };
-
-  // Join waitlist
-  const joinWaitlist = async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/waitlist/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to join waitlist: ${res.status}`);
-      }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error joining waitlist:", handleError(err));
-    }
-  };
-
-  // Leave waitlist
-  const leaveWaitlist = async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/waitlist/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to leave waitlist: ${res.status}`);
-      }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error leaving waitlist:", handleError(err));
-    }
-  };
-
-  // Delete a session
-  const deleteSession = async (sessionId: number) => {
-    try {
-      const res = await fetch(`/api/session/${sessionId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to delete session: ${res.status}`);
-      }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error deleting session:", handleError(err));
-    }
   };
 
   // Loading or not authenticated
@@ -656,7 +656,7 @@ export default function Home() {
           targetId={activeReview.dm.userId}
           authorId={user.id}
           onSuccess={() => {
-            fetchSessions(); // refresh list to show new rating
+            void fetchSessions(); // refresh list to show new rating
           }}
         />
       )}
