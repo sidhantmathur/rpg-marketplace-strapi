@@ -424,7 +424,7 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-secondary bg-card border border-border rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-card border border-border rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           Cancel
         </button>

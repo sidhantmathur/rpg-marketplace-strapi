@@ -112,7 +112,7 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
                     : 'bg-primary text-primary-foreground'
                   : isTimeSlotBooked(time)
                   ? 'bg-warning/10 text-warning hover:bg-warning/20'
-                  : 'bg-card hover:bg-muted text-primary'
+                  : 'bg-card hover:bg-muted text-primary-foreground'
               }`}
             >
               {formatTimeDisplay(time)}
