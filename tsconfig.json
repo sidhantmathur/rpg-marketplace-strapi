@@ -21,15 +21,15 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["jest", "node", "@testing-library/jest-dom"]
+    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/mocks/**/*",
-    "src/types/**/*"
+    "src/types/**/*.d.ts"
   ],
   "exclude": ["node_modules"]
 }

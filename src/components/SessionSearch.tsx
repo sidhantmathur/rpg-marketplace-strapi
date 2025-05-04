@@ -80,6 +80,15 @@ interface JoinedSession {
   };
 }
 
+interface ApiError {
+  error: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  error?: string;
+}
+
 export default function SessionSearch() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -165,14 +174,14 @@ export default function SessionSearch() {
         method: "DELETE",
       });
 
-      const data = await response.json();
+      const data: ApiResponse<null> = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete session");
       }
 
       // Refresh the session list
-      fetchSessions();
+      void fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
       alert(

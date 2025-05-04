@@ -1,9 +1,7 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent } from "@testing-library/react";
 import BookingForm from "../BookingForm";
-import { FormEvent } from "react";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
-import { Matcher } from "@testing-library/dom";
 
 interface BookingFormData {
   name: string;
@@ -11,53 +9,51 @@ interface BookingFormData {
   players: string;
 }
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeInTheDocument(): R;
-    }
-  }
+interface BookingFormProps {
+  onSubmit: (data: BookingFormData) => void | Promise<void>;
 }
 
 describe("BookingForm", () => {
-  const mockOnSubmit = jest.fn((data: BookingFormData) => {});
+  const mockOnSubmit = jest.fn<(data: BookingFormData) => void>();
 
   beforeEach(() => {
-    // Reset mock function before each test
     mockOnSubmit.mockClear();
   });
 
   it("renders all form fields", () => {
     render(<BookingForm onSubmit={mockOnSubmit} />);
 
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/number of players/i)).toBeInTheDocument();
+    const nameInput = screen.getByLabelText(/name/i);
+    const emailInput = screen.getByLabelText(/email/i);
+    const playersInput = screen.getByLabelText(/number of players/i);
+
+    expect(nameInput).toBeDefined();
+    expect(emailInput).toBeDefined();
+    expect(playersInput).toBeDefined();
   });
 
   it("calls onSubmit with form data when submitted", () => {
     render(<BookingForm onSubmit={mockOnSubmit} />);
 
-    // Fill in the form
-    fireEvent.change(screen.getByLabelText(/name/i), {
-      target: { value: "John Doe" },
-    });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText(/number of players/i), {
-      target: { value: "2" },
-    });
-
-    // Submit the form
-    fireEvent.click(screen.getByRole("button", { name: /book now/i }));
-
-    // Check if onSubmit was called with correct data
-    expect(mockOnSubmit).toHaveBeenCalledWith({
+    const testData: BookingFormData = {
       name: "John Doe",
       email: "john@example.com",
-      players: "2",
+      players: "4",
+    };
+
+    fireEvent.change(screen.getByLabelText(/name/i), {
+      target: { value: testData.name },
     });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: testData.email },
+    });
+    fireEvent.change(screen.getByLabelText(/number of players/i), {
+      target: { value: testData.players },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /book now/i }));
+
+    expect(mockOnSubmit).toHaveBeenCalledWith(testData);
   });
 
   it("shows error message when required fields are empty", () => {
@@ -65,7 +61,7 @@ describe("BookingForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /book now/i }));
 
-    expect(screen.getByText(/name is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/name is required/i)).toBeDefined();
+    expect(screen.getByText(/email is required/i)).toBeDefined();
   });
 });

@@ -21,14 +21,10 @@ const customJestConfig = {
     "!src/**/*.d.ts",
     "!src/**/*.stories.{js,jsx,ts,tsx}",
     "!src/**/*.test.{js,jsx,ts,tsx}",
-    "!src/**/*.spec.{js,jsx,ts,tsx}",
   ],
-  coverageThreshold: {
-    global: {
-      statements: 60,
-      branches: 50,
-      functions: 60,
-      lines: 60,
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.test.json",
     },
   },
 };

@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Profile } from "../types";
+import { PostgrestError } from "@supabase/supabase-js";
+
+interface SupabaseResponse<T> {
+  data: T | null;
+  error: PostgrestError | null;
+}
 
 export const useProfile = (userId: string | undefined) => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -17,7 +23,7 @@ export const useProfile = (userId: string | undefined) => {
 
     const fetchProfile = async () => {
       try {
-        const { data, error: fetchError } = await supabase
+        const { data, error: fetchError }: SupabaseResponse<Profile> = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)

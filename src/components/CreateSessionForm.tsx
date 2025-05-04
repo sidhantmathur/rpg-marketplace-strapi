@@ -45,6 +45,11 @@ interface CreateSessionFormProps {
   };
 }
 
+interface ApiResponse<T> {
+  data: T;
+  error?: string;
+}
+
 interface SessionResponse {
   id: string;
   date: string;
@@ -106,21 +111,21 @@ export default function CreateSessionForm({
   // Fetch existing sessions for the DM
   useEffect(() => {
     const fetchExistingSessions = async () => {
-      if (!user?.id) return;
+      if (!user) return;
 
       try {
         const response = await fetch(`/api/session/search?dmId=${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
 
-        const sessions: SessionResponse[] = await response.json();
-        setExistingSessions(sessions.map((s) => new Date(s.date)));
+        const data: ApiResponse<SessionResponse[]> = await response.json();
+        setExistingSessions(data.data.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("Error fetching sessions:", err);
       }
     };
 
     void fetchExistingSessions();
-  }, [user?.id]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
