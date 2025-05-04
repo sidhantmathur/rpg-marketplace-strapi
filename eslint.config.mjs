@@ -1,56 +1,9 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
 import parser from "@typescript-eslint/parser";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import reactHooks from "eslint-plugin-react-hooks";
-import js from "@eslint/js";
 import next from "@next/eslint-plugin-next";
 import react from "eslint-plugin-react";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends(
-    "next/core-web-vitals"
-  ),
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      parser: parser,
-      parserOptions: {
-        project: "./tsconfig.json",
-      },
-    },
-    plugins: {
-      "@typescript-eslint": tseslint,
-      "react-hooks": reactHooks,
-      "@next/next": next,
-      "react": react,
-    },
-    rules: {
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-      "@typescript-eslint/no-unsafe-assignment": "error",
-      "@typescript-eslint/no-unsafe-member-access": "error",
-      "@typescript-eslint/no-unsafe-call": "error",
-      "@typescript-eslint/no-unsafe-return": "error",
-      "@typescript-eslint/restrict-template-expressions": "error",
-      "@typescript-eslint/require-await": "error",
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-misused-promises": "error",
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
-      "no-unused-vars": "off",
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn"
-    }
-  }
-];
 
 export default [
   {
@@ -97,9 +50,7 @@ export default [
         alert: "readonly",
         confirm: "readonly",
         setTimeout: "readonly",
-        clearTimeout: "readonly",
-        setInterval: "readonly",
-        clearInterval: "readonly"
+        clearTimeout: "readonly"
       }
     },
     plugins: {
@@ -109,30 +60,25 @@ export default [
       "react": react
     },
     rules: {
-      // Base rules
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      // TypeScript rules
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "@typescript-eslint/no-unsafe-assignment": "warn",
       "@typescript-eslint/no-unsafe-member-access": "warn",
       "@typescript-eslint/no-unsafe-call": "warn",
       "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/restrict-template-expressions": "warn",
+      "@typescript-eslint/require-await": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
-      "@typescript-eslint/no-misused-promises": ["warn", {
-        "checksVoidReturn": false
-      }],
+      "@typescript-eslint/no-misused-promises": "warn",
+      
+      // Base rules
+      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "no-unused-vars": "off",
       
       // React rules
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      "react/no-unescaped-entities": "warn",
-      "@next/next/no-img-element": "warn",
-
-      // Disable some overly strict TypeScript rules for now
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/no-unsafe-enum-comparison": "off"
+      "react-hooks/exhaustive-deps": "warn"
     }
   },
   {
@@ -149,12 +95,5 @@ export default [
         afterAll: "readonly"
       }
     }
-  },
-  {
-    files: ["src/generated/**/*.ts"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-    },
-  },
+  }
 ];

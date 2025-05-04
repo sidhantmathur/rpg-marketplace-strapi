@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -60,63 +60,80 @@ export default function Home() {
   const [sessionFile, setSessionFile] = useState<File | null>(null);
   const [sessionPreview, setSessionPreview] = useState<string | null>(null);
 
-  // Fetch DMs
-  const fetchDMs = async () => {
-    const res = await fetch("/api/dm");
-    if (res.ok) {
-      const data = await res.json();
-      setDms(data);
-    }
-  };
-
   // Fetch all sessions
   const fetchSessions = async () => {
-    const res = await fetch("/api/session/search");
-    if (res.ok) {
-      const data: Session[] = await res.json();
-      if (error) {
-        console.error("Error fetching sessions:", error);
-      } else {
-        setSessions(data);
+    try {
+      const res = await fetch("/api/session/search");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+      const data = await res.json() as Session[];
+      setSessions(data);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
     }
   };
 
-  // Fetch sessions the user has joined
-  const fetchJoinedSessions = async () => {
-    if (!user) return;
-    const res = await fetch(`/api/user-joined-sessions/${user.id}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (error) {
-        console.error("Error fetching joined sessions:", error);
-      } else {
-        setJoinedSessionIds(data.map((b: any) => b.session.id));
+  // Fetch all DMs
+  const fetchDMs = async () => {
+    try {
+      const res = await fetch("/api/dm");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+      const data = await res.json() as { id: number; name: string }[];
+      setDms(data);
+    } catch (err) {
+      console.error("Error fetching DMs:", err);
     }
   };
 
   useEffect(() => {
-    fetchDMs();
-    fetchSessions();
+    void (async () => {
+      try {
+        await Promise.all([fetchDMs(), fetchSessions()]);
+      } catch (err) {
+        console.error("Error in initial data fetch:", err);
+      }
+    })();
   }, []);
 
   useEffect(() => {
-    if (user) fetchJoinedSessions();
+    if (user) {
+      const fetchJoinedSessions = async () => {
+        try {
+          const res = await fetch(`/api/user-joined-sessions/${user.id}`);
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const data = await res.json() as { session: { id: number } }[];
+          setJoinedSessionIds(data.map(booking => booking.session.id));
+        } catch (err) {
+          console.error("Error fetching joined sessions:", err);
+        }
+      };
+
+      void fetchJoinedSessions();
+    }
   }, [user]);
 
   // Add a new DM
   const handleDmSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    const res = await fetch("/api/dm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, userId: user?.id }),
-    });
-    if (res.ok) {
+    if (!name.trim() || !user?.id) return;
+    try {
+      const res = await fetch("/api/dm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       setName("");
-      fetchDMs();
+      await fetchDMs();
+    } catch (err) {
+      console.error("Error creating DM:", err);
     }
   };
 
@@ -129,7 +146,10 @@ export default function Home() {
       return;
     }
     setSessionFile(file);
-    setSessionPreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    setSessionPreview(previewUrl);
+    // Clean up the object URL when component unmounts or file changes
+    return () => URL.revokeObjectURL(previewUrl);
   };
 
   // Create a new session
@@ -192,69 +212,202 @@ export default function Home() {
     router.push("/");
   };
 
+  // Handle session actions
+  const handleJoinSession = useCallback(async (sessionId: number) => {
+    await joinSession(sessionId);
+  }, [joinSession]);
+
+  const handleLeaveSession = useCallback(async (sessionId: number) => {
+    await leaveSession(sessionId);
+  }, [leaveSession]);
+
+  const handleJoinWaitlist = useCallback(async (sessionId: number) => {
+    await joinWaitlist(sessionId);
+  }, [joinWaitlist]);
+
+  const handleLeaveWaitlist = useCallback(async (sessionId: number) => {
+    await leaveWaitlist(sessionId);
+  }, [leaveWaitlist]);
+
+  const handleDeleteSession = useCallback(async (sessionId: number) => {
+    await deleteSession(sessionId);
+  }, [deleteSession]);
+
+  // Render functions
+  const renderSessionActions = (session: Session) => {
+    const isJoined = joinedSessionIds.includes(session.id);
+    const isOnWaitlist = session.waitlist?.some(w => w.userId === user?.id) ?? false;
+    const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
+    const isOwner = session.userId === user?.id;
+
+    if (isOwner) {
+      return (
+        <button
+          onClick={() => void handleDeleteSession(session.id)}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Delete Session
+        </button>
+      );
+    }
+
+    if (isJoined) {
+      return (
+        <button
+          onClick={() => void handleLeaveSession(session.id)}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Leave Session
+        </button>
+      );
+    }
+
+    if (isOnWaitlist) {
+      return (
+        <button
+          onClick={() => void handleLeaveWaitlist(session.id)}
+          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+        >
+          Leave Waitlist
+        </button>
+      );
+    }
+
+    if (isFull) {
+      return (
+        <button
+          onClick={() => void handleJoinWaitlist(session.id)}
+          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+        >
+          Join Waitlist
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => void handleJoinSession(session.id)}
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Join Session
+      </button>
+    );
+  };
+
+  // Handle error display
+  const handleError = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === "string") {
+      return error;
+    }
+    return "An unknown error occurred";
+  };
+
+  // Handle session status
+  const getSessionStatus = (session: Session): { text: string; color: string } => {
+    const isJoined = joinedSessionIds.includes(session.id);
+    const isOnWaitlist = session.waitlist?.some(w => w.userId === user?.id) ?? false;
+    const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
+
+    if (isJoined) {
+      return { text: "✓ You've joined this session", color: "text-green-600" };
+    }
+    if (isOnWaitlist) {
+      return { text: "✓ You're on the waitlist", color: "text-yellow-600" };
+    }
+    if (isFull) {
+      return { text: "Session is full", color: "text-red-600" };
+    }
+    return { text: "", color: "" };
+  };
+
   // Join a session
   const joinSession = async (sessionId: number) => {
-    if (!user) return;
-    const res = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
-      setJoinedSessionIds((prev) => [...prev, sessionId]);
-      fetchSessions(); // Refresh sessions to update participant count
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to join session: ${res.status}`);
+      }
+      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+    } catch (err) {
+      console.error("Error joining session:", handleError(err));
     }
   };
 
   // Leave a session
   const leaveSession = async (sessionId: number) => {
-    if (!user) return;
-    const res = await fetch("/api/bookings", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok)
-      setJoinedSessionIds((prev) => prev.filter((id) => id !== sessionId));
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to leave session: ${res.status}`);
+      }
+      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+    } catch (err) {
+      console.error("Error leaving session:", handleError(err));
+    }
   };
 
   // Join waitlist
   const joinWaitlist = async (sessionId: number) => {
-    if (!user) return;
-    const res = await fetch("/api/waitlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
-      // Refresh sessions to update waitlist status
-      fetchSessions();
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/waitlist/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to join waitlist: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error joining waitlist:", handleError(err));
     }
   };
 
   // Leave waitlist
   const leaveWaitlist = async (sessionId: number) => {
-    if (!user) return;
-    const res = await fetch("/api/waitlist", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
-      // Refresh sessions to update waitlist status
-      fetchSessions();
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/session/${sessionId}/waitlist/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to leave waitlist: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error leaving waitlist:", handleError(err));
     }
   };
 
-  // Delete a session (DM only)
+  // Delete a session
   const deleteSession = async (sessionId: number) => {
-    const res = await fetch("/api/session", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId }),
-    });
-    if (res.ok) setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    else console.error("Failed to delete session");
+    try {
+      const res = await fetch(`/api/session/${sessionId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to delete session: ${res.status}`);
+      }
+      await fetchSessions();
+    } catch (err) {
+      console.error("Error deleting session:", handleError(err));
+    }
   };
 
   // Loading or not authenticated
@@ -270,7 +423,7 @@ export default function Home() {
     );
 
   return (
-    <main className="p-6 max-w-xl mx-auto">
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
       {profile ? (
         <p className="text-sm text-gray-600 mb-4">
@@ -282,226 +435,149 @@ export default function Home() {
         </p>
       )}
 
-      {/* Add Dungeon Master */}
-      {profile?.roles.includes("dm") && (
-        <section className="mb-8">
-          <h2 className="font-semibold mb-2">Add Dungeon Master</h2>
-          <form onSubmit={handleDmSubmit} className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter DM name"
-              className="border p-2 rounded w-full"
+      {/* DM Form */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Add a New DM</h2>
+        <form onSubmit={(e) => void handleDmSubmit(e)} className="flex gap-4">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter DM name"
+            className="flex-1 p-2 border rounded"
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Add DM
+          </button>
+        </form>
+      </div>
+
+      {/* Session Form */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Create a New Session</h2>
+        <form onSubmit={(e) => void handleSessionSubmit(e)} className="space-y-4">
+          <input
+            type="text"
+            value={sessionTitle}
+            onChange={(e) => setSessionTitle(e.target.value)}
+            placeholder="Session title"
+            className="border p-2 rounded"
+          />
+          <textarea
+            value={sessionDescription}
+            onChange={(e) => setSessionDescription(e.target.value)}
+            placeholder="Description (optional)"
+            className="border p-2 rounded"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="border p-2 rounded"
+          />
+          {sessionPreview && (
+            <Image
+              src={sessionPreview}
+              alt="Preview"
+              width={100}
+              height={100}
+              className="w-24 h-24 object-cover rounded"
             />
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Add
-            </button>
-          </form>
-          <ul className="space-y-1">
+          )}
+          <input
+            type="date"
+            value={sessionDate}
+            onChange={(e) => setSessionDate(e.target.value)}
+            className="border p-2 rounded"
+          />
+          <input
+            type="number"
+            min={1}
+            value={maxParticipants}
+            onChange={(e) => setMaxParticipants(Number(e.target.value))}
+            placeholder="Max participants"
+            className="border p-2 rounded"
+          />
+          <input
+            type="number"
+            value={sessionDuration}
+            onChange={(e) => setSessionDuration(e.target.value)}
+            placeholder="Duration in minutes"
+            className="border p-2 rounded"
+          />
+          <select
+            value={selectedDm}
+            onChange={(e) => setSelectedDm(e.target.value)}
+            className="border p-2 rounded bg-white text-black appearance-none"
+          >
+            <option value="">Select a DM</option>
             {dms.map((dm) => (
-              <li key={dm.id} className="border p-2 rounded">
+              <option key={dm.id} value={dm.id}>
                 {dm.name}
-              </li>
+              </option>
             ))}
-          </ul>
-        </section>
-      )}
+          </select>
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Create Session
+          </button>
+        </form>
+      </div>
 
-      {/* Create Session */}
-      {profile?.roles.includes("dm") && (
-        <section className="mb-8">
-          <h2 className="font-semibold mb-2">Create Session</h2>
-          <form onSubmit={handleSessionSubmit} className="grid gap-2 mb-4">
-            <input
-              type="text"
-              value={sessionTitle}
-              onChange={(e) => setSessionTitle(e.target.value)}
-              placeholder="Session title"
-              className="border p-2 rounded"
-            />
-            <textarea
-              value={sessionDescription}
-              onChange={(e) => setSessionDescription(e.target.value)}
-              placeholder="Description (optional)"
-              className="border p-2 rounded"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="border p-2 rounded"
-            />
-            {sessionPreview && (
-              <Image
-                src={sessionPreview}
-                alt="Preview"
-                width={100}
-                height={100}
-                className="w-24 h-24 object-cover rounded"
-              />
-            )}
-            <input
-              type="date"
-              value={sessionDate}
-              onChange={(e) => setSessionDate(e.target.value)}
-              className="border p-2 rounded"
-            />
-            <input
-              type="number"
-              min={1}
-              value={maxParticipants}
-              onChange={(e) => setMaxParticipants(Number(e.target.value))}
-              placeholder="Max participants"
-              className="border p-2 rounded"
-            />
-            <input
-              type="number"
-              value={sessionDuration}
-              onChange={(e) => setSessionDuration(e.target.value)}
-              placeholder="Duration in minutes"
-              className="border p-2 rounded"
-            />
-            <select
-              value={selectedDm}
-              onChange={(e) => setSelectedDm(e.target.value)}
-              className="border p-2 rounded bg-white text-black appearance-none"
+      {/* Sessions List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sessions.map((session) => {
+          const status = getSessionStatus(session);
+          return (
+            <div
+              key={session.id}
+              className="bg-white p-6 rounded-lg shadow-md"
             >
-              <option value="">Select a DM</option>
-              {dms.map((dm) => (
-                <option key={dm.id} value={dm.id}>
-                  {dm.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              Create Session
-            </button>
-          </form>
-        </section>
-      )}
-
-      {/* Available Sessions */}
-      <section>
-        <h2 className="font-semibold mb-2">Available Sessions</h2>
-        <ul className="space-y-2">
-          {sessions.map((session) => {
-            const isFull = session.bookings.length >= session.maxParticipants;
-            const hasJoined = joinedSessionIds.includes(session.id);
-            const isOnWaitlist = session.waitlist.some(
-              (w) => w.userId === user?.id,
-            );
-            const isHost = session.userId === user?.id;
-            const isPlayer =
-              profile?.roles.includes("user") || profile?.roles.includes("dm");
-            const canBook = !hasJoined && !isFull && !isHost && !isOnWaitlist;
-            const canJoinWaitlist =
-              !hasJoined && isFull && !isHost && !isOnWaitlist;
-
-            return (
-              <li key={session.id} className="border p-2 rounded">
-                {session.imageUrl && (
-                  <Image
-                    src={session.imageUrl || "/placeholder.png"}
-                    alt={session.title}
-                    width={400}
-                    height={400}
-                    quality={100}
-                    className="w-full h-full object-cover rounded"
-                  />
-                )}
-                <div className="font-semibold">{session.title}</div>
-                <div className="text-sm text-gray-600">
-                  {new Date(session.date).toLocaleDateString()} — Hosted by{" "}
-                  {session.dm.name}{" "}
-                  <RatingBadge
-                    avg={session.dm.ratingAvg}
-                    count={session.dm.ratingCount}
-                  />
-                </div>
-                <div className="text-sm text-gray-500">
-                  {session.bookings.length} / {session.maxParticipants}{" "}
-                  participants
-                  {session.waitlist.length > 0 && (
-                    <span className="ml-2 text-yellow-600">
-                      ({session.waitlist.length} on waitlist)
-                    </span>
-                  )}
-                </div>
-                {canBook && (
-                  <button
-                    onClick={() => joinSession(session.id)}
-                    className="mt-2 text-sm text-blue-600 underline"
-                  >
-                    Join Session
-                  </button>
-                )}
-
-                {canJoinWaitlist && (
-                  <button
-                    onClick={() => joinWaitlist(session.id)}
-                    className="mt-2 text-sm text-yellow-600 underline"
-                  >
-                    Join Waitlist
-                  </button>
-                )}
-
-                {isOnWaitlist && (
-                  <div className="mt-2">
-                    <span className="text-sm text-yellow-600">
-                      ✓ You're on the waitlist
-                    </span>
-                    <button
-                      onClick={() => leaveWaitlist(session.id)}
-                      className="ml-2 text-sm text-red-600 underline"
-                    >
-                      Leave Waitlist
-                    </button>
-                  </div>
-                )}
-
-                {isPlayer && hasJoined && (
-                  <div className="mt-2 text-sm text-green-600">
-                    ✓ You've joined this session
-                  </div>
-                )}
-
-                {isPlayer && !hasJoined && isFull && !isOnWaitlist && (
-                  <div className="mt-2 text-sm text-red-600">
-                    Session is full
-                  </div>
-                )}
-
-                {/* ——— REVIEW SECTION ——— */}
-                {isPlayer &&
-                  hasJoined &&
-                  new Date(session.date) < new Date() && (
-                    <div className="mt-2">
-                      {session.reviews?.some((r) => r.authorId === user.id) ? (
-                        <p className="text-sm text-green-700">
-                          ✓ Review submitted
-                        </p>
-                      ) : (
-                        <button
-                          onClick={() => setActiveReview(session)}
-                          className="text-sm text-blue-600 underline"
-                        >
-                          Leave a review
-                        </button>
-                      )}
-                    </div>
-                  )}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+              <div className="flex items-center gap-4 mb-4">
+                <Image
+                  src={session.imageUrl || "/placeholder.png"}
+                  alt={session.title}
+                  width={400}
+                  height={400}
+                  quality={100}
+                  className="w-full h-full object-cover rounded"
+                />
+              </div>
+              <h3 className="text-xl font-bold mb-2">{session.title}</h3>
+              <p className="text-gray-600 mb-2">{session.description}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-semibold">DM:</span>
+                <span>{session.dm.name}</span>
+                <span className="text-yellow-500">
+                  {"★".repeat(Math.round(session.dm.ratingAvg))}
+                </span>
+                <span className="text-gray-500">
+                  ({session.dm.ratingCount} reviews)
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-semibold">Date:</span>
+                <span>{new Date(session.date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="font-semibold">Players:</span>
+                <span>
+                  {session.bookings?.length ?? 0}/{session.maxParticipants}
+                </span>
+              </div>
+              {status.text && (
+                <div className={`mb-4 ${status.color}`}>{status.text}</div>
+              )}
+              {renderSessionActions(session)}
+            </div>
+          );
+        })}
+      </div>
 
       {/* My Joined Sessions */}
       {profile?.roles.includes("user") && joinedSessionIds.length > 0 && (
@@ -531,12 +607,7 @@ export default function Home() {
                     {session.bookings.length} / {session.maxParticipants}{" "}
                     participants
                   </div>
-                  <button
-                    onClick={() => leaveSession(session.id)}
-                    className="mt-1 text-sm text-red-600 underline"
-                  >
-                    Leave Session
-                  </button>
+                  {renderSessionActions(session)}
                 </li>
               ))}
           </ul>
@@ -571,17 +642,7 @@ export default function Home() {
                     {session.bookings.length} / {session.maxParticipants}{" "}
                     participants
                   </div>
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm("Are you sure you want to delete this session?")
-                      )
-                        deleteSession(session.id);
-                    }}
-                    className="mt-1 text-sm text-red-600 underline"
-                  >
-                    Delete Session
-                  </button>
+                  {renderSessionActions(session)}
                 </li>
               ))}
           </ul>
@@ -599,6 +660,6 @@ export default function Home() {
           }}
         />
       )}
-    </main>
+    </div>
   );
 }
