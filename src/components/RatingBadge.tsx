@@ -16,7 +16,7 @@ export default function RatingBadge({
       >
         <polygon points="10 1 12.6 7 19 7.3 14 11.6 15.6 18 10 14.3 4.4 18 6 11.6 1 7.3 7.4 7" />
       </svg>
-      {avg.toFixed(1)} ({count})
+      {avg.toFixed(1)} ({count})
     </span>
   );
 }

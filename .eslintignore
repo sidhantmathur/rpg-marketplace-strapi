@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+.next
+out
+
+# Build output
+dist
+build
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.cy.ts
+**/*.cy.tsx
+
+# Cypress
+cypress/e2e
+cypress/support
+cypress/plugins
+
+# Configuration files
+*.config.js
+*.config.ts
+*.config.mjs
+*.config.cjs
+
+# Generated files
+*.d.ts
+*.generated.ts
+
+# IDE
+.vscode
+.idea
+
+# Misc
+.DS_Store
+*.log 
