@@ -43,16 +43,16 @@
   - Waitlist signup
   - Automatic notifications for openings
   - Waitlist management UI
-- [ ] Tool category field (1 day)
+- [ ] Tool category field (1 day) - SKIP
   - Add tool selection (Roll20, Foundry, etc.)
   - Tool-specific requirements
   - Tool display in session cards
-- [ ] Basic payment integration (2 days)
+- [ ] Basic payment integration (2 days) - SKIP
   - Stripe setup
   - Payment processing
   - Basic transaction handling
   - Receipt generation
-- [ ] Cancellation policies (1 day)
+- [ ] Cancellation policies (1 day) - SKIP
   - Policy settings
   - Refund rules
   - Cancellation notifications
