@@ -64,7 +64,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
       const date = new Date();
       date.setHours(hours, minutes);
       return format(date, "h:mm a");
-    } catch (err) {
+    } catch (error) {
+      console.error("Error formatting time:", error);
       setError("Error formatting time");
       return time;
     }
@@ -78,7 +79,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
       onDateSelect(zonedDate);
       setIsSlotBooked(false);
       setError(null);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error selecting date:", error);
       setError("Error selecting date");
     }
   }, [timezone, onDateSelect]);
@@ -99,7 +101,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
 
       setIsSlotBooked(isBooked);
       setError(null);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error selecting time:", error);
       setError("Error selecting time");
     }
   }, [selectedDate, existingSessions, onTimeSelect]);
@@ -109,7 +112,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
       setDuration(value);
       onDurationSelect(value);
       setError(null);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error selecting duration:", error);
       setError("Error selecting duration");
     }
   }, [onDurationSelect]);
@@ -124,7 +128,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
         const sessionDate = new Date(session);
         return sessionDate.getTime() === slotDate.getTime();
       });
-    } catch (err) {
+    } catch (error) {
+      console.error("Error checking time slot availability:", error);
       setError("Error checking time slot availability");
       return false;
     }

@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
-import LoginPage from "../LoginForm";
-import { supabase } from "@/lib/supabaseClient";
-import { AuthResponse } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import LoginPage from "@/app/login/page";
+import { AuthError, AuthResponse } from "@supabase/supabase-js";
 
 // Mock the next/navigation module
 jest.mock("next/navigation", () => ({
@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 // Mock the supabase client
-jest.mock("@/lib/supabaseClient", () => ({
+jest.mock("@/lib/supabase", () => ({
   supabase: {
     auth: {
       signInWithPassword: jest.fn(),
@@ -71,8 +71,15 @@ describe("LoginPage", () => {
   it("displays error message on login failure", async () => {
     // Mock login failure
     const errorMessage = "Invalid credentials";
+    const mockError = {
+      message: errorMessage,
+      name: "AuthError",
+      status: 400,
+      code: "invalid_credentials",
+      __isAuthError: true,
+    } as AuthError;
     (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
-      error: { message: errorMessage },
+      error: mockError,
     } as AuthResponse);
 
     render(<LoginPage />);

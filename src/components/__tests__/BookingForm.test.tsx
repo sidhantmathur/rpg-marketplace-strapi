@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import BookingForm from "../BookingForm";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 
@@ -10,11 +10,13 @@ interface BookingFormData {
 }
 
 interface BookingFormProps {
-  onSubmit: (data: BookingFormData) => void | Promise<void>;
+  onSubmit: (data: BookingFormData) => Promise<void>;
 }
 
 describe("BookingForm", () => {
-  const mockOnSubmit = jest.fn<(data: BookingFormData) => void>();
+  const mockOnSubmit = jest.fn(async (data: BookingFormData) => {
+    await Promise.resolve();
+  });
 
   beforeEach(() => {
     mockOnSubmit.mockClear();
@@ -32,7 +34,7 @@ describe("BookingForm", () => {
     expect(playersInput).toBeDefined();
   });
 
-  it("calls onSubmit with form data when submitted", () => {
+  it("calls onSubmit with form data when submitted", async () => {
     render(<BookingForm onSubmit={mockOnSubmit} />);
 
     const testData: BookingFormData = {

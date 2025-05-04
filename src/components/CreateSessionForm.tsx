@@ -322,7 +322,7 @@ export default function CreateSessionForm({
         const conflictDate = new Date(conflict.date);
         const conflictEndTime = addMinutes(
           conflictDate,
-          conflict.duration as number
+          conflict.duration
         );
 
         return (
@@ -347,22 +347,22 @@ export default function CreateSessionForm({
     }
   };
 
-  const handleDateSelect = (date: Date) => {
+  const handleDateSelect = async (date: Date) => {
     setFormData({ ...formData, date });
     if (formData.time) {
-      checkForConflicts(date, formData.time, formData.duration);
+      await checkForConflicts(date, formData.time, formData.duration);
     }
   };
 
-  const handleTimeSelect = (time: string) => {
+  const handleTimeSelect = async (time: string) => {
     setFormData({ ...formData, time });
-    checkForConflicts(formData.date, time, formData.duration);
+    await checkForConflicts(formData.date, time, formData.duration);
   };
 
-  const handleDurationSelect = (duration: number) => {
+  const handleDurationSelect = async (duration: number) => {
     setFormData({ ...formData, duration });
     if (formData.time) {
-      checkForConflicts(formData.date, formData.time, duration);
+      await checkForConflicts(formData.date, formData.time, duration);
     }
   };
 

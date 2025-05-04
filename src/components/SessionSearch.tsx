@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import CreateSessionForm from "./CreateSessionForm";
 import { useUser } from "@/hooks/useUser";
 import { Session as PrismaSession } from "@prisma/client";
@@ -114,60 +114,61 @@ export default function SessionSearch() {
   });
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
   const [managingSession, setManagingSession] = useState<Session | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const { user } = useUser();
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
       if (filters.game) params.append("game", filters.game);
       if (filters.genre) params.append("genre", filters.genre);
-      if (filters.experienceLevel)
-        params.append("experienceLevel", filters.experienceLevel);
+      if (filters.experienceLevel) params.append("experienceLevel", filters.experienceLevel);
       if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
       if (filters.dateTo) params.append("dateTo", filters.dateTo);
       if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
 
-      const response = await fetch(`/api/session/search?${params.toString()}`);
+      const response = await fetch(`/api/sessions?${params.toString()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
-      const data = await response.json() as SessionResponse;
+      const data: SessionResponse = await response.json();
       if (data.error) {
         throw new Error(data.error);
       }
       setSessions(data.sessions);
     } catch (error) {
       console.error("Error fetching sessions:", error);
+      setError("Failed to load sessions");
     }
-  };
+  }, [filters]);
 
-  const fetchJoinedSessions = async () => {
-    if (!user) return;
+  const fetchJoinedSessions = useCallback(async () => {
     try {
-      const res = await fetch(`/api/user-joined-sessions/${user.id}`);
-      if (!res.ok) {
+      const response = await fetch("/api/sessions/joined");
+      if (!response.ok) {
         throw new Error("Failed to fetch joined sessions");
       }
-      const data = await res.json() as JoinedSessionsResponse;
+      const data: JoinedSessionsResponse = await response.json();
       if (data.error) {
         throw new Error(data.error);
       }
       setJoinedSessionIds(data.sessions.map((b) => b.session.id));
     } catch (error) {
       console.error("Error fetching joined sessions:", error);
+      setError("Failed to load joined sessions");
     }
-  };
+  }, []);
 
   useEffect(() => {
     void fetchSessions();
     if (user) void fetchJoinedSessions();
-  }, [filters, user]);
+  }, [filters, user, fetchSessions, fetchJoinedSessions]);
 
-  const handleSessionCreated = () => {
+  const handleSessionCreated = async () => {
     setShowCreateForm(false);
-    void fetchSessions();
+    await fetchSessions();
   };
 
   const handleFilterChange = (
@@ -260,23 +261,6 @@ export default function SessionSearch() {
       void fetchSessions();
     } catch (error) {
       console.error("Error joining waitlist:", error);
-    }
-  };
-
-  const leaveWaitlist = async (sessionId: number) => {
-    if (!user) return;
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to leave waitlist");
-      }
-      void fetchSessions();
-    } catch (error) {
-      console.error("Error leaving waitlist:", error);
     }
   };
 

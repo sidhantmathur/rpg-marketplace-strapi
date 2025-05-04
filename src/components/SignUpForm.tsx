@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
-import { AuthError, AuthResponse, User } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 
 interface SignUpFormState {
   email: string;
@@ -13,18 +13,6 @@ interface SignUpFormState {
   isDm: boolean;
   isLoading: boolean;
   error: string | null;
-}
-
-interface SignUpResponse {
-  user?: {
-    id: string;
-    email: string;
-  };
-  error?: AuthError;
-}
-
-interface ProfileResponse {
-  error?: string;
 }
 
 export default function SignupPage() {
