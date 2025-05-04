@@ -162,11 +162,11 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        console.log("Session found:", session.title);
-        console.log("Number of bookings:", session.bookings.length);
+        console.warn("[Email Test] Processing session:", session.title);
+        console.warn("[Email Test] Found bookings:", session.bookings.length);
 
         if (session.bookings.length === 0) {
-          console.log("No bookings found for this session");
+          console.warn("[Email Test] No bookings found for session");
           return NextResponse.json({
             message: "No bookings found for this session",
             success: true,
@@ -174,9 +174,9 @@ export async function POST(req: NextRequest) {
         }
 
         for (const booking of session.bookings) {
-          console.log("Processing booking for user:", booking.user.email);
+          console.warn("[Email Test] Processing booking for:", booking.user.email);
           if (booking.user.email) {
-            console.log("Sending review request to:", booking.user.email);
+            console.warn("[Email Test] Sending review request to:", booking.user.email);
             try {
               await sendReviewRequest(
                 {
@@ -186,9 +186,9 @@ export async function POST(req: NextRequest) {
                 },
                 { email: booking.user.email },
               );
-              console.log("Review request sent successfully");
+              console.warn("[Email Test] Review request sent successfully");
             } catch (error) {
-              console.error("Failed to send review request:", error);
+              console.error("[Email Test] Failed to send review request:", error);
               return NextResponse.json(
                 {
                   error: "Failed to send review request",
@@ -269,7 +269,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error sending test email:", error);
+    console.error("[Email Test] Failed to send test email:", error);
     return NextResponse.json(
       { error: "Failed to send test email" },
       { status: 500 },

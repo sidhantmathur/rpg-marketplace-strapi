@@ -1,5 +1,4 @@
 // app/api/session/[id]/route.ts
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendEmail } from "@/utils/sendEmail";
@@ -8,14 +7,8 @@ import {
   sendSessionCancellation,
 } from "@/utils/emailTemplates";
 
-// Prisma singleton
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prismaSingleton = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production")
-  globalForPrisma.prisma = prismaSingleton;
-
 async function handleError(err: unknown) {
-  console.error("🔥 [api/session/[id]] uncaught error:", err);
+  console.error("[Session] Uncaught error:", err);
   const message =
     err instanceof Error
       ? err.message
@@ -28,7 +21,7 @@ async function handleError(err: unknown) {
 export async function GET(request: NextRequest, context: any) {
   try {
     const rawId = context.params.id;
-    console.log("🛰  GET /api/session/[id] → id=", rawId);
+    console.warn("[Session] Fetching session id:", rawId);
     const id = Number(rawId);
     if (Number.isNaN(id)) {
       return NextResponse.json(
@@ -37,7 +30,7 @@ export async function GET(request: NextRequest, context: any) {
       );
     }
 
-    const session = await prismaSingleton.session.findUnique({
+    const session = await prisma.session.findUnique({
       where: { id },
       include: {
         dm: true,
@@ -85,7 +78,7 @@ export async function PATCH(request: NextRequest, context: any) {
     } = body;
 
     // Get current session data for comparison
-    const currentSession = await prismaSingleton.session.findUnique({
+    const currentSession = await prisma.session.findUnique({
       where: { id },
       include: {
         bookings: {
@@ -106,7 +99,7 @@ export async function PATCH(request: NextRequest, context: any) {
     }
 
     // Update the session
-    const updatedSession = await prismaSingleton.session.update({
+    const updatedSession = await prisma.session.update({
       where: { id },
       data: {
         title,
@@ -135,7 +128,7 @@ export async function PATCH(request: NextRequest, context: any) {
     });
 
     // Get DM's email
-    const dmProfile = await prismaSingleton.profile.findUnique({
+    const dmProfile = await prisma.profile.findUnique({
       where: { id: currentSession.dm.userId },
       select: { email: true },
     });
@@ -172,7 +165,7 @@ export async function PATCH(request: NextRequest, context: any) {
 
     return NextResponse.json(updatedSession);
   } catch (error) {
-    console.error("Error updating session:", error);
+    console.error("[Session] Update failed:", error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",
@@ -185,7 +178,7 @@ export async function PATCH(request: NextRequest, context: any) {
 export async function DELETE(request: NextRequest, context: any) {
   try {
     const rawId = context.params.id;
-    console.log("❌ DELETE /api/session/[id] → id=", rawId);
+    console.warn("[Session] Deleting session id:", rawId);
     const id = Number(rawId);
 
     if (Number.isNaN(id)) {
@@ -200,11 +193,11 @@ export async function DELETE(request: NextRequest, context: any) {
     if (userId) {
       // Get session and user info for notifications
       const [session, user] = await Promise.all([
-        prismaSingleton.session.findUnique({
+        prisma.session.findUnique({
           where: { id },
           include: { dm: true },
         }),
-        prismaSingleton.profile.findUnique({
+        prisma.profile.findUnique({
           where: { id: userId },
         }),
       ]);
@@ -217,7 +210,7 @@ export async function DELETE(request: NextRequest, context: any) {
       }
 
       // Delete the booking
-      await prismaSingleton.booking.delete({
+      await prisma.booking.delete({
         where: {
           sessionId_userId: {
             sessionId: id,
@@ -242,7 +235,7 @@ export async function DELETE(request: NextRequest, context: any) {
 
     // If no userId provided, delete the entire session
     // First get session info for notifications
-    const session = await prismaSingleton.session.findUnique({
+    const session = await prisma.session.findUnique({
       where: { id },
       include: {
         bookings: {
@@ -263,7 +256,7 @@ export async function DELETE(request: NextRequest, context: any) {
     }
 
     // Get DM's email
-    const dmProfile = await prismaSingleton.profile.findUnique({
+    const dmProfile = await prisma.profile.findUnique({
       where: { id: session.dm.userId },
       select: { email: true },
     });
@@ -285,25 +278,25 @@ export async function DELETE(request: NextRequest, context: any) {
     }
 
     // First delete all related bookings
-    console.log("Deleting related bookings...");
-    await prismaSingleton.booking.deleteMany({
+    console.warn("[Session] Deleting related bookings");
+    await prisma.booking.deleteMany({
       where: { sessionId: id },
     });
 
     // Delete all related reviews
-    console.log("Deleting related reviews...");
-    await prismaSingleton.review.deleteMany({
+    console.warn("[Session] Deleting related reviews");
+    await prisma.review.deleteMany({
       where: { sessionId: id },
     });
 
     // Finally delete the session (this will cascade delete the tags relation)
-    console.log("Deleting session...");
-    await prismaSingleton.session.delete({ where: { id } });
+    console.warn("[Session] Deleting session");
+    await prisma.session.delete({ where: { id } });
 
-    console.log("Session deleted successfully");
+    console.warn("[Session] Deletion completed successfully");
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error("Error in DELETE /api/session/[id]:", err);
+    console.error("[Session] Deletion failed:", err);
     return handleError(err);
   }
 }

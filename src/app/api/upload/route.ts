@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest) {
     const filePath = `sessions/${fileName}`;
 
     // Upload to Supabase Storage using authenticated client
-    const { data, error } = await supabaseAuth.storage
+    const { error } = await supabaseAuth.storage
       .from("sessions")
       .upload(filePath, file, {
         cacheControl: "3600",

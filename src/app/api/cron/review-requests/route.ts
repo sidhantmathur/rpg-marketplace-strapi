@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendReviewRequest } from "@/utils/emailTemplates";
 
-export async function GET(req: NextRequest) {
+export async function GET(_: NextRequest) {
   try {
     // Get all sessions that ended in the last 24 hours
     const now = new Date();

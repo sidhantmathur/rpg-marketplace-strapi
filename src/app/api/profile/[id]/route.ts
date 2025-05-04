@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Helper to centralize 500 responses
 function handleError(err: unknown) {
-  console.error("🔥 [api/profile/[id]] error:", err);
+  console.error("[Profile] API error:", err);
   const message =
     err instanceof Error
       ? err.message
@@ -21,7 +21,7 @@ function handleError(err: unknown) {
 export async function GET(_: NextRequest, context: any) {
   try {
     const rawId = context.params.id as string;
-    console.log("🛰 GET /api/profile/[id] → id=", rawId);
+    console.warn("[Profile] Fetching profile for id:", rawId);
 
     const profile = await prisma.profile.findUnique({
       where: { id: rawId },

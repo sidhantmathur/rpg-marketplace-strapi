@@ -11,19 +11,23 @@ const searchParamsSchema = z.object({
   experienceLevel: z.string().optional(),
   tags: z.string().optional(),
   searchTerm: z.string().optional(),
+  dmId: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const searchTerm = searchParams.get("searchTerm");
-    const game = searchParams.get("game");
-    const genre = searchParams.get("genre");
-    const experienceLevel = searchParams.get("experienceLevel");
-    const dateFrom = searchParams.get("dateFrom");
-    const dateTo = searchParams.get("dateTo");
-    const tags = searchParams.get("tags")?.split(",") || [];
-    const dmId = searchParams.get("dmId");
+    const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
+    
+    // Validate search parameters
+    const validatedParams = searchParamsSchema.safeParse(searchParams);
+    if (!validatedParams.success) {
+      return NextResponse.json(
+        { error: "Invalid search parameters", details: validatedParams.error },
+        { status: 400 }
+      );
+    }
+
+    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } = searchParams;
 
     const where: any = {
       status: "upcoming",
@@ -42,14 +46,17 @@ export async function GET(req: NextRequest) {
     if (dateFrom) where.date = { ...where.date, gte: new Date(dateFrom) };
     if (dateTo) where.date = { ...where.date, lte: new Date(dateTo) };
     if (dmId) where.dmId = Number(dmId);
-    if (tags.length > 0) {
-      where.tags = {
-        some: {
-          name: {
-            in: tags,
+    if (tags) {
+      const tagArray = tags.split(",");
+      if (tagArray.length > 0) {
+        where.tags = {
+          some: {
+            name: {
+              in: tagArray,
+            },
           },
-        },
-      };
+        };
+      }
     }
 
     const sessions = await prisma.session.findMany({

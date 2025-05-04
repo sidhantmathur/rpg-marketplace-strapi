@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { Session } from "@prisma/client";
@@ -51,7 +50,6 @@ export default function CreateSessionForm({
   onSuccess,
   session,
 }: CreateSessionFormProps) {
-  const router = useRouter();
   const { user } = useUser();
   const [formData, setFormData] = useState({
     title: session?.title || "",
@@ -488,11 +486,17 @@ export default function CreateSessionForm({
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          disabled={isLoading}
+          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {session ? "Update Session" : "Create Session"}
+          {isLoading ? "Processing..." : session ? "Update Session" : "Create Session"}
         </button>
       </div>
+      {error && (
+        <div className="mt-4 p-2 bg-destructive/10 border border-destructive/20 rounded text-destructive">
+          {error}
+        </div>
+      )}
     </form>
   );
 }

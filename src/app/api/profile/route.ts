@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { id, email, roles } = body;
 
-    console.log("🔧 Creating profile with:", { id, email, roles });
+    console.warn("[Profile] Creating new profile:", { id, email, roles });
 
     if (!id || !email || !roles || !Array.isArray(roles)) {
       return NextResponse.json(
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(profile);
   } catch (err) {
-    console.error("❌ Error in POST /api/profile:", err);
+    console.error("[Profile] Creation failed:", err);
     return NextResponse.json(
       {
         error: "Failed to create profile",

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendSessionReminder } from "@/utils/emailTemplates";
 
-export async function GET(req: NextRequest) {
+export async function GET(_: NextRequest) {
   try {
     // Get all sessions starting in the next 24 hours
     const now = new Date();

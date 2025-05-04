@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Calendar } from "react-calendar";
 import type { CalendarProps } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { format, addHours } from "date-fns";
+import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
 interface SessionCalendarProps {

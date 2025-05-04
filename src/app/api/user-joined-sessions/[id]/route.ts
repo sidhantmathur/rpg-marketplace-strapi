@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Helper to centralize 500 responses
 function handleError(err: unknown) {
-  console.error("🔥 [api/bookings/user/[id]] error:", err);
+  console.error("[UserSessions] API error:", err);
   const message =
     err instanceof Error
       ? err.message
@@ -21,7 +21,7 @@ function handleError(err: unknown) {
 export async function GET(_: NextRequest, context: any) {
   try {
     const { id } = await context.params;
-    console.log("🛰 GET /api/bookings/user/[id] → userId=", id);
+    console.warn("[UserSessions] Fetching sessions for user:", id);
 
     // Optional: validate format of `id` here
     // e.g. if you expect a UUID: if (!isValidUUID(id)) { … }

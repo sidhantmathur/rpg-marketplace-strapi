@@ -13,19 +13,19 @@ export const sendEmail = async ({
   html: string;
 }) => {
   try {
-    console.log("Attempting to send email to:", to);
-    console.log("Subject:", subject);
+    console.warn("[Email] Sending email to:", to);
+    console.warn("[Email] Subject:", subject);
     const result = await resend.emails.send({
       from: "RPG Marketplace <onboarding@resend.dev>",
       to,
       subject,
       html,
     });
-    console.log("Email sent successfully:", result);
+    console.warn("[Email] Successfully sent:", result);
     return result;
   } catch (error) {
-    console.error("Email sending failed:", error);
-    console.error("Email details:", { to, subject });
+    console.error("[Email] Failed to send:", error);
+    console.error("[Email] Failed attempt details:", { to, subject });
     throw error; // Rethrow the error to handle it in the calling function
   }
 };
