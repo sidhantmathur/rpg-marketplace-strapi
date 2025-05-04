@@ -1,26 +1,26 @@
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
-import LoginPage from '../LoginForm';
-import { supabase } from '@/lib/supabaseClient';
+import "@testing-library/jest-dom";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { useRouter } from "next/navigation";
+import LoginPage from "../LoginForm";
+import { supabase } from "@/lib/supabaseClient";
 
 // Mock the next/navigation module
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(),
 }));
 
 // Mock the supabase client
-jest.mock('@/lib/supabaseClient', () => ({
+jest.mock("@/lib/supabaseClient", () => ({
   supabase: {
     auth: {
-      signInWithPassword: jest.fn()
-    }
-  }
+      signInWithPassword: jest.fn(),
+    },
+  },
 }));
 
-describe('LoginPage', () => {
+describe("LoginPage", () => {
   const mockRouter = {
-    push: jest.fn()
+    push: jest.fn(),
   };
 
   beforeEach(() => {
@@ -29,61 +29,63 @@ describe('LoginPage', () => {
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
   });
 
-  it('renders login form', () => {
+  it("renders login form", () => {
     render(<LoginPage />);
-    
-    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
+
+    expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
     expect(screen.getByText(/account/, { exact: false })).toBeInTheDocument();
   });
 
-  it('handles successful login', async () => {
+  it("handles successful login", async () => {
     // Mock successful login
-    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({ error: null });
-    
-    render(<LoginPage />);
-    
-    // Fill in the form
-    fireEvent.change(screen.getByPlaceholderText('Email'), {
-      target: { value: 'test@example.com' }
+    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
+      error: null,
     });
-    fireEvent.change(screen.getByPlaceholderText('Password'), {
-      target: { value: 'password123' }
+
+    render(<LoginPage />);
+
+    // Fill in the form
+    fireEvent.change(screen.getByPlaceholderText("Email"), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Password"), {
+      target: { value: "password123" },
     });
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
     // Wait for and verify the redirect
     await waitFor(() => {
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123'
+        email: "test@example.com",
+        password: "password123",
       });
-      expect(mockRouter.push).toHaveBeenCalledWith('/');
+      expect(mockRouter.push).toHaveBeenCalledWith("/");
     });
   });
 
-  it('displays error message on login failure', async () => {
+  it("displays error message on login failure", async () => {
     // Mock login failure
-    const errorMessage = 'Invalid credentials';
+    const errorMessage = "Invalid credentials";
     (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
-      error: { message: errorMessage }
+      error: { message: errorMessage },
     });
-    
+
     render(<LoginPage />);
-    
+
     // Fill in the form
-    fireEvent.change(screen.getByPlaceholderText('Email'), {
-      target: { value: 'test@example.com' }
+    fireEvent.change(screen.getByPlaceholderText("Email"), {
+      target: { value: "test@example.com" },
     });
-    fireEvent.change(screen.getByPlaceholderText('Password'), {
-      target: { value: 'wrongpassword' }
+    fireEvent.change(screen.getByPlaceholderText("Password"), {
+      target: { value: "wrongpassword" },
     });
 
     // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
     // Wait for and verify error message
     await waitFor(() => {
@@ -91,4 +93,4 @@ describe('LoginPage', () => {
     });
     expect(mockRouter.push).not.toHaveBeenCalled();
   });
-}); 
+});

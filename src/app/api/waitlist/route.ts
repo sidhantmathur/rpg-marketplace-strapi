@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { sendEmail } from '@/utils/sendEmail';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { sendEmail } from "@/utils/sendEmail";
 
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, userId } = await req.json();
 
     if (!sessionId || !userId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     const session = await prisma.session.findUnique({
@@ -16,19 +16,25 @@ export async function POST(req: NextRequest) {
     });
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     // Check if already on waitlist
     const alreadyOnWaitlist = session.waitlist.some((w) => w.userId === userId);
     if (alreadyOnWaitlist) {
-      return NextResponse.json({ error: 'You are already on the waitlist' }, { status: 400 });
+      return NextResponse.json(
+        { error: "You are already on the waitlist" },
+        { status: 400 },
+      );
     }
 
     // Check if already booked
     const alreadyBooked = session.bookings.some((b) => b.userId === userId);
     if (alreadyBooked) {
-      return NextResponse.json({ error: 'You are already booked for this session' }, { status: 400 });
+      return NextResponse.json(
+        { error: "You are already booked for this session" },
+        { status: 400 },
+      );
     }
 
     // Add to waitlist
@@ -46,11 +52,13 @@ export async function POST(req: NextRequest) {
 
     // Send notification to DM
     if (dm) {
-      const dmProfile = await prisma.profile.findUnique({ where: { id: dm.userId } });
+      const dmProfile = await prisma.profile.findUnique({
+        where: { id: dm.userId },
+      });
       if (dmProfile?.email) {
         await sendEmail({
           to: dmProfile.email,
-          subject: 'New Waitlist Entry',
+          subject: "New Waitlist Entry",
           html: `A new user has joined the waitlist for your session "${session.title}".`,
         });
       }
@@ -58,10 +66,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(waitlistEntry);
   } catch (error) {
-    console.error('Error adding to waitlist:', error);
+    console.error("Error adding to waitlist:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
 }
@@ -71,7 +81,7 @@ export async function DELETE(req: NextRequest) {
     const { sessionId, userId } = await req.json();
 
     if (!sessionId || !userId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     const waitlistEntry = await prisma.waitlist.delete({
@@ -85,10 +95,12 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(waitlistEntry);
   } catch (error) {
-    console.error('Error removing from waitlist:', error);
+    console.error("Error removing from waitlist:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
-} 
+}

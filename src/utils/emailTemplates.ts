@@ -1,4 +1,4 @@
-import { sendEmail } from './sendEmail';
+import { sendEmail } from "./sendEmail";
 
 interface SessionInfo {
   title: string;
@@ -11,7 +11,10 @@ interface UserInfo {
   name?: string;
 }
 
-export const sendSessionReminder = async (session: SessionInfo, users: UserInfo[]) => {
+export const sendSessionReminder = async (
+  session: SessionInfo,
+  users: UserInfo[],
+) => {
   for (const user of users) {
     if (user.email) {
       await sendEmail({
@@ -23,19 +26,26 @@ export const sendSessionReminder = async (session: SessionInfo, users: UserInfo[
   }
 };
 
-export const sendSessionCancellation = async (session: SessionInfo, users: UserInfo[], reason?: string) => {
+export const sendSessionCancellation = async (
+  session: SessionInfo,
+  users: UserInfo[],
+  reason?: string,
+) => {
   for (const user of users) {
     if (user.email) {
       await sendEmail({
         to: user.email,
         subject: `Session Cancelled: ${session.title}`,
-        html: `<p>The session <strong>${session.title}</strong> has been cancelled.${reason ? ` Reason: ${reason}` : ''}</p>`,
+        html: `<p>The session <strong>${session.title}</strong> has been cancelled.${reason ? ` Reason: ${reason}` : ""}</p>`,
       });
     }
   }
 };
 
-export const sendReviewRequest = async (session: SessionInfo, user: UserInfo) => {
+export const sendReviewRequest = async (
+  session: SessionInfo,
+  user: UserInfo,
+) => {
   if (user.email) {
     await sendEmail({
       to: user.email,
@@ -45,7 +55,11 @@ export const sendReviewRequest = async (session: SessionInfo, user: UserInfo) =>
   }
 };
 
-export const sendSessionModification = async (session: SessionInfo, users: UserInfo[], changes: string) => {
+export const sendSessionModification = async (
+  session: SessionInfo,
+  users: UserInfo[],
+  changes: string,
+) => {
   for (const user of users) {
     if (user.email) {
       await sendEmail({
@@ -61,8 +75,8 @@ export const sendWelcomeEmail = async (user: UserInfo) => {
   if (user.email) {
     await sendEmail({
       to: user.email,
-      subject: 'Welcome to RPG Marketplace!',
+      subject: "Welcome to RPG Marketplace!",
       html: `<p>Welcome to RPG Marketplace! We're excited to have you join our community.</p>`,
     });
   }
-}; 
+};

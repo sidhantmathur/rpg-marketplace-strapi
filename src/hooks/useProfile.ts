@@ -1,33 +1,41 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { Profile } from "../types";
 
-export function useProfile() {
-  const [profile, setProfile] = useState<any>(null);
+export const useProfile = (userId: string | undefined) => {
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData.user;
-      // console.log('User ID:', user?.id);
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(`/api/profile/${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-      }
-
+    if (!userId) {
       setLoading(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (fetchError) throw fetchError;
+        setProfile(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch profile"),
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProfile();
-  }, []);
+  }, [userId]);
 
-  return { profile, loading };
-}
+  return { profile, loading, error };
+};

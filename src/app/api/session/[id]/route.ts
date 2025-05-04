@@ -1,33 +1,40 @@
 // app/api/session/[id]/route.ts
-import { PrismaClient } from '@prisma/client'
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { sendEmail } from '@/utils/sendEmail'
-import { sendSessionModification, sendSessionCancellation } from '@/utils/emailTemplates'
+import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { sendEmail } from "@/utils/sendEmail";
+import {
+  sendSessionModification,
+  sendSessionCancellation,
+} from "@/utils/emailTemplates";
 
 // Prisma singleton
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
-const prismaSingleton = globalForPrisma.prisma || new PrismaClient()
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prismaSingleton
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const prismaSingleton = globalForPrisma.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production")
+  globalForPrisma.prisma = prismaSingleton;
 
 async function handleError(err: unknown) {
-  console.error('🔥 [api/session/[id]] uncaught error:', err)
+  console.error("🔥 [api/session/[id]] uncaught error:", err);
   const message =
     err instanceof Error
       ? err.message
-      : typeof err === 'string'
-      ? err
-      : 'Unknown error'
-  return NextResponse.json({ error: message }, { status: 500 })
+      : typeof err === "string"
+        ? err
+        : "Unknown error";
+  return NextResponse.json({ error: message }, { status: 500 });
 }
 
 export async function GET(request: NextRequest, context: any) {
   try {
-    const rawId = context.params.id
-    console.log('🛰  GET /api/session/[id] → id=', rawId)
-    const id = Number(rawId)
+    const rawId = context.params.id;
+    console.log("🛰  GET /api/session/[id] → id=", rawId);
+    const id = Number(rawId);
     if (Number.isNaN(id)) {
-      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Invalid session id" },
+        { status: 400 },
+      );
     }
 
     const session = await prismaSingleton.session.findUnique({
@@ -35,31 +42,32 @@ export async function GET(request: NextRequest, context: any) {
       include: {
         dm: true,
         bookings: { include: { user: true } },
-        reviews: {                        // ← NEW
+        reviews: {
+          // ← NEW
           where: { deleted: false },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: { author: true },
         },
       },
     });
-    
+
     if (!session) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json(session)
+    return NextResponse.json(session);
   } catch (err) {
-    return handleError(err)
+    return handleError(err);
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  context: any
-) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
     const id = Number(context.params.id);
     if (Number.isNaN(id)) {
-      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid session id" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
@@ -73,7 +81,7 @@ export async function PATCH(
       experienceLevel,
       maxParticipants,
       tags,
-      imageUrl
+      imageUrl,
     } = body;
 
     // Get current session data for comparison
@@ -94,7 +102,7 @@ export async function PATCH(
     });
 
     if (!currentSession) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     // Update the session
@@ -108,14 +116,18 @@ export async function PATCH(
         game,
         genre,
         experienceLevel,
-        maxParticipants: maxParticipants ? parseInt(maxParticipants) : undefined,
+        maxParticipants: maxParticipants
+          ? parseInt(maxParticipants)
+          : undefined,
         imageUrl,
-        tags: tags ? {
-          deleteMany: {}, // Remove all existing tags
-          create: tags.map((tag: string) => ({
-            name: tag,
-          })),
-        } : undefined,
+        tags: tags
+          ? {
+              deleteMany: {}, // Remove all existing tags
+              create: tags.map((tag: string) => ({
+                name: tag,
+              })),
+            }
+          : undefined,
       },
       include: {
         tags: true,
@@ -131,14 +143,18 @@ export async function PATCH(
     if (dmProfile?.email) {
       // Prepare changes description
       const changes = [];
-      if (title && title !== currentSession.title) changes.push(`title changed to "${title}"`);
-      if (date && new Date(date).getTime() !== currentSession.date.getTime()) changes.push(`date changed to ${new Date(date).toLocaleString()}`);
-      if (duration && duration !== currentSession.duration) changes.push(`duration changed to ${duration} minutes`);
-      if (maxParticipants && maxParticipants !== currentSession.maxParticipants) changes.push(`max participants changed to ${maxParticipants}`);
-      
+      if (title && title !== currentSession.title)
+        changes.push(`title changed to "${title}"`);
+      if (date && new Date(date).getTime() !== currentSession.date.getTime())
+        changes.push(`date changed to ${new Date(date).toLocaleString()}`);
+      if (duration && duration !== currentSession.duration)
+        changes.push(`duration changed to ${duration} minutes`);
+      if (maxParticipants && maxParticipants !== currentSession.maxParticipants)
+        changes.push(`max participants changed to ${maxParticipants}`);
+
       if (changes.length > 0) {
         const participants = [
-          ...currentSession.bookings.map(b => ({ email: b.user.email })),
+          ...currentSession.bookings.map((b) => ({ email: b.user.email })),
           { email: dmProfile.email },
         ];
 
@@ -149,29 +165,34 @@ export async function PATCH(
             id: updatedSession.id,
           },
           participants,
-          changes.join(', ')
+          changes.join(", "),
         );
       }
     }
 
     return NextResponse.json(updatedSession);
   } catch (error) {
-    console.error('Error updating session:', error);
+    console.error("Error updating session:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(request: NextRequest, context: any) {
   try {
-    const rawId = context.params.id
-    console.log('❌ DELETE /api/session/[id] → id=', rawId)
-    const id = Number(rawId)
+    const rawId = context.params.id;
+    console.log("❌ DELETE /api/session/[id] → id=", rawId);
+    const id = Number(rawId);
 
     if (Number.isNaN(id)) {
-      return NextResponse.json({ error: 'Invalid session id' }, { status: 400 })
+      return NextResponse.json(
+        { error: "Invalid session id" },
+        { status: 400 },
+      );
     }
 
     // Check if this is a user removal request
@@ -181,15 +202,18 @@ export async function DELETE(request: NextRequest, context: any) {
       const [session, user] = await Promise.all([
         prismaSingleton.session.findUnique({
           where: { id },
-          include: { dm: true }
+          include: { dm: true },
         }),
         prismaSingleton.profile.findUnique({
-          where: { id: userId }
-        })
+          where: { id: userId },
+        }),
       ]);
 
       if (!session) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        return NextResponse.json(
+          { error: "Session not found" },
+          { status: 404 },
+        );
       }
 
       // Delete the booking
@@ -197,9 +221,9 @@ export async function DELETE(request: NextRequest, context: any) {
         where: {
           sessionId_userId: {
             sessionId: id,
-            userId
-          }
-        }
+            userId,
+          },
+        },
       });
 
       // Send notification to the removed user
@@ -208,7 +232,7 @@ export async function DELETE(request: NextRequest, context: any) {
           to: user.email,
           subject: `Removed from Session: ${session.title}`,
           html: `<p>You have been removed from the session <strong>${session.title}</strong> scheduled on ${new Date(
-            session.date
+            session.date,
           ).toLocaleString()}.</p>`,
         });
       }
@@ -235,7 +259,7 @@ export async function DELETE(request: NextRequest, context: any) {
     });
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     // Get DM's email
@@ -246,7 +270,7 @@ export async function DELETE(request: NextRequest, context: any) {
 
     if (dmProfile?.email) {
       const participants = [
-        ...session.bookings.map(b => ({ email: b.user.email })),
+        ...session.bookings.map((b) => ({ email: b.user.email })),
         { email: dmProfile.email },
       ];
 
@@ -256,30 +280,30 @@ export async function DELETE(request: NextRequest, context: any) {
           date: session.date,
           id: session.id,
         },
-        participants
+        participants,
       );
     }
 
     // First delete all related bookings
-    console.log('Deleting related bookings...')
+    console.log("Deleting related bookings...");
     await prismaSingleton.booking.deleteMany({
-      where: { sessionId: id }
-    })
+      where: { sessionId: id },
+    });
 
     // Delete all related reviews
-    console.log('Deleting related reviews...')
+    console.log("Deleting related reviews...");
     await prismaSingleton.review.deleteMany({
-      where: { sessionId: id }
-    })
+      where: { sessionId: id },
+    });
 
     // Finally delete the session (this will cascade delete the tags relation)
-    console.log('Deleting session...')
-    await prismaSingleton.session.delete({ where: { id } })
-    
-    console.log('Session deleted successfully')
-    return NextResponse.json({ success: true }, { status: 200 })
+    console.log("Deleting session...");
+    await prismaSingleton.session.delete({ where: { id } });
+
+    console.log("Session deleted successfully");
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error('Error in DELETE /api/session/[id]:', err)
-    return handleError(err)
+    console.error("Error in DELETE /api/session/[id]:", err);
+    return handleError(err);
   }
 }

@@ -1,5 +1,5 @@
-'use client';
-import { useState } from 'react';
+"use client";
+import { useState } from "react";
 
 export default function StarRatingInput({
   value,
@@ -20,7 +20,7 @@ export default function StarRatingInput({
           viewBox="0 0 20 20"
           width={size}
           height={size}
-          className={`cursor-pointer ${n <= value ? 'fill-yellow-400' : 'fill-gray-300'}`}
+          className={`cursor-pointer ${n <= value ? "fill-yellow-400" : "fill-gray-300"}`}
         >
           <polygon points="10 1 12.6 7 19 7.3 14 11.6 15.6 18 10 14.3 4.4 18 6 11.6 1 7.3 7.4 7" />
         </svg>

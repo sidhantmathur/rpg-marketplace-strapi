@@ -1,6 +1,6 @@
-'use client';
-import { useState } from 'react';
-import StarRatingInput from './StarRatingInput';
+"use client";
+import { useState } from "react";
+import StarRatingInput from "./StarRatingInput";
 
 export default function ReviewModal({
   open,
@@ -18,7 +18,7 @@ export default function ReviewModal({
   onSuccess: () => void;
 }) {
   const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
 
   if (!open) return null;
   return (
@@ -34,13 +34,15 @@ export default function ReviewModal({
         />
 
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} className="px-3 py-1 text-sm">Cancel</button>
+          <button onClick={onClose} className="px-3 py-1 text-sm">
+            Cancel
+          </button>
           <button
             className="bg-blue-600 text-white px-3 py-1 text-sm rounded"
             onClick={async () => {
-              const res = await fetch('/api/reviews', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              const res = await fetch("/api/reviews", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   sessionId,
                   targetId,
@@ -53,7 +55,7 @@ export default function ReviewModal({
                 onSuccess();
                 onClose();
               } else {
-                alert('Error saving review');
+                alert("Error saving review");
               }
             }}
           >

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
 export async function POST(request: NextRequest) {
@@ -21,11 +21,14 @@ export async function POST(request: NextRequest) {
       maxParticipants,
       tags,
       imageUrl,
-      userId
+      userId,
     } = body;
 
     if (!title || !date || !userId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     // First, get or create the DungeonMaster record
@@ -36,18 +39,21 @@ export async function POST(request: NextRequest) {
     if (!dm) {
       // Get user profile to get the name
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
         .single();
 
       if (!profile) {
-        return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+        return NextResponse.json(
+          { error: "User profile not found" },
+          { status: 404 },
+        );
       }
 
       dm = await prisma.dungeonMaster.create({
         data: {
-          name: profile.email.split('@')[0], // Use email username as default name
+          name: profile.email.split("@")[0], // Use email username as default name
           userId,
         },
       });
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
         imageUrl,
         userId,
         dmId: dm.id,
-        status: 'upcoming',
+        status: "upcoming",
         tags: {
           create: tags.map((tag: string) => ({
             name: tag,
@@ -81,17 +87,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newSession);
   } catch (error) {
-    console.error('Error creating session:', error);
+    console.error("Error creating session:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
 
 export async function GET() {
   const sessions = await prisma.session.findMany({
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
     include: {
       dm: { select: { name: true } },
       bookings: {
@@ -120,7 +126,7 @@ export async function DELETE(req: NextRequest) {
   const { sessionId } = await req.json();
 
   if (!sessionId) {
-    return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
+    return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
   }
 
   try {
@@ -134,10 +140,10 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('API DELETE /session error:', error);
+    console.error("API DELETE /session error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
     );
   }
 }

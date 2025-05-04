@@ -7,6 +7,7 @@ A modern platform for connecting Dungeon Masters with players for tabletop role-
 The platform is in active development with core features implemented. We're working towards a complete MVP by the end of Month 1.
 
 ### ✅ Implemented Features
+
 - Basic marketplace structure
 - Session search and filtering
 - Categories and tags system
@@ -15,6 +16,7 @@ The platform is in active development with core features implemented. We're work
 - Basic review system
 
 ### 🚧 In Development
+
 - Session scheduling and capacity management
 - Payment integration
 - User profiles and dashboards
@@ -24,6 +26,7 @@ The platform is in active development with core features implemented. We're work
 ## Project Overview
 
 This marketplace allows:
+
 - Players to discover and book RPG sessions
 - Game Masters to host and manage sessions
 - Community building through reviews and forums
@@ -70,6 +73,7 @@ rpg-marketplace/
    ```
 
 ## 📅 Development Timeline
+
 - **Month 1**: MVP Development (Current)
 - **Month 2**: Feature Enhancement
 - **Month 3**: Polish and Scale
@@ -77,6 +81,7 @@ rpg-marketplace/
 ## Key Features
 
 ### MVP Features (Month 1)
+
 - Session booking system
 - Basic user profiles
 - Session management
@@ -86,6 +91,7 @@ rpg-marketplace/
 - Core community features
 
 ### 🎯 Upcoming Features
+
 - Community forums
 - In-app messaging
 - Advanced analytics
@@ -109,4 +115,5 @@ Currently in Month 1 of development, working towards MVP completion. See TODO.md
 For support, please open an issue in the repository or contact the development team.
 
 ## 📄 License
+
 Private - All rights reserved

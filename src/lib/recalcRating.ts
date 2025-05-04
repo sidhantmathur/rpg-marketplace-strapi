@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import prisma from "@/lib/prisma";
 
 export async function recalcRating(targetId: string) {
   const agg = await prisma.review.aggregate({

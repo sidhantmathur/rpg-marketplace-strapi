@@ -1,40 +1,40 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { useUser } from '@/hooks/useUser';
-import { Session } from '@prisma/client';
-import SessionCalendar from './SessionCalendar';
-import { addMinutes } from 'date-fns';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@/hooks/useUser";
+import { Session } from "@prisma/client";
+import SessionCalendar from "./SessionCalendar";
+import { addMinutes } from "date-fns";
 
 const GAME_OPTIONS = [
-  'D&D 5e',
-  'Pathfinder',
-  'Call of Cthulhu',
-  'Starfinder',
-  'Shadowrun',
-  'Cyberpunk Red',
-  'Vampire: The Masquerade',
-  'Other'
+  "D&D 5e",
+  "Pathfinder",
+  "Call of Cthulhu",
+  "Starfinder",
+  "Shadowrun",
+  "Cyberpunk Red",
+  "Vampire: The Masquerade",
+  "Other",
 ];
 
 const GENRE_OPTIONS = [
-  'Fantasy',
-  'Horror',
-  'Sci-Fi',
-  'Modern',
-  'Historical',
-  'Post-Apocalyptic',
-  'Superhero',
-  'Other'
+  "Fantasy",
+  "Horror",
+  "Sci-Fi",
+  "Modern",
+  "Historical",
+  "Post-Apocalyptic",
+  "Superhero",
+  "Other",
 ];
 
 const EXPERIENCE_LEVELS = [
-  'Beginner',
-  'Intermediate',
-  'Advanced',
-  'All Levels'
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+  "All Levels",
 ];
 
 interface CreateSessionFormProps {
@@ -45,24 +45,32 @@ interface CreateSessionFormProps {
   };
 }
 
-export default function CreateSessionForm({ onCancel, onSuccess, session }: CreateSessionFormProps) {
+export default function CreateSessionForm({
+  onCancel,
+  onSuccess,
+  session,
+}: CreateSessionFormProps) {
   const router = useRouter();
   const { user } = useUser();
   const [formData, setFormData] = useState({
-    title: session?.title || '',
-    description: session?.description || '',
+    title: session?.title || "",
+    description: session?.description || "",
     date: session?.date ? new Date(session.date) : new Date(),
-    time: session?.date ? new Date(session.date).toISOString().split('T')[1].slice(0, 5) : '',
+    time: session?.date
+      ? new Date(session.date).toISOString().split("T")[1].slice(0, 5)
+      : "",
     duration: session?.duration || 120,
-    game: session?.game || '',
-    genre: session?.genre || '',
-    experienceLevel: session?.experienceLevel || '',
+    game: session?.game || "",
+    genre: session?.genre || "",
+    experienceLevel: session?.experienceLevel || "",
     maxParticipants: session?.maxParticipants || 5,
-    tags: session?.tags?.map(tag => tag.name) || [] as string[],
-    imageUrl: session?.imageUrl || '',
+    tags: session?.tags?.map((tag) => tag.name) || ([] as string[]),
+    imageUrl: session?.imageUrl || "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(session?.imageUrl || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    session?.imageUrl || null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingSessions, setExistingSessions] = useState<Date[]>([]);
@@ -75,12 +83,12 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
 
       try {
         const response = await fetch(`/api/session/search?dmId=${user.id}`);
-        if (!response.ok) throw new Error('Failed to fetch sessions');
-        
+        if (!response.ok) throw new Error("Failed to fetch sessions");
+
         const sessions = await response.json();
         setExistingSessions(sessions.map((s: any) => new Date(s.date)));
       } catch (err) {
-        console.error('Error fetching sessions:', err);
+        console.error("Error fetching sessions:", err);
       }
     };
 
@@ -96,14 +104,16 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       if (session) {
         // Update existing session
         const response = await fetch(`/api/session/${session.id}`, {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             title: formData.title,
             description: formData.description,
-            date: new Date(`${formData.date.toISOString().split('T')[0]}T${formData.time}`).toISOString(),
+            date: new Date(
+              `${formData.date.toISOString().split("T")[0]}T${formData.time}`,
+            ).toISOString(),
             duration: parseInt(formData.duration.toString()),
             game: formData.game,
             genre: formData.genre,
@@ -114,48 +124,48 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update session');
+          throw new Error("Failed to update session");
         }
 
         // If there's a new image, upload it
         if (imageFile) {
           const path = `${user?.id}/session/${session.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error } = await supabase
-            .storage
-            .from('sessions')
-            .upload(path, imageFile, { cacheControl: '3600', upsert: false });
+          const { data: uploadData, error } = await supabase.storage
+            .from("sessions")
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false });
 
           if (error) {
-            console.error('Upload error:', error);
-            throw new Error('Image upload failed');
+            console.error("Upload error:", error);
+            throw new Error("Image upload failed");
           }
 
           // Get public URL
-          const { data: { publicUrl } } = supabase
-            .storage
-            .from('sessions')
-            .getPublicUrl(uploadData.path);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with new image URL
           await fetch(`/api/session/${session.id}`, {
-            method: 'PATCH',
+            method: "PATCH",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ imageUrl: publicUrl }),
           });
         }
       } else {
         // Create new session
-        const sessionResponse = await fetch('/api/session', {
-          method: 'POST',
+        const sessionResponse = await fetch("/api/session", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             ...formData,
-            date: new Date(`${formData.date.toISOString().split('T')[0]}T${formData.time}`).toISOString(),
+            date: new Date(
+              `${formData.date.toISOString().split("T")[0]}T${formData.time}`,
+            ).toISOString(),
             duration: parseInt(formData.duration.toString()),
             maxParticipants: parseInt(formData.maxParticipants.toString()),
             tags: formData.tags,
@@ -164,7 +174,7 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         });
 
         if (!sessionResponse.ok) {
-          throw new Error('Failed to create session');
+          throw new Error("Failed to create session");
         }
 
         const sessionData = await sessionResponse.json();
@@ -173,27 +183,25 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
         if (imageFile) {
           const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error } = await supabase
-            .storage
-            .from('sessions')
-            .upload(path, imageFile, { cacheControl: '3600', upsert: false });
+          const { data: uploadData, error } = await supabase.storage
+            .from("sessions")
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false });
 
           if (error) {
-            console.error('Upload error:', error);
-            throw new Error('Image upload failed');
+            console.error("Upload error:", error);
+            throw new Error("Image upload failed");
           }
 
           // Get public URL
-          const { data: { publicUrl } } = supabase
-            .storage
-            .from('sessions')
-            .getPublicUrl(uploadData.path);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with image URL
           await fetch(`/api/session/${sessionData.id}`, {
-            method: 'PATCH',
+            method: "PATCH",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ imageUrl: publicUrl }),
           });
@@ -202,23 +210,23 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
 
       // Reset form and close
       setFormData({
-        title: '',
-        description: '',
+        title: "",
+        description: "",
         date: new Date(),
-        time: '',
+        time: "",
         duration: 120,
-        game: '',
-        genre: '',
-        experienceLevel: '',
+        game: "",
+        genre: "",
+        experienceLevel: "",
         maxParticipants: 5,
         tags: [] as string[],
-        imageUrl: '',
+        imageUrl: "",
       });
       setImageFile(null);
       setImagePreview(null);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +237,7 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Max file size is 2 MB.');
+      alert("Max file size is 2 MB.");
       return;
     }
 
@@ -237,22 +245,26 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const checkForConflicts = async (date: Date, time: string, duration: number) => {
+  const checkForConflicts = async (
+    date: Date,
+    time: string,
+    duration: number,
+  ) => {
     if (!user?.id) return;
 
     try {
-      const [hours, minutes] = time.split(':').map(Number);
+      const [hours, minutes] = time.split(":").map(Number);
       const sessionDate = new Date(date);
       sessionDate.setHours(hours, minutes, 0, 0);
       const sessionEnd = addMinutes(sessionDate, duration);
 
       const response = await fetch(`/api/session/search?dmId=${user.id}`);
       if (!response.ok) return;
-      
+
       const sessions = await response.json();
       const conflicts = sessions.filter((s: any) => {
         const sessionStart = new Date(s.date);
-        const sessionEndTime = s.duration 
+        const sessionEndTime = s.duration
           ? addMinutes(sessionStart, s.duration)
           : addMinutes(sessionStart, 120);
 
@@ -264,12 +276,14 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       });
 
       if (conflicts.length > 0) {
-        setConflictWarning(`Warning: This time slot overlaps with ${conflicts.length} existing session${conflicts.length > 1 ? 's' : ''}.`);
+        setConflictWarning(
+          `Warning: This time slot overlaps with ${conflicts.length} existing session${conflicts.length > 1 ? "s" : ""}.`,
+        );
       } else {
         setConflictWarning(null);
       }
     } catch (err) {
-      console.error('Error checking for conflicts:', err);
+      console.error("Error checking for conflicts:", err);
     }
   };
 
@@ -295,7 +309,9 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-secondary">Title</label>
+        <label className="block text-sm font-medium text-secondary">
+          Title
+        </label>
         <input
           type="text"
           value={formData.title}
@@ -306,17 +322,23 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">Description</label>
+        <label className="block text-sm font-medium text-secondary">
+          Description
+        </label>
         <textarea
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           rows={3}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary mb-2">Session Schedule</label>
+        <label className="block text-sm font-medium text-secondary mb-2">
+          Session Schedule
+        </label>
         <SessionCalendar
           onDateSelect={handleDateSelect}
           onTimeSelect={handleTimeSelect}
@@ -333,11 +355,18 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-secondary">Max Participants</label>
+          <label className="block text-sm font-medium text-secondary">
+            Max Participants
+          </label>
           <input
             type="number"
             value={formData.maxParticipants}
-            onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                maxParticipants: parseInt(e.target.value),
+              })
+            }
             min="1"
             max="20"
             className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
@@ -347,7 +376,9 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-secondary">Game</label>
+          <label className="block text-sm font-medium text-secondary">
+            Game
+          </label>
           <select
             value={formData.game}
             onChange={(e) => setFormData({ ...formData, game: e.target.value })}
@@ -355,56 +386,79 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
             className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           >
             <option value="">Select a game</option>
-            {GAME_OPTIONS.map(game => (
-              <option key={game} value={game}>{game}</option>
+            {GAME_OPTIONS.map((game) => (
+              <option key={game} value={game}>
+                {game}
+              </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-secondary">Genre</label>
+          <label className="block text-sm font-medium text-secondary">
+            Genre
+          </label>
           <select
             value={formData.genre}
-            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, genre: e.target.value })
+            }
             required
             className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           >
             <option value="">Select a genre</option>
-            {GENRE_OPTIONS.map(genre => (
-              <option key={genre} value={genre}>{genre}</option>
+            {GENRE_OPTIONS.map((genre) => (
+              <option key={genre} value={genre}>
+                {genre}
+              </option>
             ))}
           </select>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">Experience Level</label>
+        <label className="block text-sm font-medium text-secondary">
+          Experience Level
+        </label>
         <select
           value={formData.experienceLevel}
-          onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, experienceLevel: e.target.value })
+          }
           required
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         >
           <option value="">Select experience level</option>
-          {EXPERIENCE_LEVELS.map(level => (
-            <option key={level} value={level}>{level}</option>
+          {EXPERIENCE_LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">Tags (comma separated)</label>
+        <label className="block text-sm font-medium text-secondary">
+          Tags (comma separated)
+        </label>
         <input
           type="text"
-          value={formData.tags.join(', ')}
-          onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()) })}
+          value={formData.tags.join(", ")}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              tags: e.target.value.split(",").map((tag) => tag.trim()),
+            })
+          }
           placeholder="e.g. roleplay, combat, exploration"
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">Session Image</label>
+        <label className="block text-sm font-medium text-secondary">
+          Session Image
+        </label>
         <input
           type="file"
           accept="image/*"
@@ -432,9 +486,9 @@ export default function CreateSessionForm({ onCancel, onSuccess, session }: Crea
           type="submit"
           className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          {session ? 'Update Session' : 'Create Session'}
+          {session ? "Update Session" : "Create Session"}
         </button>
       </div>
     </form>
   );
-} 
+}

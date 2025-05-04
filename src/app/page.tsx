@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useUser } from '@/hooks/useUser';
-import { SignOutButton } from '@/components/SignOutButton';
-import SessionSearch from '@/components/SessionSearch';
-import Link from 'next/link';
+import { useUser } from "@/hooks/useUser";
+import { SignOutButton } from "@/components/SignOutButton";
+import SessionSearch from "@/components/SessionSearch";
+import Link from "next/link";
 
 export default function HomePage() {
   const { user, loading } = useUser();
@@ -30,7 +30,11 @@ export default function HomePage() {
         </>
       ) : (
         <p className="text-secondary">
-          Please <Link href="/login" className="text-link hover:text-link-hover">log in</Link> to create or view sessions.
+          Please{" "}
+          <Link href="/login" className="text-link hover:text-link-hover">
+            log in
+          </Link>{" "}
+          to create or view sessions.
         </p>
       )}
     </main>

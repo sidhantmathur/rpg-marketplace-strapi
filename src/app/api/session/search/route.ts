@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { z } from "zod";
 
 // Define validation schema for search parameters
 const searchParamsSchema = z.object({
@@ -16,23 +16,23 @@ const searchParamsSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const searchTerm = searchParams.get('searchTerm');
-    const game = searchParams.get('game');
-    const genre = searchParams.get('genre');
-    const experienceLevel = searchParams.get('experienceLevel');
-    const dateFrom = searchParams.get('dateFrom');
-    const dateTo = searchParams.get('dateTo');
-    const tags = searchParams.get('tags')?.split(',') || [];
-    const dmId = searchParams.get('dmId');
+    const searchTerm = searchParams.get("searchTerm");
+    const game = searchParams.get("game");
+    const genre = searchParams.get("genre");
+    const experienceLevel = searchParams.get("experienceLevel");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    const tags = searchParams.get("tags")?.split(",") || [];
+    const dmId = searchParams.get("dmId");
 
     const where: any = {
-      status: 'upcoming',
+      status: "upcoming",
     };
 
     if (searchTerm) {
       where.OR = [
-        { title: { contains: searchTerm, mode: 'insensitive' } },
-        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { title: { contains: searchTerm, mode: "insensitive" } },
+        { description: { contains: searchTerm, mode: "insensitive" } },
       ];
     }
 
@@ -77,16 +77,18 @@ export async function GET(req: NextRequest) {
         tags: true,
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
 
     return NextResponse.json(sessions);
   } catch (error) {
-    console.error('Error searching sessions:', error);
+    console.error("Error searching sessions:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
-} 
+}

@@ -26,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <header className="border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -38,7 +40,10 @@ export default function RootLayout({
                   <Link href="/" className="text-secondary hover:text-primary">
                     Home
                   </Link>
-                  <Link href="/sessions" className="text-secondary hover:text-primary">
+                  <Link
+                    href="/sessions"
+                    className="text-secondary hover:text-primary"
+                  >
                     Sessions
                   </Link>
                 </nav>

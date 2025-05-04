@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { sendReviewRequest } from '@/utils/emailTemplates';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { sendReviewRequest } from "@/utils/emailTemplates";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
               date: session.date,
               id: session.id,
             },
-            { email: booking.user.email }
+            { email: booking.user.email },
           );
         }
       }
@@ -44,10 +44,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error sending review requests:', error);
+    console.error("Error sending review requests:", error);
     return NextResponse.json(
-      { error: 'Failed to send review requests' },
-      { status: 500 }
+      { error: "Failed to send review requests" },
+      { status: 500 },
     );
   }
-} 
+}

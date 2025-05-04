@@ -17,7 +17,9 @@ export default function SessionCard({ session }: SessionCardProps) {
       <h2>{session.title}</h2>
       <p>{session.description}</p>
       <p>{session.date}</p>
-      <p>{session.currentPlayers}/{session.maxPlayers} players</p>
+      <p>
+        {session.currentPlayers}/{session.maxPlayers} players
+      </p>
     </div>
   );
-} 
+}

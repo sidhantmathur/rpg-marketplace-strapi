@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const reviewCreateSchema = z.object({
   sessionId: z.number().int().positive(),
@@ -13,7 +13,7 @@ export const reviewPatchSchema = z
     comment: z.string().max(1000).optional(),
   })
   .refine((d) => d.rating !== undefined || d.comment !== undefined, {
-    message: 'Nothing to update',
+    message: "Nothing to update",
   });
 
 export const reportSchema = z.object({

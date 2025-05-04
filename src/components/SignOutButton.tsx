@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export function SignOutButton() {
   const router = useRouter();
@@ -12,7 +12,10 @@ export function SignOutButton() {
   };
 
   return (
-    <button onClick={handleSignOut} className="text-sm text-link hover:text-link-hover">
+    <button
+      onClick={handleSignOut}
+      className="text-sm text-link hover:text-link-hover"
+    >
       Sign out
     </button>
   );

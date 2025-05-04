@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface BookingFormProps {
   onSubmit: (data: { name: string; email: string; players: string }) => void;
@@ -11,14 +11,14 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const players = formData.get('players') as string;
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const players = formData.get("players") as string;
 
     const newErrors: { [key: string]: string } = {};
-    if (!name) newErrors.name = 'Name is required';
-    if (!email) newErrors.email = 'Email is required';
-    if (!players) newErrors.players = 'Number of players is required';
+    if (!name) newErrors.name = "Name is required";
+    if (!email) newErrors.email = "Email is required";
+    if (!players) newErrors.players = "Number of players is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -48,4 +48,4 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
       <button type="submit">Book Now</button>
     </form>
   );
-} 
+}

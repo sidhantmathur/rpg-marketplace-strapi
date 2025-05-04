@@ -1,5 +1,5 @@
 /* Fantasy-themed font imports */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=Uncial+Antiqua&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=Uncial+Antiqua&display=swap");
 
 @import "tailwindcss";
 
@@ -33,7 +33,7 @@
   --forest-dark-light: #1b4d3e;
   --copper-dark: #d27d46;
   --copper-dark-light: #e68a52;
-  
+
   /* Default to Light Theme */
   --parchment: var(--parchment-light);
   --parchment-dark: var(--parchment-light-dark);
@@ -46,7 +46,7 @@
   --amber-light: var(--amber-light-light);
   --forest: var(--forest-light);
   --forest-light: var(--forest-light-light);
-  
+
   /* UI Colors */
   --background: var(--parchment);
   --foreground: var(--ink);
@@ -82,8 +82,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Cinzel', serif;
-  --font-mono: 'MedievalSharp', cursive;
+  --font-sans: "Cinzel", serif;
+  --font-mono: "MedievalSharp", cursive;
 }
 
 /* Dark Theme */
@@ -163,7 +163,10 @@ body {
 }
 
 /* Base styles for UI elements */
-select, input, button, textarea {
+select,
+input,
+button,
+textarea {
   background-color: var(--input);
   color: var(--foreground);
   border: 2px solid var(--border);
@@ -173,9 +176,14 @@ select, input, button, textarea {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-select:focus, input:focus, button:focus, textarea:focus {
+select:focus,
+input:focus,
+button:focus,
+textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--amber), 2px 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 2px var(--amber),
+    2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Dropdown specific styles */
@@ -221,7 +229,7 @@ button:active {
 }
 
 .fantasy-border::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -2px;
   left: -2px;
@@ -242,7 +250,7 @@ button:active {
 }
 
 .scroll-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -253,7 +261,7 @@ button:active {
 }
 
 .scroll-container::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -277,7 +285,7 @@ button:active {
 }
 
 .fantasy-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
@@ -308,7 +316,7 @@ button:active {
 }
 
 .card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;

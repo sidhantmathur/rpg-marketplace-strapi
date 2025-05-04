@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { sendSessionReminder } from '@/utils/emailTemplates';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { sendSessionReminder } from "@/utils/emailTemplates";
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       if (!dmProfile?.email) continue;
 
       const participants = [
-        ...session.bookings.map(b => ({ email: b.user.email })),
+        ...session.bookings.map((b) => ({ email: b.user.email })),
         { email: dmProfile.email },
       ];
 
@@ -54,16 +54,16 @@ export async function GET(req: NextRequest) {
           date: session.date,
           id: session.id,
         },
-        participants
+        participants,
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error sending session reminders:', error);
+    console.error("Error sending session reminders:", error);
     return NextResponse.json(
-      { error: 'Failed to send reminders' },
-      { status: 500 }
+      { error: "Failed to send reminders" },
+      { status: 500 },
     );
   }
-} 
+}
