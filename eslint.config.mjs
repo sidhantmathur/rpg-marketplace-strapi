@@ -13,20 +13,22 @@ export default [
       "**/out/**",
       "**/dist/**",
       "**/build/**",
-      "**/*.config.js",
-      "**/*.config.ts",
-      "**/*.config.mjs",
-      "**/*.config.cjs",
       "**/*.d.ts",
       "**/*.generated.ts",
       "**/cypress/e2e/**",
       "**/cypress/support/**",
-      "**/cypress/plugins/**"
+      "**/cypress/plugins/**",
+      "**/.swc/**",
+      "**/public/**",
+      "**/coverage/**",
+      "**/jest.setup.js",
+      "**/jest.config.js",
+      "**/jest.integration.config.js",
+      "**/prisma/generated/**"
     ]
   },
-  js.configs.recommended,
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["src/**/*.ts", "src/**/*.tsx"],
     languageOptions: {
       parser: parser,
       parserOptions: {
@@ -91,7 +93,7 @@ export default [
     }
   },
   {
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+    files: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
     languageOptions: {
       globals: {
         describe: "readonly",
@@ -102,6 +104,21 @@ export default [
         afterEach: "readonly",
         beforeAll: "readonly",
         afterAll: "readonly"
+      }
+    }
+  },
+  {
+    files: ["next.config.ts", "cypress.config.ts", "postcss.config.mjs", "tsconfig.json", "prisma/schema.prisma"],
+    languageOptions: {
+      parser: parser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: "module"
+      },
+      globals: {
+        module: "readonly",
+        require: "readonly",
+        process: "readonly"
       }
     }
   }
