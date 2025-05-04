@@ -1,13 +1,37 @@
 // app/api/session/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendEmail } from "@/utils/sendEmail";
 import {
   sendSessionModification,
   sendSessionCancellation,
 } from "@/utils/emailTemplates";
 
-async function handleError(err: unknown) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+interface SessionUpdateRequest {
+  title?: string;
+  description?: string;
+  date?: string;
+  duration?: number;
+  game?: string;
+  genre?: string;
+  experienceLevel?: string;
+  maxParticipants?: number;
+  tags?: string[];
+  imageUrl?: string;
+}
+
+interface SessionInfo {
+  title: string;
+  date: Date;
+  id: number;
+}
+
+function handleError(err: unknown) {
   console.error("[Session] Uncaught error:", err);
   const message =
     err instanceof Error
@@ -18,12 +42,12 @@ async function handleError(err: unknown) {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-export async function GET(request: NextRequest, context: any) {
+export async function GET(request: NextRequest, context: RouteParams) {
   try {
-    const rawId = context.params.id;
-    console.warn("[Session] Fetching session id:", rawId);
-    const id = Number(rawId);
-    if (Number.isNaN(id)) {
+    const { id } = context.params;
+    console.warn("[Session] Fetching session id:", id);
+    const sessionId = Number(id);
+    if (Number.isNaN(sessionId)) {
       return NextResponse.json(
         { error: "Invalid session id" },
         { status: 400 },
@@ -31,12 +55,11 @@ export async function GET(request: NextRequest, context: any) {
     }
 
     const session = await prisma.session.findUnique({
-      where: { id },
+      where: { id: sessionId },
       include: {
         dm: true,
         bookings: { include: { user: true } },
         reviews: {
-          // ← NEW
           where: { deleted: false },
           orderBy: { createdAt: "desc" },
           include: { author: true },
@@ -53,17 +76,18 @@ export async function GET(request: NextRequest, context: any) {
   }
 }
 
-export async function PATCH(request: NextRequest, context: any) {
+export async function PATCH(request: NextRequest, context: RouteParams) {
   try {
-    const id = Number(context.params.id);
-    if (Number.isNaN(id)) {
+    const { id } = context.params;
+    const sessionId = Number(id);
+    if (Number.isNaN(sessionId)) {
       return NextResponse.json(
         { error: "Invalid session id" },
         { status: 400 },
       );
     }
 
-    const body = await request.json();
+    const body = await request.json() as SessionUpdateRequest;
     const {
       title,
       description,
@@ -77,226 +101,114 @@ export async function PATCH(request: NextRequest, context: any) {
       imageUrl,
     } = body;
 
-    // Get current session data for comparison
-    const currentSession = await prisma.session.findUnique({
-      where: { id },
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
       include: {
+        dm: true,
         bookings: {
           include: {
-            user: {
-              select: { email: true },
-            },
+            user: true,
           },
-        },
-        dm: {
-          select: { userId: true },
         },
       },
     });
 
-    if (!currentSession) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Update the session
     const updatedSession = await prisma.session.update({
-      where: { id },
+      where: { id: sessionId },
       data: {
         title,
         description,
         date: date ? new Date(date) : undefined,
-        duration: duration ? parseInt(duration) : undefined,
+        duration,
         game,
         genre,
         experienceLevel,
-        maxParticipants: maxParticipants
-          ? parseInt(maxParticipants)
-          : undefined,
+        maxParticipants,
         imageUrl,
-        tags: tags
-          ? {
-              deleteMany: {}, // Remove all existing tags
-              create: tags.map((tag: string) => ({
-                name: tag,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        tags: true,
+        tags: tags ? {
+          set: [],
+          create: tags.map(tag => ({ name: tag }))
+        } : undefined,
       },
     });
 
-    // Get DM's email
-    const dmProfile = await prisma.profile.findUnique({
-      where: { id: currentSession.dm.userId },
-      select: { email: true },
-    });
-
-    if (dmProfile?.email) {
-      // Prepare changes description
-      const changes = [];
-      if (title && title !== currentSession.title)
-        changes.push(`title changed to "${title}"`);
-      if (date && new Date(date).getTime() !== currentSession.date.getTime())
-        changes.push(`date changed to ${new Date(date).toLocaleString()}`);
-      if (duration && duration !== currentSession.duration)
-        changes.push(`duration changed to ${duration} minutes`);
-      if (maxParticipants && maxParticipants !== currentSession.maxParticipants)
-        changes.push(`max participants changed to ${maxParticipants}`);
-
-      if (changes.length > 0) {
-        const participants = [
-          ...currentSession.bookings.map((b) => ({ email: b.user.email })),
-          { email: dmProfile.email },
-        ];
-
-        await sendSessionModification(
-          {
-            title: updatedSession.title,
-            date: updatedSession.date,
-            id: updatedSession.id,
-          },
-          participants,
-          changes.join(", "),
-        );
-      }
+    // Notify all booked users about the changes
+    if (session.bookings.length > 0) {
+      const users = session.bookings.map((booking) => ({ email: booking.user.email }));
+      const sessionInfo: SessionInfo = {
+        title: updatedSession.title,
+        date: updatedSession.date,
+        id: updatedSession.id,
+      };
+      const changes = [
+        title && `title changed to "${title}"`,
+        date && `date changed to ${new Date(date).toLocaleString()}`,
+        duration && `duration changed to ${duration} minutes`,
+        maxParticipants && `max participants changed to ${maxParticipants}`,
+      ].filter(Boolean).join(", ");
+      
+      await sendSessionModification(sessionInfo, users, changes);
     }
 
     return NextResponse.json(updatedSession);
-  } catch (error) {
-    console.error("[Session] Update failed:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
-    );
+  } catch (err) {
+    return handleError(err);
   }
 }
 
-export async function DELETE(request: NextRequest, context: any) {
+export async function DELETE(request: NextRequest, context: RouteParams) {
   try {
-    const rawId = context.params.id;
-    console.warn("[Session] Deleting session id:", rawId);
-    const id = Number(rawId);
-
-    if (Number.isNaN(id)) {
+    const { id } = context.params;
+    const sessionId = Number(id);
+    if (Number.isNaN(sessionId)) {
       return NextResponse.json(
         { error: "Invalid session id" },
         { status: 400 },
       );
     }
 
-    // Check if this is a user removal request
-    const { userId } = await request.json();
-    if (userId) {
-      // Get session and user info for notifications
-      const [session, user] = await Promise.all([
-        prisma.session.findUnique({
-          where: { id },
-          include: { dm: true },
-        }),
-        prisma.profile.findUnique({
-          where: { id: userId },
-        }),
-      ]);
-
-      if (!session) {
-        return NextResponse.json(
-          { error: "Session not found" },
-          { status: 404 },
-        );
-      }
-
-      // Delete the booking
-      await prisma.booking.delete({
-        where: {
-          sessionId_userId: {
-            sessionId: id,
-            userId,
-          },
-        },
-      });
-
-      // Send notification to the removed user
-      if (user?.email) {
-        await sendEmail({
-          to: user.email,
-          subject: `Removed from Session: ${session.title}`,
-          html: `<p>You have been removed from the session <strong>${session.title}</strong> scheduled on ${new Date(
-            session.date,
-          ).toLocaleString()}.</p>`,
-        });
-      }
-
-      return NextResponse.json({ success: true }, { status: 200 });
-    }
-
-    // If no userId provided, delete the entire session
-    // First get session info for notifications
     const session = await prisma.session.findUnique({
-      where: { id },
+      where: { id: sessionId },
       include: {
         bookings: {
           include: {
-            user: {
-              select: { email: true },
-            },
+            user: true,
           },
-        },
-        dm: {
-          select: { userId: true },
         },
       },
     });
 
     if (!session) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Get DM's email
-    const dmProfile = await prisma.profile.findUnique({
-      where: { id: session.dm.userId },
-      select: { email: true },
-    });
-
-    if (dmProfile?.email) {
-      const participants = [
-        ...session.bookings.map((b) => ({ email: b.user.email })),
-        { email: dmProfile.email },
-      ];
-
-      await sendSessionCancellation(
-        {
-          title: session.title,
-          date: session.date,
-          id: session.id,
-        },
-        participants,
-      );
-    }
-
-    // First delete all related bookings
-    console.warn("[Session] Deleting related bookings");
+    // Delete all bookings first
     await prisma.booking.deleteMany({
-      where: { sessionId: id },
+      where: { sessionId },
     });
 
-    // Delete all related reviews
-    console.warn("[Session] Deleting related reviews");
-    await prisma.review.deleteMany({
-      where: { sessionId: id },
+    // Delete the session
+    await prisma.session.delete({
+      where: { id: sessionId },
     });
 
-    // Finally delete the session (this will cascade delete the tags relation)
-    console.warn("[Session] Deleting session");
-    await prisma.session.delete({ where: { id } });
+    // Notify all booked users about the cancellation
+    if (session.bookings.length > 0) {
+      const users = session.bookings.map((booking) => ({ email: booking.user.email }));
+      const sessionInfo: SessionInfo = {
+        title: session.title,
+        date: session.date,
+        id: session.id,
+      };
+      await sendSessionCancellation(sessionInfo, users);
+    }
 
-    console.warn("[Session] Deletion completed successfully");
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[Session] Deletion failed:", err);
     return handleError(err);
   }
 }

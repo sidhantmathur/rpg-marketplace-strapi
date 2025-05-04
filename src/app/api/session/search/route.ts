@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 // Define validation schema for search parameters
 const searchParamsSchema = z.object({
@@ -27,9 +28,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } = searchParams;
+    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } = validatedParams.data;
 
-    const where: any = {
+    const where: Prisma.SessionWhereInput = {
       status: "upcoming",
     };
 
@@ -43,8 +44,13 @@ export async function GET(req: NextRequest) {
     if (game) where.game = game;
     if (genre) where.genre = genre;
     if (experienceLevel) where.experienceLevel = experienceLevel;
-    if (dateFrom) where.date = { ...where.date, gte: new Date(dateFrom) };
-    if (dateTo) where.date = { ...where.date, lte: new Date(dateTo) };
+    
+    if (dateFrom || dateTo) {
+      where.date = {};
+      if (dateFrom) where.date.gte = new Date(dateFrom);
+      if (dateTo) where.date.lte = new Date(dateTo);
+    }
+    
     if (dmId) where.dmId = Number(dmId);
     if (tags) {
       const tagArray = tags.split(",");
@@ -92,10 +98,8 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error searching sessions:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+      { error: "Failed to search sessions" },
+      { status: 500 }
     );
   }
 }

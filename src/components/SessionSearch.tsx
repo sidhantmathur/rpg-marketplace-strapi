@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import CreateSessionForm from "./CreateSessionForm";
 import { useUser } from "@/hooks/useUser";
 import { Session as PrismaSession } from "@prisma/client";
@@ -60,8 +59,6 @@ interface Session extends Omit<PrismaSession, "imageUrl"> {
 }
 
 export default function SessionSearch() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);

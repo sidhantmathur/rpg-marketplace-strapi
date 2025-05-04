@@ -7,9 +7,29 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
+interface SessionCreateRequest {
+  title: string;
+  description?: string;
+  date: string;
+  duration?: number;
+  game?: string;
+  genre?: string;
+  experienceLevel?: string;
+  maxParticipants?: number;
+  tags?: string[];
+  imageUrl?: string;
+  userId: string;
+}
+
+interface SupabaseProfile {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json() as SessionCreateRequest;
     const {
       title,
       description,
@@ -42,7 +62,7 @@ export async function POST(request: NextRequest) {
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .single() as { data: SupabaseProfile | null };
 
       if (!profile) {
         return NextResponse.json(
@@ -53,43 +73,36 @@ export async function POST(request: NextRequest) {
 
       dm = await prisma.dungeonMaster.create({
         data: {
-          name: profile.email.split("@")[0], // Use email username as default name
+          name: profile.name || profile.email,
           userId,
         },
       });
     }
 
-    // Create the session
-    const newSession = await prisma.session.create({
+    const session = await prisma.session.create({
       data: {
         title,
         description,
         date: new Date(date),
-        duration: duration ? parseInt(duration) : null,
+        duration,
         game,
         genre,
         experienceLevel,
-        maxParticipants: parseInt(maxParticipants),
+        maxParticipants,
         imageUrl,
-        userId,
         dmId: dm.id,
-        status: "upcoming",
-        tags: {
-          create: tags.map((tag: string) => ({
-            name: tag,
-          })),
-        },
-      },
-      include: {
-        tags: true,
+        userId,
+        tags: tags ? {
+          create: tags.map(tag => ({ name: tag }))
+        } : undefined,
       },
     });
 
-    return NextResponse.json(newSession);
+    return NextResponse.json(session, { status: 201 });
   } catch (error) {
     console.error("Error creating session:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to create session" },
       { status: 500 },
     );
   }
@@ -97,25 +110,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   const sessions = await prisma.session.findMany({
-    orderBy: { date: "asc" },
     include: {
-      dm: { select: { name: true } },
-      bookings: {
-        select: {
-          userId: true,
-          user: {
-            select: { email: true },
-          },
-        },
-      },
-      waitlist: {
-        select: {
-          userId: true,
-          user: {
-            select: { email: true },
-          },
-        },
-      },
+      dm: true,
+      bookings: true,
+    },
+    orderBy: {
+      date: "asc",
     },
   });
 
@@ -123,26 +123,25 @@ export async function GET() {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { sessionId } = await req.json();
-
-  if (!sessionId) {
-    return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
-  }
-
   try {
-    // Remove bookings first due to foreign key constraint
-    await prisma.booking.deleteMany({
-      where: { sessionId: Number(sessionId) },
-    });
-    await prisma.session.delete({
-      where: { id: Number(sessionId) },
+    const { sessionId } = await req.json() as { sessionId: number };
+
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: "Missing sessionId" },
+        { status: 400 },
+      );
+    }
+
+    const session = await prisma.session.delete({
+      where: { id: sessionId },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(session);
   } catch (error) {
-    console.error("API DELETE /session error:", error);
+    console.error("Error deleting session:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Failed to delete session" },
       { status: 500 },
     );
   }

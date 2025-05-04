@@ -24,7 +24,8 @@ export default [
       "**/jest.setup.js",
       "**/jest.config.js",
       "**/jest.integration.config.js",
-      "**/prisma/generated/**"
+      "**/prisma/generated/**",
+      "**/prisma/schema.prisma"
     ]
   },
   {
@@ -108,7 +109,7 @@ export default [
     }
   },
   {
-    files: ["next.config.ts", "cypress.config.ts", "postcss.config.mjs", "tsconfig.json", "prisma/schema.prisma"],
+    files: ["next.config.ts", "cypress.config.ts", "postcss.config.mjs", "tsconfig.json"],
     languageOptions: {
       parser: parser,
       parserOptions: {

@@ -7,10 +7,23 @@ const gp = global as unknown as { prisma?: PrismaClient };
 const prisma = gp.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== "production") gp.prisma = prisma;
 
+interface ReviewCreateRequest {
+  sessionId: number;
+  targetId: string;
+  authorId: string;
+  rating: number;
+  comment?: string;
+}
+
+interface Session {
+  id: number;
+  date: Date;
+}
+
 // POST /api/reviews  -------------------------------------------------------
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, targetId, authorId, rating, comment } = await req.json();
+    const { sessionId, targetId, authorId, rating, comment } = await req.json() as ReviewCreateRequest;
 
     // ----- basic validation (manual) -------------------------------------
     if (
@@ -48,7 +61,7 @@ export async function POST(req: NextRequest) {
     // Session must be in the past
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
-    });
+    }) as Session | null;
     if (!session || session.date > new Date()) {
       return NextResponse.json(
         { error: "Session not yet completed" },
@@ -68,7 +81,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(review, { status: 201 });
   } catch (err) {
     console.error("POST /api/reviews error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create review" },
+      { status: 500 },
+    );
   }
 }
 

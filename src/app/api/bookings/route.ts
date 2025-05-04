@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/utils/sendEmail";
-
 import prisma from "@/lib/prisma";
+
+interface BookingRequest {
+  sessionId: string | number;
+  userId: string;
+}
+
+interface SessionWithBookingsAndDM {
+  id: number;
+  title: string;
+  date: Date;
+  maxParticipants: number;
+  dmId: number;
+  bookings: Array<{ userId: string }>;
+  waitlist: Array<{ userId: string }>;
+  dm: { userId: string } | null;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json();
+    const { sessionId, userId } = await req.json() as BookingRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -14,7 +29,7 @@ export async function POST(req: NextRequest) {
     const session = await prisma.session.findUnique({
       where: { id: Number(sessionId) },
       include: { bookings: true, dm: true },
-    });
+    }) as SessionWithBookingsAndDM | null;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -88,7 +103,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json();
+    const { sessionId, userId } = await req.json() as BookingRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -97,7 +112,7 @@ export async function DELETE(req: NextRequest) {
     const session = await prisma.session.findUnique({
       where: { id: Number(sessionId) },
       include: { bookings: true, waitlist: true },
-    });
+    }) as SessionWithBookingsAndDM | null;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -112,61 +127,30 @@ export async function DELETE(req: NextRequest) {
       },
     });
 
-    // Get user and DM info for notifications
-    const [user, dmProfile] = await Promise.all([
-      prisma.profile.findUnique({ where: { id: userId } }),
-      prisma.dungeonMaster
-        .findUnique({
-          where: { id: session.dmId },
-        })
-        .then((dm) =>
-          dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null,
-        ),
-    ]);
-
-    // Notify DM that user left
-    if (dmProfile?.email && user) {
-      await sendEmail({
-        to: dmProfile.email,
-        subject: `User Left Session: ${session.title}`,
-        html: `<p>${user.email} has left your session <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date,
-        ).toLocaleString()}.</p>`,
-      });
-    }
-
-    // If there are people on the waitlist, notify all of them
+    // Move first person from waitlist to booking if any
     if (session.waitlist.length > 0) {
-      const waitlistUsers = await prisma.profile.findMany({
+      const firstWaitlist = session.waitlist[0];
+      await prisma.booking.create({
+        data: {
+          sessionId: Number(sessionId),
+          userId: firstWaitlist.userId,
+        },
+      });
+      await prisma.waitlist.delete({
         where: {
-          id: {
-            in: session.waitlist.map((w) => w.userId),
+          sessionId_userId: {
+            sessionId: Number(sessionId),
+            userId: firstWaitlist.userId,
           },
         },
       });
-
-      // Send notification to all waitlist users
-      for (const waitlistUser of waitlistUsers) {
-        if (waitlistUser.email) {
-          await sendEmail({
-            to: waitlistUser.email,
-            subject: "Session Spot Available",
-            html: `<p>A spot has become available in the session <strong>${session.title}</strong> scheduled on ${new Date(
-              session.date,
-            ).toLocaleString()}.</p>
-            <p>Hurry to book your spot!</p>`,
-          });
-        }
-      }
     }
 
     return NextResponse.json(booking);
   } catch (error) {
-    console.error("Error cancelling booking:", error);
+    console.error("DELETE /api/bookings unexpected error:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
+      { error: "Internal server error", details: error },
       { status: 500 },
     );
   }

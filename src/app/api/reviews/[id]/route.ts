@@ -6,11 +6,27 @@ const gp = global as unknown as { prisma?: PrismaClient };
 const prisma = gp.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== "production") gp.prisma = prisma;
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+interface ReviewUpdateRequest {
+  authorId: string;
+  rating?: number;
+  comment?: string;
+}
+
+interface ReviewDeleteRequest {
+  authorId: string;
+}
+
 /* PATCH /api/reviews/[id] ------------------------------------------------ */
-export async function PATCH(req: NextRequest, context: any) {
+export async function PATCH(req: NextRequest, context: RouteParams) {
   try {
     const id = Number(context.params.id);
-    const { authorId, rating, comment } = await req.json();
+    const { authorId, rating, comment } = await req.json() as ReviewUpdateRequest;
 
     if (!authorId)
       return NextResponse.json({ error: "authorId required" }, { status: 400 });
@@ -40,15 +56,18 @@ export async function PATCH(req: NextRequest, context: any) {
     return NextResponse.json(updated);
   } catch (err) {
     console.error("PATCH /api/reviews/[id] error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update review" },
+      { status: 500 },
+    );
   }
 }
 
 /* DELETE /api/reviews/[id] ---------------------------------------------- */
-export async function DELETE(req: NextRequest, context: any) {
+export async function DELETE(req: NextRequest, context: RouteParams) {
   try {
     const id = Number(context.params.id);
-    const { authorId } = await req.json();
+    const { authorId } = await req.json() as ReviewDeleteRequest;
 
     if (!authorId)
       return NextResponse.json({ error: "authorId required" }, { status: 400 });
@@ -59,14 +78,21 @@ export async function DELETE(req: NextRequest, context: any) {
     if (review.authorId !== authorId)
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    await prisma.$transaction(async (tx) => {
-      await tx.review.update({ where: { id }, data: { deleted: true } });
-      await recalcRating(review.targetId);
+    const deleted = await prisma.$transaction(async (tx) => {
+      const r = await tx.review.update({
+        where: { id },
+        data: { deleted: true },
+      });
+      await recalcRating(r.targetId);
+      return r;
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(deleted);
   } catch (err) {
     console.error("DELETE /api/reviews/[id] error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete review" },
+      { status: 500 },
+    );
   }
 }

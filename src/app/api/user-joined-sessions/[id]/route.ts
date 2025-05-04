@@ -6,6 +6,12 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
 // Helper to centralize 500 responses
 function handleError(err: unknown) {
   console.error("[UserSessions] API error:", err);
@@ -18,9 +24,9 @@ function handleError(err: unknown) {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-export async function GET(_: NextRequest, context: any) {
+export async function GET(_: NextRequest, context: RouteParams) {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     console.warn("[UserSessions] Fetching sessions for user:", id);
 
     // Optional: validate format of `id` here
