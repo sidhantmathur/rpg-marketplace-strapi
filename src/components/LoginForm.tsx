@@ -4,23 +4,47 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AuthError } from "@supabase/supabase-js";
+
+interface LoginFormState {
+  email: string;
+  password: string;
+  error: string;
+  isLoading: boolean;
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formState, setFormState] = useState<LoginFormState>({
+    email: "",
+    password: "",
+    error: "",
+    isLoading: false,
+  });
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFormState(prev => ({ ...prev, error: "", isLoading: true }));
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) setError(error.message);
-    else router.push("/");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formState.email,
+        password: formState.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      router.push("/");
+    } catch (error) {
+      const message = error instanceof AuthError 
+        ? error.message 
+        : "An unexpected error occurred";
+      setFormState(prev => ({ ...prev, error: message }));
+    } finally {
+      setFormState(prev => ({ ...prev, isLoading: false }));
+    }
   };
 
   return (
@@ -29,31 +53,36 @@ export default function LoginPage() {
       <form onSubmit={handleSignIn} className="space-y-4">
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formState.email}
+          onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
           placeholder="Email"
           className="w-full border p-2 rounded"
+          required
         />
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formState.password}
+          onChange={(e) => setFormState(prev => ({ ...prev, password: e.target.value }))}
           placeholder="Password"
           className="w-full border p-2 rounded"
+          required
         />
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white p-2 rounded"
+          className="w-full bg-blue-600 text-white p-2 rounded disabled:opacity-50"
+          disabled={formState.isLoading}
         >
-          Log In
+          {formState.isLoading ? "Logging in..." : "Log In"}
         </button>
+        {formState.error && (
+          <p className="text-red-500 text-sm">{formState.error}</p>
+        )}
         <p className="text-sm mt-2">
-          Don’t have an account?{" "}
-          <Link href="/signup" className="text-blue-600 underline">
+          Don't have an account?{" "}
+          <Link href="/signup" className="text-blue-600 hover:underline">
             Sign up
           </Link>
         </p>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
       </form>
     </main>
   );

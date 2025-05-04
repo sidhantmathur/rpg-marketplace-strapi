@@ -89,6 +89,16 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface SessionResponse {
+  sessions: Session[];
+  error?: string;
+}
+
+interface JoinedSessionsResponse {
+  sessions: JoinedSession[];
+  error?: string;
+}
+
 export default function SessionSearch() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -123,8 +133,11 @@ export default function SessionSearch() {
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
-      const data: Session[] = await response.json();
-      setSessions(data);
+      const data = await response.json() as SessionResponse;
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      setSessions(data.sessions);
     } catch (error) {
       console.error("Error fetching sessions:", error);
     }
@@ -137,8 +150,11 @@ export default function SessionSearch() {
       if (!res.ok) {
         throw new Error("Failed to fetch joined sessions");
       }
-      const data: JoinedSession[] = await res.json();
-      setJoinedSessionIds(data.map((b) => b.session.id));
+      const data = await res.json() as JoinedSessionsResponse;
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      setJoinedSessionIds(data.sessions.map((b) => b.session.id));
     } catch (error) {
       console.error("Error fetching joined sessions:", error);
     }
@@ -174,7 +190,7 @@ export default function SessionSearch() {
         method: "DELETE",
       });
 
-      const data: ApiResponse<null> = await response.json();
+      const data = await response.json() as ApiResponse<null>;
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete session");

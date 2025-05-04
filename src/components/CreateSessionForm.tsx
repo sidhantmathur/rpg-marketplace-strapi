@@ -78,6 +78,13 @@ interface FormData {
   imageUrl: string;
 }
 
+interface UploadResponse {
+  data: {
+    path: string;
+  };
+  error: Error | null;
+}
+
 export default function CreateSessionForm({
   onCancel,
   onSuccess,
@@ -117,7 +124,10 @@ export default function CreateSessionForm({
         const response = await fetch(`/api/session/search?dmId=${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
 
-        const data: ApiResponse<SessionResponse[]> = await response.json();
+        const data = await response.json() as ApiResponse<SessionResponse[]>;
+        if (data.error) {
+          throw new Error(data.error);
+        }
         setExistingSessions(data.data.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("Error fetching sessions:", err);
@@ -165,7 +175,7 @@ export default function CreateSessionForm({
 
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from("sessions")
-            .upload(path, imageFile, { cacheControl: "3600", upsert: false });
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false }) as UploadResponse;
 
           if (uploadError) {
             console.error("Upload error:", uploadError);
@@ -173,9 +183,9 @@ export default function CreateSessionForm({
           }
 
           // Get public URL
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
+          const { data: { publicUrl } } = supabase.storage
+            .from("sessions")
+            .getPublicUrl(uploadData.path);
 
           // Update session with new image URL
           const updateResponse = await fetch(`/api/session/${session.id}`, {
@@ -213,7 +223,7 @@ export default function CreateSessionForm({
           throw new Error("Failed to create session");
         }
 
-        const sessionData: SessionResponse = await sessionResponse.json();
+        const sessionData = await sessionResponse.json() as SessionResponse;
 
         // If there's an image, upload it
         if (imageFile) {
@@ -221,7 +231,7 @@ export default function CreateSessionForm({
 
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from("sessions")
-            .upload(path, imageFile, { cacheControl: "3600", upsert: false });
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false }) as UploadResponse;
 
           if (uploadError) {
             console.error("Upload error:", uploadError);
@@ -229,9 +239,9 @@ export default function CreateSessionForm({
           }
 
           // Get public URL
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
+          const { data: { publicUrl } } = supabase.storage
+            .from("sessions")
+            .getPublicUrl(uploadData.path);
 
           // Update session with image URL
           const updateResponse = await fetch(`/api/session/${sessionData.id}`, {
