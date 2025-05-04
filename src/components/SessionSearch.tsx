@@ -35,41 +35,63 @@ const EXPERIENCE_LEVELS = [
   "All Levels",
 ];
 
+interface Booking {
+  userId: string;
+  user: {
+    email: string;
+  };
+}
+
+interface WaitlistEntry {
+  userId: string;
+  user: {
+    email: string;
+  };
+}
+
+interface Tag {
+  id: number;
+  name: string;
+}
+
 interface Session extends Omit<PrismaSession, "imageUrl"> {
   dm: {
     name: string;
   };
-  bookings: Array<{
-    userId: string;
-    user: {
-      email: string;
-    };
-  }>;
-  waitlist: Array<{
-    userId: string;
-    user: {
-      email: string;
-    };
-  }>;
-  tags: Array<{
-    id: number;
-    name: string;
-  }>;
+  bookings: Booking[];
+  waitlist: WaitlistEntry[];
+  tags: Tag[];
   imageUrl: string | null;
+}
+
+interface Filters {
+  searchTerm: string;
+  game: string;
+  genre: string;
+  experienceLevel: string;
+  dateFrom: string;
+  dateTo: string;
+  tags: string[];
+}
+
+interface JoinedSession {
+  session: {
+    id: number;
+  };
 }
 
 export default function SessionSearch() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     searchTerm: "",
     game: "",
     genre: "",
     experienceLevel: "",
     dateFrom: "",
     dateTo: "",
-    tags: [] as string[],
+    tags: [],
   });
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
   const [managingSession, setManagingSession] = useState<Session | null>(null);
@@ -77,38 +99,50 @@ export default function SessionSearch() {
   const { user } = useUser();
 
   const fetchSessions = async () => {
-    const params = new URLSearchParams();
-    if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
-    if (filters.game) params.append("game", filters.game);
-    if (filters.genre) params.append("genre", filters.genre);
-    if (filters.experienceLevel)
-      params.append("experienceLevel", filters.experienceLevel);
-    if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.append("dateTo", filters.dateTo);
-    if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
+    try {
+      const params = new URLSearchParams();
+      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+      if (filters.game) params.append("game", filters.game);
+      if (filters.genre) params.append("genre", filters.genre);
+      if (filters.experienceLevel)
+        params.append("experienceLevel", filters.experienceLevel);
+      if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+      if (filters.dateTo) params.append("dateTo", filters.dateTo);
+      if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
 
-    const response = await fetch(`/api/session/search?${params.toString()}`);
-    const data = await response.json();
-    setSessions(data);
+      const response = await fetch(`/api/session/search?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch sessions");
+      }
+      const data: Session[] = await response.json();
+      setSessions(data);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+    }
   };
 
   const fetchJoinedSessions = async () => {
     if (!user) return;
-    const res = await fetch(`/api/user-joined-sessions/${user.id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setJoinedSessionIds(data.map((b: any) => b.session.id));
+    try {
+      const res = await fetch(`/api/user-joined-sessions/${user.id}`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch joined sessions");
+      }
+      const data: JoinedSession[] = await res.json();
+      setJoinedSessionIds(data.map((b) => b.session.id));
+    } catch (error) {
+      console.error("Error fetching joined sessions:", error);
     }
   };
 
   useEffect(() => {
-    fetchSessions();
-    if (user) fetchJoinedSessions();
+    void fetchSessions();
+    if (user) void fetchJoinedSessions();
   }, [filters, user]);
 
   const handleSessionCreated = () => {
     setShowCreateForm(false);
-    fetchSessions();
+    void fetchSessions();
   };
 
   const handleFilterChange = (
@@ -153,51 +187,71 @@ export default function SessionSearch() {
 
   const joinSession = async (sessionId: number) => {
     if (!user) return;
-    const res = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to join session");
+      }
       setJoinedSessionIds((prev) => [...prev, sessionId]);
-      fetchSessions();
+      void fetchSessions();
+    } catch (error) {
+      console.error("Error joining session:", error);
     }
   };
 
   const leaveSession = async (sessionId: number) => {
     if (!user) return;
-    const res = await fetch("/api/bookings", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to leave session");
+      }
       setJoinedSessionIds((prev) => prev.filter((id) => id !== sessionId));
-      fetchSessions();
+      void fetchSessions();
+    } catch (error) {
+      console.error("Error leaving session:", error);
     }
   };
 
   const joinWaitlist = async (sessionId: number) => {
     if (!user) return;
-    const res = await fetch("/api/waitlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
-      fetchSessions();
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to join waitlist");
+      }
+      void fetchSessions();
+    } catch (error) {
+      console.error("Error joining waitlist:", error);
     }
   };
 
   const leaveWaitlist = async (sessionId: number) => {
     if (!user) return;
-    const res = await fetch("/api/waitlist", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, userId: user.id }),
-    });
-    if (res.ok) {
-      fetchSessions();
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, userId: user.id }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to leave waitlist");
+      }
+      void fetchSessions();
+    } catch (error) {
+      console.error("Error leaving waitlist:", error);
     }
   };
 

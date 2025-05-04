@@ -1,9 +1,26 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent } from "@testing-library/react";
 import BookingForm from "../BookingForm";
+import { FormEvent } from "react";
+import { expect, jest, describe, it, beforeEach } from "@jest/globals";
+import { Matcher } from "@testing-library/dom";
+
+interface BookingFormData {
+  name: string;
+  email: string;
+  players: string;
+}
+
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeInTheDocument(): R;
+    }
+  }
+}
 
 describe("BookingForm", () => {
-  const mockOnSubmit = jest.fn();
+  const mockOnSubmit = jest.fn((data: BookingFormData) => {});
 
   beforeEach(() => {
     // Reset mock function before each test

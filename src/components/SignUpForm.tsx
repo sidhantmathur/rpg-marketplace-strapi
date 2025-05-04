@@ -5,6 +5,28 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
+import { AuthResponse, User } from "@supabase/supabase-js";
+
+interface SignUpResponse {
+  user?: {
+    id: string;
+    email: string;
+  };
+  error?: {
+    message: string;
+  };
+}
+
+interface SessionResponse {
+  user?: {
+    id: string;
+    email: string;
+  };
+}
+
+interface ProfileResponse {
+  error?: string;
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -27,7 +49,7 @@ export default function SignupPage() {
     setError("");
 
     // Step 1: Sign up
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error }: AuthResponse = await supabase.auth.signUp({
       email,
       password,
     });
@@ -43,12 +65,11 @@ export default function SignupPage() {
 
     // Step 3: If not available, attempt to get current session after confirmation
     if (!userId || !userEmail) {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionUser = session?.user as User;
 
-      userId = session?.user?.id;
-      userEmail = session?.user?.email;
+      userId = sessionUser?.id;
+      userEmail = sessionUser?.email;
 
       if (!userId || !userEmail) {
         setError(
@@ -84,9 +105,9 @@ export default function SignupPage() {
       return;
     }
 
-    const errorData = await res.json();
-    if (errorData) {
-      console.error("[SignUp] Profile creation failed:", errorData);
+    const errorData: ProfileResponse = await res.json();
+    if (errorData?.error) {
+      console.error("[SignUp] Profile creation failed:", errorData.error);
     }
 
     router.push("/");

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import LoginPage from "../LoginForm";
 import { supabase } from "@/lib/supabaseClient";
+import { AuthResponse } from "@supabase/supabase-js";
 
 // Mock the next/navigation module
 jest.mock("next/navigation", () => ({
@@ -42,7 +43,7 @@ describe("LoginPage", () => {
     // Mock successful login
     (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
       error: null,
-    });
+    } as AuthResponse);
 
     render(<LoginPage />);
 
@@ -72,7 +73,7 @@ describe("LoginPage", () => {
     const errorMessage = "Invalid credentials";
     (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
       error: { message: errorMessage },
-    });
+    } as AuthResponse);
 
     render(<LoginPage />);
 

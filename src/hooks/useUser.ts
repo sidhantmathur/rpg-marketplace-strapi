@@ -27,7 +27,7 @@ export const useUser = () => {
       }
     };
 
-    fetchUser();
+    void fetchUser();
 
     const {
       data: { subscription },
@@ -35,7 +35,9 @@ export const useUser = () => {
       setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, loading, error };

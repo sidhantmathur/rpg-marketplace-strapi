@@ -34,7 +34,7 @@ export const useProfile = (userId: string | undefined) => {
       }
     };
 
-    fetchProfile();
+    void fetchProfile();
   }, [userId]);
 
   return { profile, loading, error };

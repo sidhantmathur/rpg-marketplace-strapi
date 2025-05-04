@@ -1,9 +1,19 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import SessionCard from "../SessionCard";
+import { expect, describe, it } from "@jest/globals";
+
+interface Session {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  maxPlayers: number;
+  currentPlayers: number;
+}
 
 describe("SessionCard", () => {
-  const mockSession = {
+  const mockSession: Session = {
     id: "1",
     title: "D&D Adventure",
     description: "An epic fantasy adventure",

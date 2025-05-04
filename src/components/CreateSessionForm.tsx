@@ -45,13 +45,41 @@ interface CreateSessionFormProps {
   };
 }
 
+interface SessionResponse {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+  duration: number;
+  game: string;
+  genre: string;
+  experienceLevel: string;
+  maxParticipants: number;
+  tags: { name: string }[];
+  imageUrl: string;
+}
+
+interface FormData {
+  title: string;
+  description: string;
+  date: Date;
+  time: string;
+  duration: number;
+  game: string;
+  genre: string;
+  experienceLevel: string;
+  maxParticipants: number;
+  tags: string[];
+  imageUrl: string;
+}
+
 export default function CreateSessionForm({
   onCancel,
   onSuccess,
   session,
 }: CreateSessionFormProps) {
   const { user } = useUser();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: session?.title || "",
     description: session?.description || "",
     date: session?.date ? new Date(session.date) : new Date(),
@@ -63,7 +91,7 @@ export default function CreateSessionForm({
     genre: session?.genre || "",
     experienceLevel: session?.experienceLevel || "",
     maxParticipants: session?.maxParticipants || 5,
-    tags: session?.tags?.map((tag) => tag.name) || ([] as string[]),
+    tags: session?.tags?.map((tag) => tag.name) || [],
     imageUrl: session?.imageUrl || "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -84,14 +112,14 @@ export default function CreateSessionForm({
         const response = await fetch(`/api/session/search?dmId=${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
 
-        const sessions = await response.json();
-        setExistingSessions(sessions.map((s: any) => new Date(s.date)));
+        const sessions: SessionResponse[] = await response.json();
+        setExistingSessions(sessions.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("Error fetching sessions:", err);
       }
     };
 
-    fetchExistingSessions();
+    void fetchExistingSessions();
   }, [user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,12 +158,12 @@ export default function CreateSessionForm({
         if (imageFile) {
           const path = `${user?.id}/session/${session.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error } = await supabase.storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from("sessions")
             .upload(path, imageFile, { cacheControl: "3600", upsert: false });
 
-          if (error) {
-            console.error("Upload error:", error);
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
             throw new Error("Image upload failed");
           }
 
@@ -145,13 +173,17 @@ export default function CreateSessionForm({
           } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with new image URL
-          await fetch(`/api/session/${session.id}`, {
+          const updateResponse = await fetch(`/api/session/${session.id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ imageUrl: publicUrl }),
           });
+
+          if (!updateResponse.ok) {
+            throw new Error("Failed to update session image");
+          }
         }
       } else {
         // Create new session
@@ -176,18 +208,18 @@ export default function CreateSessionForm({
           throw new Error("Failed to create session");
         }
 
-        const sessionData = await sessionResponse.json();
+        const sessionData: SessionResponse = await sessionResponse.json();
 
         // If there's an image, upload it
         if (imageFile) {
           const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error } = await supabase.storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from("sessions")
             .upload(path, imageFile, { cacheControl: "3600", upsert: false });
 
-          if (error) {
-            console.error("Upload error:", error);
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
             throw new Error("Image upload failed");
           }
 
@@ -197,13 +229,17 @@ export default function CreateSessionForm({
           } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with image URL
-          await fetch(`/api/session/${sessionData.id}`, {
+          const updateResponse = await fetch(`/api/session/${sessionData.id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ imageUrl: publicUrl }),
           });
+
+          if (!updateResponse.ok) {
+            throw new Error("Failed to update session image");
+          }
         }
       }
 
@@ -218,7 +254,7 @@ export default function CreateSessionForm({
         genre: "",
         experienceLevel: "",
         maxParticipants: 5,
-        tags: [] as string[],
+        tags: [],
         imageUrl: "",
       });
       setImageFile(null);
@@ -248,41 +284,51 @@ export default function CreateSessionForm({
     date: Date,
     time: string,
     duration: number,
-  ) => {
-    if (!user?.id) return;
-
+    sessionId?: string
+  ): Promise<boolean> => {
     try {
-      const [hours, minutes] = time.split(":").map(Number);
-      const sessionDate = new Date(date);
-      sessionDate.setHours(hours, minutes, 0, 0);
-      const sessionEnd = addMinutes(sessionDate, duration);
+      const sessionDateTime = new Date(
+        `${date.toISOString().split("T")[0]}T${time}`
+      );
+      const sessionEndTime = addMinutes(sessionDateTime, duration);
 
-      const response = await fetch(`/api/session/search?dmId=${user.id}`);
-      if (!response.ok) return;
+      const response = await fetch(
+        `/api/session/conflicts?date=${date.toISOString()}&time=${time}&duration=${duration}${
+          sessionId ? `&sessionId=${sessionId}` : ""
+        }`
+      );
 
-      const sessions = await response.json();
-      const conflicts = sessions.filter((s: any) => {
-        const sessionStart = new Date(s.date);
-        const sessionEndTime = s.duration
-          ? addMinutes(sessionStart, s.duration)
-          : addMinutes(sessionStart, 120);
+      if (!response.ok) {
+        throw new Error("Failed to check for conflicts");
+      }
+
+      const conflicts: SessionResponse[] = await response.json();
+      const hasConflicts = conflicts.some((conflict) => {
+        const conflictDate = new Date(conflict.date);
+        const conflictEndTime = addMinutes(
+          conflictDate,
+          conflict.duration as number
+        );
 
         return (
-          (sessionStart <= sessionDate && sessionEndTime > sessionDate) ||
-          (sessionStart < sessionEnd && sessionEndTime >= sessionEnd) ||
-          (sessionDate <= sessionStart && sessionEnd >= sessionEndTime)
+          (sessionDateTime >= conflictDate && sessionDateTime < conflictEndTime) ||
+          (sessionEndTime > conflictDate && sessionEndTime <= conflictEndTime) ||
+          (sessionDateTime <= conflictDate && sessionEndTime >= conflictEndTime)
         );
       });
 
-      if (conflicts.length > 0) {
+      if (hasConflicts) {
         setConflictWarning(
-          `Warning: This time slot overlaps with ${conflicts.length} existing session${conflicts.length > 1 ? "s" : ""}.`,
+          "This session time conflicts with another session. Please choose a different time."
         );
       } else {
         setConflictWarning(null);
       }
+
+      return hasConflicts;
     } catch (err) {
       console.error("Error checking for conflicts:", err);
+      return false;
     }
   };
 
