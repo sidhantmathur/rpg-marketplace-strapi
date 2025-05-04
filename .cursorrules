@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "rules": {
+    "formatting": {
+      "indent": 2,
+      "quotes": "double",
+      "semi": true,
+      "trailingComma": "es5",
+      "printWidth": 100,
+      "tabWidth": 2,
+      "useTabs": false
+    },
+    "typescript": {
+      "strict": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true
+    },
+    "nextjs": {
+      "appRouter": true,
+      "serverComponents": true,
+      "imageOptimization": true,
+      "staticGeneration": true
+    },
+    "supabase": {
+      "rowLevelSecurity": true,
+      "policies": true,
+      "storage": {
+        "maxFileSize": "5MB",
+        "allowedMimeTypes": ["image/*", "application/pdf"]
+      }
+    },
+    "security": {
+      "env": {
+        "required": [
+          "NEXT_PUBLIC_SUPABASE_URL",
+          "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "SUPABASE_SERVICE_ROLE_KEY",
+          "RESEND_API_KEY"
+        ],
+        "optional": [
+          "NEXT_PUBLIC_SITE_URL",
+          "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+          "STRIPE_SECRET_KEY"
+        ]
+      },
+      "headers": {
+        "Content-Security-Policy": true,
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      }
+    },
+    "testing": {
+      "jest": true,
+      "coverage": {
+        "statements": 80,
+        "branches": 70,
+        "functions": 80,
+        "lines": 80
+      }
+    },
+    "deployment": {
+      "vercel": {
+        "autoDeploy": true,
+        "previewDeployments": true,
+        "productionBranch": "main"
+      }
+    },
+    "performance": {
+      "imageOptimization": true,
+      "codeSplitting": true,
+      "lazyLoading": true,
+      "cacheControl": {
+        "static": "public, max-age=31536000, immutable",
+        "dynamic": "public, max-age=0, must-revalidate"
+      }
+    },
+    "development": {
+      "workflow": {
+        "tdd": {
+          "enabled": true,
+          "steps": [
+            "writeTests",
+            "writeCode",
+            "runTests",
+            "refactor"
+          ],
+          "testFirst": true,
+          "coverageBeforeCommit": true,
+          "testPatterns": [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx"
+          ],
+          "additionalRules": {
+            "unitTests": {
+              "required": true,
+              "coverage": {
+                "statements": 80,
+                "branches": 70,
+                "functions": 80,
+                "lines": 80
+              }
+            },
+            "integrationTests": {
+              "required": true,
+              "coverage": {
+                "statements": 60,
+                "branches": 50,
+                "functions": 60,
+                "lines": 60
+              }
+            },
+            "e2eTests": {
+              "required": true,
+              "coverage": {
+                "statements": 40,
+                "branches": 30,
+                "functions": 40,
+                "lines": 40
+              }
+            },
+            "testDocumentation": {
+              "required": true,
+              "describeBlocks": true,
+              "testTitles": true,
+              "comments": true
+            }
+          }
+        }
+      }
+    },
+    "ci": {
+      "enabled": true,
+      "workflow": {
+        "stages": [
+          "lint",
+          "test",
+          "build",
+          "deploy"
+        ],
+        "rules": {
+          "lint": {
+            "eslint": true,
+            "prettier": true,
+            "typescript": true
+          },
+          "test": {
+            "unitTests": true,
+            "integrationTests": true,
+            "e2eTests": true,
+            "coverage": true
+          },
+          "build": {
+            "nextBuild": true,
+            "typeCheck": true,
+            "bundleAnalysis": true
+          },
+          "deploy": {
+            "preview": {
+              "onPullRequest": true,
+              "autoMerge": false
+            },
+            "production": {
+              "onMain": true,
+              "manualApproval": true
+            }
+          }
+        },
+        "environments": {
+          "development": {
+            "autoDeploy": true,
+            "preview": true
+          },
+          "staging": {
+            "autoDeploy": true,
+            "preview": true,
+            "manualApproval": false
+          },
+          "production": {
+            "autoDeploy": false,
+            "preview": false,
+            "manualApproval": true
+          }
+        },
+        "notifications": {
+          "slack": true,
+          "email": true,
+          "github": true
+        }
+      }
+    }
+  }
+} 
