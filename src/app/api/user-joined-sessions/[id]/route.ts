@@ -20,14 +20,14 @@ function handleError(err: unknown) {
 
 export async function GET(_: NextRequest, context: any) {
   try {
-    const rawId = context.params.id as string
-    console.log('🛰 GET /api/bookings/user/[id] → userId=', rawId)
+    const { id } = await context.params
+    console.log('🛰 GET /api/bookings/user/[id] → userId=', id)
 
-    // Optional: validate format of `rawId` here
-    // e.g. if you expect a UUID: if (!isValidUUID(rawId)) { … }
+    // Optional: validate format of `id` here
+    // e.g. if you expect a UUID: if (!isValidUUID(id)) { … }
 
     const bookings = await prisma.booking.findMany({
-      where: { userId: rawId },
+      where: { userId: id },
       include: {
         session: {
           include: {
