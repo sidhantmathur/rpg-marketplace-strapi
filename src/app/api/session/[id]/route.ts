@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendEmail } from '@/utils/sendEmail'
+import { sendSessionModification, sendSessionCancellation } from '@/utils/emailTemplates'
 
 // Prisma singleton
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
@@ -75,6 +76,27 @@ export async function PATCH(
       imageUrl
     } = body;
 
+    // Get current session data for comparison
+    const currentSession = await prismaSingleton.session.findUnique({
+      where: { id },
+      include: {
+        bookings: {
+          include: {
+            user: {
+              select: { email: true },
+            },
+          },
+        },
+        dm: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!currentSession) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
     // Update the session
     const updatedSession = await prismaSingleton.session.update({
       where: { id },
@@ -99,6 +121,38 @@ export async function PATCH(
         tags: true,
       },
     });
+
+    // Get DM's email
+    const dmProfile = await prismaSingleton.profile.findUnique({
+      where: { id: currentSession.dm.userId },
+      select: { email: true },
+    });
+
+    if (dmProfile?.email) {
+      // Prepare changes description
+      const changes = [];
+      if (title && title !== currentSession.title) changes.push(`title changed to "${title}"`);
+      if (date && new Date(date).getTime() !== currentSession.date.getTime()) changes.push(`date changed to ${new Date(date).toLocaleString()}`);
+      if (duration && duration !== currentSession.duration) changes.push(`duration changed to ${duration} minutes`);
+      if (maxParticipants && maxParticipants !== currentSession.maxParticipants) changes.push(`max participants changed to ${maxParticipants}`);
+      
+      if (changes.length > 0) {
+        const participants = [
+          ...currentSession.bookings.map(b => ({ email: b.user.email })),
+          { email: dmProfile.email },
+        ];
+
+        await sendSessionModification(
+          {
+            title: updatedSession.title,
+            date: updatedSession.date,
+            id: updatedSession.id,
+          },
+          participants,
+          changes.join(', ')
+        );
+      }
+    }
 
     return NextResponse.json(updatedSession);
   } catch (error) {
@@ -163,6 +217,49 @@ export async function DELETE(request: NextRequest, context: any) {
     }
 
     // If no userId provided, delete the entire session
+    // First get session info for notifications
+    const session = await prismaSingleton.session.findUnique({
+      where: { id },
+      include: {
+        bookings: {
+          include: {
+            user: {
+              select: { email: true },
+            },
+          },
+        },
+        dm: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    // Get DM's email
+    const dmProfile = await prismaSingleton.profile.findUnique({
+      where: { id: session.dm.userId },
+      select: { email: true },
+    });
+
+    if (dmProfile?.email) {
+      const participants = [
+        ...session.bookings.map(b => ({ email: b.user.email })),
+        { email: dmProfile.email },
+      ];
+
+      await sendSessionCancellation(
+        {
+          title: session.title,
+          date: session.date,
+          id: session.id,
+        },
+        participants
+      );
+    }
+
     // First delete all related bookings
     console.log('Deleting related bookings...')
     await prismaSingleton.booking.deleteMany({

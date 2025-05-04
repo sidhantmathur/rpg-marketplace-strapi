@@ -29,17 +29,17 @@
   - Review display
 
 ### Week 2
-- [ ] Session scheduling system (1 day)
+- [x] Session scheduling system (1 day)
   - Calendar integration
   - Time slot selection
   - Timezone handling
   - Session duration settings
-- [ ] Session capacity management (1 day)
+- [x] Session capacity management (1 day)
   - Max participants setting
   - Current participants count
   - Capacity display
   - Full session handling
-- [ ] Waitlist functionality (1 day)
+- [x] Waitlist functionality (1 day)
   - Waitlist signup
   - Automatic notifications for openings
   - Waitlist management UI
