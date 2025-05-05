@@ -62,6 +62,8 @@
     "msw": "^2.7.5",
     "prisma": "^6.6.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "whatwg-fetch": "^3.6.20"
   }
 }

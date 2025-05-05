@@ -9,63 +9,50 @@ import "@testing-library/jest-dom";
 import { screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { render } from "@/test-utils";
 import LoginForm from "@/components/LoginForm";
-import { AuthResponse, User, Session, AuthError } from "@supabase/supabase-js";
+import { AuthError, User, Session } from "@supabase/supabase-js";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 import { AppRouterContextProviderMock } from "../../lib/test-utils";
+import { useRouter } from "next/navigation";
+import { setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 
-// Mock the entire next/navigation module
-jest.mock("next/navigation", () => {
-  const mockRouter = {
-    push: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-  };
-
-  return {
-    useRouter: () => mockRouter,
-    usePathname: () => "/",
-    useSearchParams: () => new URLSearchParams(),
-  };
-});
-
-// Create mock function
-const mockSignInWithPassword = jest.fn();
-
-// Mock Supabase client with proper implementation
-jest.mock("../../lib/supabaseClient", () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: mockSignInWithPassword,
-    },
-  },
+// Mock Next.js router
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(),
 }));
 
-// Import the mocked module after defining the mock
-import { supabase } from "../../lib/supabaseClient";
+// Set up MSW server to intercept network requests
+const server = setupServer(
+  http.post("https://test.supabase.co/auth/v1/token", () => {
+    return HttpResponse.json({
+      access_token: "test-token",
+      refresh_token: "test-refresh-token",
+      user: { id: "test-user-id", email: "test@example.com" },
+    });
+  })
+);
+
+// Mock router implementation
+const mockPush = jest.fn();
+const mockRouter = {
+  push: mockPush,
+};
 
 describe("LoginForm", () => {
-  const mockRouter = {
-    push: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-  };
+  // Set up and tear down test environment
+  beforeAll(() => server.listen());
+  afterEach(() => {
+    server.resetHandlers();
+    jest.clearAllMocks();
+  });
+  afterAll(() => server.close());
 
   beforeEach(() => {
-    // Clear all mocks and reset modules
-    jest.clearAllMocks();
-    jest.resetModules();
-
-    // Log mock status for debugging
-    console.log(
-      "Is signInWithPassword mocked?",
-      jest.isMockFunction(supabase.auth.signInWithPassword)
-    );
+    // Reset mocks before each test
+    mockPush.mockReset();
+    
+    // Setup router mock for each test
+    (useRouter as jest.Mock).mockReturnValue(mockRouter);
   });
 
   it("renders login form", () => {
@@ -82,35 +69,80 @@ describe("LoginForm", () => {
   });
 
   it("handles successful login", async () => {
-    const mockUser: User = {
-      id: "test-id",
+    // Setup successful response
+    const mockUser: Partial<User> = {
+      id: "test-user-id",
       email: "test@example.com",
-      created_at: new Date().toISOString(),
-      aud: "authenticated",
       role: "authenticated",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       app_metadata: {},
       user_metadata: {},
+      aud: "authenticated",
     };
-
-    const mockSession: Session = {
+    
+    const mockSession: Partial<Session> = {
       access_token: "test-token",
       refresh_token: "test-refresh-token",
       expires_in: 3600,
-      expires_at: Date.now() + 3600,
       token_type: "bearer",
-      user: mockUser,
+      user: mockUser as User,
     };
-
-    const mockAuthResponse: AuthResponse = {
+    
+    const mockResponse = {
       data: {
-        user: mockUser,
-        session: mockSession,
+        user: mockUser as User,
+        session: mockSession as Session,
       },
       error: null,
     };
+    
+    const { mockFunctions } = require("@/lib/__mocks__/supabaseClient");
+    mockFunctions.signInWithPassword.mockResolvedValueOnce(mockResponse);
 
-    // Setup mock implementation
-    mockSignInWithPassword.mockImplementationOnce(() => Promise.resolve(mockAuthResponse));
+    render(
+      <AppRouterContextProviderMock router={mockRouter}>
+        <LoginForm />
+      </AppRouterContextProviderMock>
+    );
+    
+    // Fill out the form
+    fireEvent.change(screen.getByPlaceholderText("Email"), {
+      target: { value: "test@example.com" },
+    });
+    
+    fireEvent.change(screen.getByPlaceholderText("Password"), {
+      target: { value: "password123" },
+    });
+    
+    // Submit the form
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    
+    // Verify Supabase was called with correct credentials
+    await waitFor(() => {
+      expect(mockFunctions.signInWithPassword).toHaveBeenCalledWith({
+        email: "test@example.com",
+        password: "password123",
+      });
+    });
+    
+    // Verify redirect happened
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/");
+    });
+  });
+
+  it("handles login error", async () => {
+    const mockError = new AuthError("Invalid credentials", 400);
+    
+    // Setup error response
+    const mockResponse = {
+      data: null,
+      error: mockError,
+    };
+    
+    const { mockFunctions } = require("@/lib/__mocks__/supabaseClient");
+    mockFunctions.signInWithPassword.mockResolvedValueOnce(mockResponse);
 
     render(
       <AppRouterContextProviderMock router={mockRouter}>
@@ -119,6 +151,72 @@ describe("LoginForm", () => {
     );
 
     // Fill in the form
+    await act(async () => {
+      fireEvent.change(screen.getByPlaceholderText("Email"), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByPlaceholderText("Password"), {
+        target: { value: "wrong-password" },
+      });
+    });
+
+    // Submit the form
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    });
+
+    // Wait for and verify error message
+    await waitFor(() => {
+      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("shows loading state during authentication", async () => {
+    // Setup delayed response to test loading state
+    const mockUser: Partial<User> = {
+      id: "test-user-id",
+      email: "test@example.com",
+      role: "authenticated",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+    };
+    
+    const mockSession: Partial<Session> = {
+      access_token: "test-token",
+      refresh_token: "test-refresh-token",
+      expires_in: 3600,
+      token_type: "bearer",
+      user: mockUser as User,
+    };
+    
+    const mockResponse = {
+      data: {
+        user: mockUser as User,
+        session: mockSession as Session,
+      },
+      error: null,
+    };
+    
+    const { mockFunctions } = require("@/lib/__mocks__/supabaseClient");
+    mockFunctions.signInWithPassword.mockImplementationOnce(() => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(mockResponse);
+        }, 100);
+      });
+    });
+
+    render(
+      <AppRouterContextProviderMock router={mockRouter}>
+        <LoginForm />
+      </AppRouterContextProviderMock>
+    );
+    
+    // Fill out and submit form
     await act(async () => {
       fireEvent.change(screen.getByPlaceholderText("Email"), {
         target: { value: "test@example.com" },
@@ -127,66 +225,15 @@ describe("LoginForm", () => {
         target: { value: "password123" },
       });
     });
-
-    // Submit the form
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
-    });
-
-    // Log mock calls for debugging
-    console.log("Mock calls:", mockSignInWithPassword.mock.calls);
-
-    // Wait for and verify the redirect
+    
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    
+    // Check for loading state
+    expect(screen.getByRole("button", { name: /logging in/i })).toBeDisabled();
+    
+    // Wait for login to complete
     await waitFor(() => {
-      expect(mockSignInWithPassword).toHaveBeenCalledWith({
-        email: "test@example.com",
-        password: "password123",
-      });
-      expect(mockRouter.push).toHaveBeenCalledWith("/");
+      expect(mockPush).toHaveBeenCalledWith("/");
     });
-  });
-
-  it("handles login error", async () => {
-    const mockError = new AuthError("Invalid credentials", 400);
-    const mockAuthResponse: AuthResponse = {
-      data: {
-        user: null,
-        session: null,
-      },
-      error: mockError,
-    };
-
-    // Setup mock implementation
-    mockSignInWithPassword.mockImplementationOnce(() => Promise.resolve(mockAuthResponse));
-
-    render(
-      <AppRouterContextProviderMock router={mockRouter}>
-        <LoginForm />
-      </AppRouterContextProviderMock>
-    );
-
-    // Fill in the form
-    await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "test@example.com" },
-      });
-      fireEvent.change(screen.getByPlaceholderText("Password"), {
-        target: { value: "wrongpassword" },
-      });
-    });
-
-    // Submit the form
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
-    });
-
-    // Log mock calls for debugging
-    console.log("Mock calls:", mockSignInWithPassword.mock.calls);
-
-    // Wait for and verify error message
-    await waitFor(() => {
-      expect(screen.getByText("Invalid credentials")).toBeInTheDocument();
-    });
-    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });
