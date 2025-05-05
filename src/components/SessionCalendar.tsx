@@ -71,82 +71,90 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
     }
   }, []);
 
-  const handleDateChange: CalendarProps["onChange"] = useCallback((value: CalendarProps["value"]) => {
-    try {
-      if (!value || Array.isArray(value)) return;
-      const zonedDate = toZonedTime(value, timezone);
-      setSelectedDate(zonedDate);
-      onDateSelect(zonedDate);
-      setIsSlotBooked(false);
-      setError(null);
-    } catch (error) {
-      console.error("Error selecting date:", error);
-      setError("Error selecting date");
-    }
-  }, [timezone, onDateSelect]);
+  const handleDateChange: CalendarProps["onChange"] = useCallback(
+    (value: CalendarProps["value"]) => {
+      try {
+        if (!value || Array.isArray(value)) return;
+        const zonedDate = toZonedTime(value, timezone);
+        setSelectedDate(zonedDate);
+        onDateSelect(zonedDate);
+        setIsSlotBooked(false);
+        setError(null);
+      } catch (error) {
+        console.error("Error selecting date:", error);
+        setError("Error selecting date");
+      }
+    },
+    [timezone, onDateSelect]
+  );
 
-  const handleTimeChange = useCallback((time: string) => {
-    try {
-      setSelectedTime(time);
-      onTimeSelect(time);
+  const handleTimeChange = useCallback(
+    (time: string) => {
+      try {
+        setSelectedTime(time);
+        onTimeSelect(time);
 
-      const [hours, minutes] = time.split(":").map(Number);
-      const slotDate = new Date(selectedDate);
-      slotDate.setHours(hours, minutes, 0, 0);
+        const [hours, minutes] = time.split(":").map(Number);
+        const slotDate = new Date(selectedDate);
+        slotDate.setHours(hours, minutes, 0, 0);
 
-      const isBooked = existingSessions.some((session) => {
-        const sessionDate = new Date(session);
-        return sessionDate.getTime() === slotDate.getTime();
-      });
+        const isBooked = existingSessions.some((session) => {
+          const sessionDate = new Date(session);
+          return sessionDate.getTime() === slotDate.getTime();
+        });
 
-      setIsSlotBooked(isBooked);
-      setError(null);
-    } catch (error) {
-      console.error("Error selecting time:", error);
-      setError("Error selecting time");
-    }
-  }, [selectedDate, existingSessions, onTimeSelect]);
+        setIsSlotBooked(isBooked);
+        setError(null);
+      } catch (error) {
+        console.error("Error selecting time:", error);
+        setError("Error selecting time");
+      }
+    },
+    [selectedDate, existingSessions, onTimeSelect]
+  );
 
-  const handleDurationChange = useCallback((value: number) => {
-    try {
-      setDuration(value);
-      onDurationSelect(value);
-      setError(null);
-    } catch (error) {
-      console.error("Error selecting duration:", error);
-      setError("Error selecting duration");
-    }
-  }, [onDurationSelect]);
+  const handleDurationChange = useCallback(
+    (value: number) => {
+      try {
+        setDuration(value);
+        onDurationSelect(value);
+        setError(null);
+      } catch (error) {
+        console.error("Error selecting duration:", error);
+        setError("Error selecting duration");
+      }
+    },
+    [onDurationSelect]
+  );
 
-  const isTimeSlotBooked = useCallback((time: string): boolean => {
-    try {
-      const [hours, minutes] = time.split(":").map(Number);
-      const slotDate = new Date(selectedDate);
-      slotDate.setHours(hours, minutes, 0, 0);
+  const isTimeSlotBooked = useCallback(
+    (time: string): boolean => {
+      try {
+        const [hours, minutes] = time.split(":").map(Number);
+        const slotDate = new Date(selectedDate);
+        slotDate.setHours(hours, minutes, 0, 0);
 
-      return existingSessions.some((session) => {
-        const sessionDate = new Date(session);
-        return sessionDate.getTime() === slotDate.getTime();
-      });
-    } catch (error) {
-      console.error("Error checking time slot availability:", error);
-      setError("Error checking time slot availability");
-      return false;
-    }
-  }, [selectedDate, existingSessions]);
+        return existingSessions.some((session) => {
+          const sessionDate = new Date(session);
+          return sessionDate.getTime() === slotDate.getTime();
+        });
+      } catch (error) {
+        console.error("Error checking time slot availability:", error);
+        setError("Error checking time slot availability");
+        return false;
+      }
+    },
+    [selectedDate, existingSessions]
+  );
 
   return (
     <div className="space-y-4">
       {error && (
-        <div className="p-2 bg-error/10 border border-error/20 rounded text-error">
-          {error}
-        </div>
+        <div className="p-2 bg-error/10 border border-error/20 rounded text-error">{error}</div>
       )}
 
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">
-          Select Date
-        </h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Select Date</h3>
         <Calendar
           onChange={handleDateChange}
           value={selectedDate}
@@ -156,9 +164,7 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">
-          Select Time
-        </h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Select Time</h3>
         <div className="grid grid-cols-4 gap-2">
           {TIME_SLOTS.map((slot) => (
             <button
@@ -187,20 +193,14 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-secondary">
-          Session Duration
-        </h3>
+        <h3 className="text-lg font-semibold mb-2 text-secondary">Session Duration</h3>
         <select
           value={duration}
           onChange={(e) => handleDurationChange(Number(e.target.value))}
           className="w-full p-2 border border-border rounded text-primary bg-input"
         >
           {DURATION_OPTIONS.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              className="text-primary"
-            >
+            <option key={option.value} value={option.value} className="text-primary">
               {option.label}
             </option>
           ))}

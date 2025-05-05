@@ -23,7 +23,8 @@ interface Session {
 // POST /api/reviews  -------------------------------------------------------
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, targetId, authorId, rating, comment } = await req.json() as ReviewCreateRequest;
+    const { sessionId, targetId, authorId, rating, comment } =
+      (await req.json()) as ReviewCreateRequest;
 
     // ----- basic validation (manual) -------------------------------------
     if (
@@ -34,16 +35,10 @@ export async function POST(req: NextRequest) {
       rating < 1 ||
       rating > 5
     ) {
-      return NextResponse.json(
-        { error: "Missing or invalid fields" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
     }
     if (authorId === targetId) {
-      return NextResponse.json(
-        { error: "Cannot review yourself" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Cannot review yourself" }, { status: 400 });
     }
 
     // Both users must have a booking for that session
@@ -52,21 +47,15 @@ export async function POST(req: NextRequest) {
       select: { userId: true },
     });
     if (bookings.length !== 2) {
-      return NextResponse.json(
-        { error: "Both users must attend the session" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Both users must attend the session" }, { status: 400 });
     }
 
     // Session must be in the past
-    const session = await prisma.session.findUnique({
+    const session = (await prisma.session.findUnique({
       where: { id: sessionId },
-    }) as Session | null;
+    })) as Session | null;
     if (!session || session.date > new Date()) {
-      return NextResponse.json(
-        { error: "Session not yet completed" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Session not yet completed" }, { status: 400 });
     }
 
     // Create review & update aggregates in one transaction
@@ -81,10 +70,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(review, { status: 201 });
   } catch (err) {
     console.error("POST /api/reviews error:", err);
-    return NextResponse.json(
-      { error: "Failed to create review" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
   }
 }
 
@@ -92,10 +78,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const targetId = req.nextUrl.searchParams.get("targetId");
   if (!targetId)
-    return NextResponse.json(
-      { error: "targetId query param required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "targetId query param required" }, { status: 400 });
 
   const page = Number(req.nextUrl.searchParams.get("page") || 1);
   const limit = Number(req.nextUrl.searchParams.get("limit") || 10);

@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 interface SessionCreateRequest {
@@ -29,7 +29,7 @@ interface SupabaseProfile {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as SessionCreateRequest;
+    const body = (await request.json()) as SessionCreateRequest;
     const {
       title,
       description,
@@ -45,10 +45,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!title || !date || !userId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     // First, get or create the DungeonMaster record
@@ -58,17 +55,14 @@ export async function POST(request: NextRequest) {
 
     if (!dm) {
       // Get user profile to get the name
-      const { data: profile } = await supabase
+      const { data: profile } = (await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single() as { data: SupabaseProfile | null };
+        .single()) as { data: SupabaseProfile | null };
 
       if (!profile) {
-        return NextResponse.json(
-          { error: "User profile not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "User profile not found" }, { status: 404 });
       }
 
       dm = await prisma.dungeonMaster.create({
@@ -92,19 +86,18 @@ export async function POST(request: NextRequest) {
         imageUrl,
         dmId: dm.id,
         userId,
-        tags: tags ? {
-          create: tags.map(tag => ({ name: tag }))
-        } : undefined,
+        tags: tags
+          ? {
+              create: tags.map((tag) => ({ name: tag })),
+            }
+          : undefined,
       },
     });
 
     return NextResponse.json(session, { status: 201 });
   } catch (error) {
     console.error("Error creating session:", error);
-    return NextResponse.json(
-      { error: "Failed to create session" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
   }
 }
 
@@ -124,13 +117,10 @@ export async function GET() {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { sessionId } = await req.json() as { sessionId: number };
+    const { sessionId } = (await req.json()) as { sessionId: number };
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing sessionId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
     }
 
     const session = await prisma.session.delete({
@@ -140,9 +130,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(session);
   } catch (error) {
     console.error("Error deleting session:", error);
-    return NextResponse.json(
-      { error: "Failed to delete session" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete session" }, { status: 500 });
   }
 }

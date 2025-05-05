@@ -66,7 +66,7 @@ export default function Home() {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      const data = await res.json() as Session[];
+      const data = (await res.json()) as Session[];
       setSessions(data);
     } catch (err) {
       console.error("Error fetching sessions:", err);
@@ -80,7 +80,7 @@ export default function Home() {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      const data = await res.json() as { id: number; name: string }[];
+      const data = (await res.json()) as { id: number; name: string }[];
       setDms(data);
     } catch (err) {
       console.error("Error fetching DMs:", err);
@@ -95,8 +95,8 @@ export default function Home() {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      const data = await res.json() as { session: { id: number } }[];
-      setJoinedSessionIds(data.map(booking => booking.session.id));
+      const data = (await res.json()) as { session: { id: number } }[];
+      setJoinedSessionIds(data.map((booking) => booking.session.id));
     } catch (err) {
       console.error("Error fetching joined sessions:", err);
     }
@@ -119,108 +119,153 @@ export default function Home() {
   }, [user?.id, fetchJoinedSessions]);
 
   // Fix useCallback dependencies
-  const joinSession = useCallback(async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to join session: ${res.status}`);
+  const joinSession = useCallback(
+    async (sessionId: number) => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`/api/session/${sessionId}/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to join session: ${res.status}`);
+        }
+        await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+      } catch (err) {
+        console.error(
+          "Error joining session:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
       }
-      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
-    } catch (err) {
-      console.error("Error joining session:", err instanceof Error ? err.message : "Unknown error");
-    }
-  }, [user?.id, fetchSessions, fetchJoinedSessions]);
+    },
+    [user?.id, fetchSessions, fetchJoinedSessions]
+  );
 
-  const leaveSession = useCallback(async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to leave session: ${res.status}`);
+  const leaveSession = useCallback(
+    async (sessionId: number) => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`/api/session/${sessionId}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to leave session: ${res.status}`);
+        }
+        await Promise.all([fetchSessions(), fetchJoinedSessions()]);
+      } catch (err) {
+        console.error(
+          "Error leaving session:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
       }
-      await Promise.all([fetchSessions(), fetchJoinedSessions()]);
-    } catch (err) {
-      console.error("Error leaving session:", err instanceof Error ? err.message : "Unknown error");
-    }
-  }, [user?.id, fetchSessions, fetchJoinedSessions]);
+    },
+    [user?.id, fetchSessions, fetchJoinedSessions]
+  );
 
-  const joinWaitlist = useCallback(async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/waitlist/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to join waitlist: ${res.status}`);
+  const joinWaitlist = useCallback(
+    async (sessionId: number) => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`/api/session/${sessionId}/waitlist/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to join waitlist: ${res.status}`);
+        }
+        await fetchSessions();
+      } catch (err) {
+        console.error(
+          "Error joining waitlist:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
       }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error joining waitlist:", err instanceof Error ? err.message : "Unknown error");
-    }
-  }, [user?.id, fetchSessions]);
+    },
+    [user?.id, fetchSessions]
+  );
 
-  const leaveWaitlist = useCallback(async (sessionId: number) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/session/${sessionId}/waitlist/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to leave waitlist: ${res.status}`);
+  const leaveWaitlist = useCallback(
+    async (sessionId: number) => {
+      if (!user?.id) return;
+      try {
+        const res = await fetch(`/api/session/${sessionId}/waitlist/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to leave waitlist: ${res.status}`);
+        }
+        await fetchSessions();
+      } catch (err) {
+        console.error(
+          "Error leaving waitlist:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
       }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error leaving waitlist:", err instanceof Error ? err.message : "Unknown error");
-    }
-  }, [user?.id, fetchSessions]);
+    },
+    [user?.id, fetchSessions]
+  );
 
-  const deleteSession = useCallback(async (sessionId: number) => {
-    try {
-      const res = await fetch(`/api/session/${sessionId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to delete session: ${res.status}`);
+  const deleteSession = useCallback(
+    async (sessionId: number) => {
+      try {
+        const res = await fetch(`/api/session/${sessionId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to delete session: ${res.status}`);
+        }
+        await fetchSessions();
+      } catch (err) {
+        console.error(
+          "Error deleting session:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
       }
-      await fetchSessions();
-    } catch (err) {
-      console.error("Error deleting session:", err instanceof Error ? err.message : "Unknown error");
-    }
-  }, [fetchSessions]);
+    },
+    [fetchSessions]
+  );
 
   // Handle session actions
-  const handleJoinSession = useCallback(async (sessionId: number) => {
-    await joinSession(sessionId);
-  }, [joinSession]);
+  const handleJoinSession = useCallback(
+    async (sessionId: number) => {
+      await joinSession(sessionId);
+    },
+    [joinSession]
+  );
 
-  const handleLeaveSession = useCallback(async (sessionId: number) => {
-    await leaveSession(sessionId);
-  }, [leaveSession]);
+  const handleLeaveSession = useCallback(
+    async (sessionId: number) => {
+      await leaveSession(sessionId);
+    },
+    [leaveSession]
+  );
 
-  const handleJoinWaitlist = useCallback(async (sessionId: number) => {
-    await joinWaitlist(sessionId);
-  }, [joinWaitlist]);
+  const handleJoinWaitlist = useCallback(
+    async (sessionId: number) => {
+      await joinWaitlist(sessionId);
+    },
+    [joinWaitlist]
+  );
 
-  const handleLeaveWaitlist = useCallback(async (sessionId: number) => {
-    await leaveWaitlist(sessionId);
-  }, [leaveWaitlist]);
+  const handleLeaveWaitlist = useCallback(
+    async (sessionId: number) => {
+      await leaveWaitlist(sessionId);
+    },
+    [leaveWaitlist]
+  );
 
-  const handleDeleteSession = useCallback(async (sessionId: number) => {
-    await deleteSession(sessionId);
-  }, [deleteSession]);
+  const handleDeleteSession = useCallback(
+    async (sessionId: number) => {
+      await deleteSession(sessionId);
+    },
+    [deleteSession]
+  );
 
   // Add a new DM
   const handleDmSubmit = async (e: FormEvent) => {
@@ -334,7 +379,7 @@ export default function Home() {
   // Render functions
   const renderSessionActions = (session: Session) => {
     const isJoined = joinedSessionIds.includes(session.id);
-    const isOnWaitlist = session.waitlist?.some(w => w.userId === user?.id) ?? false;
+    const isOnWaitlist = session.waitlist?.some((w) => w.userId === user?.id) ?? false;
     const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
     const isOwner = session.userId === user?.id;
 
@@ -395,7 +440,7 @@ export default function Home() {
   // Handle session status
   const getSessionStatus = (session: Session): { text: string; color: string } => {
     const isJoined = joinedSessionIds.includes(session.id);
-    const isOnWaitlist = session.waitlist?.some(w => w.userId === user?.id) ?? false;
+    const isOnWaitlist = session.waitlist?.some((w) => w.userId === user?.id) ?? false;
     const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
 
     if (isJoined) {
@@ -416,9 +461,7 @@ export default function Home() {
     return (
       <main className="p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
-        <p className="text-gray-700">
-          Please log in to create or view sessions.
-        </p>
+        <p className="text-gray-700">Please log in to create or view sessions.</p>
       </main>
     );
 
@@ -520,10 +563,7 @@ export default function Home() {
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
+          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
             Create Session
           </button>
         </form>
@@ -534,10 +574,7 @@ export default function Home() {
         {sessions.map((session) => {
           const status = getSessionStatus(session);
           return (
-            <div
-              key={session.id}
-              className="bg-white p-6 rounded-lg shadow-md"
-            >
+            <div key={session.id} className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center gap-4 mb-4">
                 <Image
                   src={session.imageUrl || "/placeholder.png"}
@@ -556,9 +593,7 @@ export default function Home() {
                 <span className="text-yellow-500">
                   {"★".repeat(Math.round(session.dm.ratingAvg))}
                 </span>
-                <span className="text-gray-500">
-                  ({session.dm.ratingCount} reviews)
-                </span>
+                <span className="text-gray-500">({session.dm.ratingCount} reviews)</span>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-semibold">Date:</span>
@@ -570,9 +605,7 @@ export default function Home() {
                   {session.bookings?.length ?? 0}/{session.maxParticipants}
                 </span>
               </div>
-              {status.text && (
-                <div className={`mb-4 ${status.color}`}>{status.text}</div>
-              )}
+              {status.text && <div className={`mb-4 ${status.color}`}>{status.text}</div>}
               {renderSessionActions(session)}
             </div>
           );
@@ -600,12 +633,10 @@ export default function Home() {
                   )}
                   <div className="font-semibold">{session.title}</div>
                   <div className="text-sm text-gray-600">
-                    {new Date(session.date).toLocaleDateString()} — Hosted by{" "}
-                    {session.dm.name}
+                    {new Date(session.date).toLocaleDateString()} — Hosted by {session.dm.name}
                   </div>
                   <div className="text-sm text-gray-500 mb-1">
-                    {session.bookings.length} / {session.maxParticipants}{" "}
-                    participants
+                    {session.bookings.length} / {session.maxParticipants} participants
                   </div>
                   {renderSessionActions(session)}
                 </li>
@@ -635,12 +666,10 @@ export default function Home() {
                   )}
                   <div className="font-semibold">{session.title}</div>
                   <div className="text-sm text-gray-600">
-                    {new Date(session.date).toLocaleDateString()} — Hosted by
-                    you
+                    {new Date(session.date).toLocaleDateString()} — Hosted by you
                   </div>
                   <div className="text-sm text-gray-500 mb-1">
-                    {session.bookings.length} / {session.maxParticipants}{" "}
-                    participants
+                    {session.bookings.length} / {session.maxParticipants} participants
                   </div>
                   {renderSessionActions(session)}
                 </li>

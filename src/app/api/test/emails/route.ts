@@ -16,36 +16,27 @@ interface EmailTestRequest {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json() as unknown;
+    const body = (await req.json()) as unknown;
     if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { error: "Invalid request body" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
     const { type, sessionId, email } = body as EmailTestRequest;
 
     if (!type) {
-      return NextResponse.json(
-        { error: "Email type is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Email type is required" }, { status: 400 });
     }
 
     // For session-related emails, we need a session
     if (type !== "welcome" && !sessionId) {
       return NextResponse.json(
         { error: "Session ID is required for this email type" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // For welcome email, we need an email address
     if (type === "welcome" && !email) {
-      return NextResponse.json(
-        { error: "Email is required for welcome email" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Email is required for welcome email" }, { status: 400 });
     }
 
     switch (type) {
@@ -67,10 +58,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!session) {
-          return NextResponse.json(
-            { error: "Session not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
         const dmProfile = await prisma.profile.findUnique({
@@ -79,10 +67,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!dmProfile?.email) {
-          return NextResponse.json(
-            { error: "DM profile not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "DM profile not found" }, { status: 404 });
         }
 
         const participants = [
@@ -96,7 +81,7 @@ export async function POST(req: NextRequest) {
             date: session.date,
             id: session.id,
           },
-          participants,
+          participants
         );
         break;
       }
@@ -119,10 +104,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!session) {
-          return NextResponse.json(
-            { error: "Session not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
         const dmProfile = await prisma.profile.findUnique({
@@ -131,10 +113,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!dmProfile?.email) {
-          return NextResponse.json(
-            { error: "DM profile not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "DM profile not found" }, { status: 404 });
         }
 
         const participants = [
@@ -149,7 +128,7 @@ export async function POST(req: NextRequest) {
             id: session.id,
           },
           participants,
-          "Test cancellation reason",
+          "Test cancellation reason"
         );
         break;
       }
@@ -169,10 +148,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!session) {
-          return NextResponse.json(
-            { error: "Session not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
         console.warn("[Email Test] Processing session:", session.title);
@@ -197,7 +173,7 @@ export async function POST(req: NextRequest) {
                   date: session.date,
                   id: session.id,
                 },
-                { email: booking.user.email },
+                { email: booking.user.email }
               );
               console.warn("[Email Test] Review request sent successfully");
             } catch (error) {
@@ -207,7 +183,7 @@ export async function POST(req: NextRequest) {
                   error: "Failed to send review request",
                   details: error,
                 },
-                { status: 500 },
+                { status: 500 }
               );
             }
           }
@@ -233,10 +209,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!session) {
-          return NextResponse.json(
-            { error: "Session not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
         const dmProfile = await prisma.profile.findUnique({
@@ -245,10 +218,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (!dmProfile?.email) {
-          return NextResponse.json(
-            { error: "DM profile not found" },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: "DM profile not found" }, { status: 404 });
         }
 
         const participants = [
@@ -263,7 +233,7 @@ export async function POST(req: NextRequest) {
             id: session.id,
           },
           participants,
-          "Test modification: Session time changed to tomorrow",
+          "Test modification: Session time changed to tomorrow"
         );
         break;
       }
@@ -280,18 +250,12 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        return NextResponse.json(
-          { error: "Invalid email type" },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: "Invalid email type" }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Email Test] Failed to send test email:", error);
-    return NextResponse.json(
-      { error: "Failed to send test email" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to send test email" }, { status: 500 });
   }
 }

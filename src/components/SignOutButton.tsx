@@ -20,16 +20,14 @@ export function SignOutButton({ className = "" }: SignOutButtonProps) {
 
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
 
       router.refresh();
     } catch (error) {
-      const message = error instanceof AuthError 
-        ? error.message 
-        : "An unexpected error occurred";
+      const message = error instanceof AuthError ? error.message : "An unexpected error occurred";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -45,9 +43,7 @@ export function SignOutButton({ className = "" }: SignOutButtonProps) {
       >
         {isLoading ? "Signing out..." : "Sign out"}
       </button>
-      {error && (
-        <p className="text-red-500 text-xs mt-1">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }

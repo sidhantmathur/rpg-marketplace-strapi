@@ -24,8 +24,8 @@ export default [
       "**/jest.config.js",
       "**/jest.integration.config.js",
       "**/prisma/generated/**",
-      "**/prisma/schema.prisma"
-    ]
+      "**/prisma/schema.prisma",
+    ],
   },
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
@@ -36,8 +36,8 @@ export default [
         ecmaVersion: 2022,
         sourceType: "module",
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         React: "readonly",
@@ -52,19 +52,19 @@ export default [
         alert: "readonly",
         confirm: "readonly",
         setTimeout: "readonly",
-        clearTimeout: "readonly"
-      }
+        clearTimeout: "readonly",
+      },
     },
     plugins: {
       "@typescript-eslint": tseslint,
       "react-hooks": reactHooks,
       "@next/next": next,
-      "react": react
+      react: react,
     },
     rules: {
       // TypeScript rules
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-unsafe-assignment": "warn",
       "@typescript-eslint/no-unsafe-member-access": "warn",
       "@typescript-eslint/no-unsafe-call": "warn",
@@ -73,24 +73,24 @@ export default [
       "@typescript-eslint/require-await": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/no-misused-promises": "warn",
-      
+
       // Base rules
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-unused-vars": "off",
-      
+
       // React rules
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      
+
       // Next.js rules
       "@next/next/no-html-link-for-pages": "error",
       "@next/next/no-img-element": "warn",
       "@next/next/no-page-custom-font": "warn",
       "@next/next/no-sync-scripts": "warn",
-      "@next/next/no-typos": "error"
-    }
+      "@next/next/no-typos": "error",
+    },
   },
   {
     files: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
@@ -103,9 +103,9 @@ export default [
         beforeEach: "readonly",
         afterEach: "readonly",
         beforeAll: "readonly",
-        afterAll: "readonly"
-      }
-    }
+        afterAll: "readonly",
+      },
+    },
   },
   {
     files: ["next.config.ts", "cypress.config.ts", "postcss.config.mjs", "tsconfig.json"],
@@ -113,13 +113,13 @@ export default [
       parser: parser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: "module"
+        sourceType: "module",
       },
       globals: {
         module: "readonly",
         require: "readonly",
-        process: "readonly"
-      }
-    }
-  }
+        process: "readonly",
+      },
+    },
+  },
 ];

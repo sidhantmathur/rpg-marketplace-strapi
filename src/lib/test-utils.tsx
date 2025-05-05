@@ -21,9 +21,5 @@ export function AppRouterContextProviderMock({
     ...router,
   };
 
-  return (
-    <AppRouterContext.Provider value={mockRouter}>
-      {children}
-    </AppRouterContext.Provider>
-  );
-} 
+  return <AppRouterContext.Provider value={mockRouter}>{children}</AppRouterContext.Provider>;
+}

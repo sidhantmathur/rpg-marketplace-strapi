@@ -19,9 +19,7 @@ export const useUser = () => {
         if (fetchError) throw fetchError;
         setUser(authUser);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to fetch user"),
-        );
+        setError(err instanceof Error ? err : new Error("Failed to fetch user"));
       } finally {
         setLoading(false);
       }

@@ -1,10 +1,7 @@
 // app/api/session/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import {
-  sendSessionModification,
-  sendSessionCancellation,
-} from "@/utils/emailTemplates";
+import { sendSessionModification, sendSessionCancellation } from "@/utils/emailTemplates";
 
 interface RouteParams {
   params: {
@@ -34,11 +31,7 @@ interface SessionInfo {
 function handleError(err: unknown) {
   console.error("[Session] Uncaught error:", err);
   const message =
-    err instanceof Error
-      ? err.message
-      : typeof err === "string"
-        ? err
-        : "Unknown error";
+    err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
@@ -48,10 +41,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
     console.warn("[Session] Fetching session id:", id);
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
-      return NextResponse.json(
-        { error: "Invalid session id" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
     }
 
     const session = await prisma.session.findUnique({
@@ -81,13 +71,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = context.params;
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
-      return NextResponse.json(
-        { error: "Invalid session id" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
     }
 
-    const body = await request.json() as SessionUpdateRequest;
+    const body = (await request.json()) as SessionUpdateRequest;
     const {
       title,
       description,
@@ -129,10 +116,12 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
         experienceLevel,
         maxParticipants,
         imageUrl,
-        tags: tags ? {
-          set: [],
-          create: tags.map(tag => ({ name: tag }))
-        } : undefined,
+        tags: tags
+          ? {
+              set: [],
+              create: tags.map((tag) => ({ name: tag })),
+            }
+          : undefined,
       },
     });
 
@@ -149,8 +138,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
         date && `date changed to ${new Date(date).toLocaleString()}`,
         duration && `duration changed to ${duration} minutes`,
         maxParticipants && `max participants changed to ${maxParticipants}`,
-      ].filter(Boolean).join(", ");
-      
+      ]
+        .filter(Boolean)
+        .join(", ");
+
       await sendSessionModification(sessionInfo, users, changes);
     }
 
@@ -165,10 +156,7 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
     const { id } = context.params;
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
-      return NextResponse.json(
-        { error: "Invalid session id" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
     }
 
     const session = await prisma.session.findUnique({

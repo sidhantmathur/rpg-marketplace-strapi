@@ -18,16 +18,16 @@ interface SessionWithBookingsAndWaitlist {
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json() as WaitlistRequest;
+    const { sessionId, userId } = (await req.json()) as WaitlistRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const session = await prisma.session.findUnique({
+    const session = (await prisma.session.findUnique({
       where: { id: Number(sessionId) },
       include: { bookings: true, waitlist: true },
-    }) as SessionWithBookingsAndWaitlist | null;
+    })) as SessionWithBookingsAndWaitlist | null;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -36,10 +36,7 @@ export async function POST(req: NextRequest) {
     // Check if already on waitlist
     const alreadyOnWaitlist = session.waitlist.some((w) => w.userId === userId);
     if (alreadyOnWaitlist) {
-      return NextResponse.json(
-        { error: "You are already on the waitlist" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "You are already on the waitlist" }, { status: 400 });
     }
 
     // Check if already booked
@@ -47,7 +44,7 @@ export async function POST(req: NextRequest) {
     if (alreadyBooked) {
       return NextResponse.json(
         { error: "You are already booked for this session" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -62,10 +59,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!dm) {
-      return NextResponse.json(
-        { error: "Dungeon Master not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Dungeon Master not found" }, { status: 404 });
     }
 
     const [user, dmProfile] = await Promise.all([
@@ -78,7 +72,7 @@ export async function POST(req: NextRequest) {
         to: user.email,
         subject: `Added to Waitlist: ${session.title}`,
         html: `<p>You have been added to the waitlist for <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date,
+          session.date
         ).toLocaleString()}.</p>`,
       });
 
@@ -86,7 +80,7 @@ export async function POST(req: NextRequest) {
         to: dmProfile.email,
         subject: `New Waitlist Entry: ${session.title}`,
         html: `<p>${user.email} has been added to the waitlist for your session <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date,
+          session.date
         ).toLocaleString()}.</p>`,
       });
     }
@@ -94,16 +88,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(waitlistEntry);
   } catch (error) {
     console.error("Error adding to waitlist:", error);
-    return NextResponse.json(
-      { error: "Failed to add to waitlist" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to add to waitlist" }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json() as WaitlistRequest;
+    const { sessionId, userId } = (await req.json()) as WaitlistRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -121,9 +112,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(waitlistEntry);
   } catch (error) {
     console.error("Error removing from waitlist:", error);
-    return NextResponse.json(
-      { error: "Failed to remove from waitlist" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to remove from waitlist" }, { status: 500 });
   }
 }

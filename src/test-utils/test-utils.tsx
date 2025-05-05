@@ -24,9 +24,7 @@ const customRender = (
   const mockRouter = createMockRouter(router);
 
   return rtlRender(
-    <RouterContext.Provider value={mockRouter}>
-      {ui}
-    </RouterContext.Provider>,
+    <RouterContext.Provider value={mockRouter}>{ui}</RouterContext.Provider>,
     options
   );
 };
@@ -35,4 +33,4 @@ const customRender = (
 export * from "@testing-library/react";
 
 // Override render method
-export { customRender as render }; 
+export { customRender as render };

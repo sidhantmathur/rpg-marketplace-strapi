@@ -32,9 +32,7 @@ export const useProfile = (userId: string | undefined) => {
         if (fetchError) throw fetchError;
         setProfile(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to fetch profile"),
-        );
+        setError(err instanceof Error ? err : new Error("Failed to fetch profile"));
       } finally {
         setLoading(false);
       }

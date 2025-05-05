@@ -36,7 +36,7 @@ export default function SignupPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormState(prev => ({ ...prev, error: null, isLoading: true }));
+    setFormState((prev) => ({ ...prev, error: null, isLoading: true }));
 
     try {
       // Validate form
@@ -63,15 +63,13 @@ export default function SignupPage() {
       }
 
       // Create profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert([
-          {
-            id: signUpData.user.id,
-            email: formState.email,
-            is_dm: formState.isDm,
-          },
-        ]);
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          id: signUpData.user.id,
+          email: formState.email,
+          is_dm: formState.isDm,
+        },
+      ]);
 
       if (profileError) {
         throw new Error("Failed to create user profile");
@@ -79,14 +77,15 @@ export default function SignupPage() {
 
       router.push("/");
     } catch (error) {
-      const message = error instanceof AuthError 
-        ? error.message 
-        : error instanceof Error 
-          ? error.message 
-          : "An unexpected error occurred";
-      setFormState(prev => ({ ...prev, error: message }));
+      const message =
+        error instanceof AuthError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "An unexpected error occurred";
+      setFormState((prev) => ({ ...prev, error: message }));
     } finally {
-      setFormState(prev => ({ ...prev, isLoading: false }));
+      setFormState((prev) => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -97,7 +96,7 @@ export default function SignupPage() {
         <input
           type="email"
           value={formState.email}
-          onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
+          onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
           placeholder="Email"
           className="w-full border p-2 rounded"
           required
@@ -105,7 +104,7 @@ export default function SignupPage() {
         <input
           type="password"
           value={formState.password}
-          onChange={(e) => setFormState(prev => ({ ...prev, password: e.target.value }))}
+          onChange={(e) => setFormState((prev) => ({ ...prev, password: e.target.value }))}
           placeholder="Password"
           className="w-full border p-2 rounded"
           required
@@ -116,7 +115,7 @@ export default function SignupPage() {
             type="checkbox"
             id="isDm"
             checked={formState.isDm}
-            onChange={(e) => setFormState(prev => ({ ...prev, isDm: e.target.checked }))}
+            onChange={(e) => setFormState((prev) => ({ ...prev, isDm: e.target.checked }))}
             className="mr-2"
           />
           <label htmlFor="isDm">I want to be a Dungeon Master</label>
@@ -128,9 +127,7 @@ export default function SignupPage() {
         >
           {formState.isLoading ? "Creating account..." : "Sign Up"}
         </button>
-        {formState.error && (
-          <p className="text-red-500 text-sm">{formState.error}</p>
-        )}
+        {formState.error && <p className="text-red-500 text-sm">{formState.error}</p>}
         <p className="text-sm mt-2">
           Already have an account?{" "}
           <Link href="/login" className="text-blue-600 hover:underline">

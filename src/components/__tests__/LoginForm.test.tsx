@@ -59,9 +59,12 @@ describe("LoginForm", () => {
     // Clear all mocks and reset modules
     jest.clearAllMocks();
     jest.resetModules();
-    
+
     // Log mock status for debugging
-    console.log("Is signInWithPassword mocked?", jest.isMockFunction(supabase.auth.signInWithPassword));
+    console.log(
+      "Is signInWithPassword mocked?",
+      jest.isMockFunction(supabase.auth.signInWithPassword)
+    );
   });
 
   it("renders login form", () => {

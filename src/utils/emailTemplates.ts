@@ -11,10 +11,7 @@ interface UserInfo {
   name?: string;
 }
 
-export const sendSessionReminder = async (
-  session: SessionInfo,
-  users: UserInfo[],
-) => {
+export const sendSessionReminder = async (session: SessionInfo, users: UserInfo[]) => {
   for (const user of users) {
     if (user.email) {
       await sendEmail({
@@ -29,7 +26,7 @@ export const sendSessionReminder = async (
 export const sendSessionCancellation = async (
   session: SessionInfo,
   users: UserInfo[],
-  reason?: string,
+  reason?: string
 ) => {
   for (const user of users) {
     if (user.email) {
@@ -42,10 +39,7 @@ export const sendSessionCancellation = async (
   }
 };
 
-export const sendReviewRequest = async (
-  session: SessionInfo,
-  user: UserInfo,
-) => {
+export const sendReviewRequest = async (session: SessionInfo, user: UserInfo) => {
   if (user.email) {
     await sendEmail({
       to: user.email,
@@ -58,7 +52,7 @@ export const sendReviewRequest = async (
 export const sendSessionModification = async (
   session: SessionInfo,
   users: UserInfo[],
-  changes: string,
+  changes: string
 ) => {
   for (const user of users) {
     if (user.email) {

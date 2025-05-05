@@ -15,8 +15,7 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>;
  * Model DungeonMaster
  *
  */
-export type DungeonMaster =
-  $Result.DefaultSelection<Prisma.$DungeonMasterPayload>;
+export type DungeonMaster = $Result.DefaultSelection<Prisma.$DungeonMasterPayload>;
 /**
  * Model Session
  *
@@ -63,14 +62,10 @@ export class PrismaClient<
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
    */
 
-  constructor(
-    optionsArg?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>,
-  );
+  constructor(optionsArg?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>);
   $on<V extends U>(
     eventType: V,
-    callback: (
-      event: V extends "query" ? Prisma.QueryEvent : Prisma.LogEvent,
-    ) => void,
+    callback: (event: V extends "query" ? Prisma.QueryEvent : Prisma.LogEvent) => void
   ): PrismaClient;
 
   /**
@@ -114,10 +109,7 @@ export class PrismaClient<
    *
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
-  $executeRawUnsafe<T = unknown>(
-    query: string,
-    ...values: any[]
-  ): Prisma.PrismaPromise<number>;
+  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
 
   /**
    * Performs a prepared raw query and returns the `SELECT` data.
@@ -143,10 +135,7 @@ export class PrismaClient<
    *
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
-  $queryRawUnsafe<T = unknown>(
-    query: string,
-    ...values: any[]
-  ): Prisma.PrismaPromise<T>;
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
 
   /**
    * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
@@ -163,18 +152,16 @@ export class PrismaClient<
    */
   $transaction<P extends Prisma.PrismaPromise<any>[]>(
     arg: [...P],
-    options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
+    options?: { isolationLevel?: Prisma.TransactionIsolationLevel }
   ): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>;
 
   $transaction<R>(
-    fn: (
-      prisma: Omit<PrismaClient, runtime.ITXClientDenyList>,
-    ) => $Utils.JsPromise<R>,
+    fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>,
     options?: {
       maxWait?: number;
       timeout?: number;
       isolationLevel?: Prisma.TransactionIsolationLevel;
-    },
+    }
   ): $Utils.JsPromise<R>;
 
   $extends: $Extensions.ExtendsHook<
@@ -361,15 +348,14 @@ export namespace Prisma {
   /**
    * Get the type of the value, that the Promise holds.
    */
-  export type PromiseType<T extends PromiseLike<any>> =
-    T extends PromiseLike<infer U> ? U : T;
+  export type PromiseType<T extends PromiseLike<any>> = T extends PromiseLike<infer U> ? U : T;
 
   /**
    * Get the return type of a function which returns a Promise.
    */
-  export type PromiseReturnType<
-    T extends (...args: any) => $Utils.JsPromise<any>,
-  > = PromiseType<ReturnType<T>>;
+  export type PromiseReturnType<T extends (...args: any) => $Utils.JsPromise<any>> = PromiseType<
+    ReturnType<T>
+  >;
 
   /**
    * From T, pick a set of properties whose keys are in the union K
@@ -464,20 +450,16 @@ export namespace Prisma {
 
   type EitherStrict<O extends object, K extends Key> = Strict<__Either<O, K>>;
 
-  type EitherLoose<O extends object, K extends Key> = ComputeRaw<
-    __Either<O, K>
-  >;
+  type EitherLoose<O extends object, K extends Key> = ComputeRaw<__Either<O, K>>;
 
   type _Either<O extends object, K extends Key, strict extends Boolean> = {
     1: EitherStrict<O, K>;
     0: EitherLoose<O, K>;
   }[strict];
 
-  type Either<
-    O extends object,
-    K extends Key,
-    strict extends Boolean = 1,
-  > = O extends unknown ? _Either<O, K, strict> : never;
+  type Either<O extends object, K extends Key, strict extends Boolean = 1> = O extends unknown
+    ? _Either<O, K, strict>
+    : never;
 
   export type Union = any;
 
@@ -486,9 +468,9 @@ export namespace Prisma {
   } & {};
 
   /** Helper Types for "Merge" **/
-  export type IntersectOf<U extends Union> = (
-    U extends unknown ? (k: U) => void : never
-  ) extends (k: infer I) => void
+  export type IntersectOf<U extends Union> = (U extends unknown ? (k: U) => void : never) extends (
+    k: infer I
+  ) => void
     ? I
     : never;
 
@@ -506,18 +488,10 @@ export namespace Prisma {
   >;
 
   type Key = string | number | symbol;
-  type AtBasic<O extends object, K extends Key> = K extends keyof O
-    ? O[K]
-    : never;
+  type AtBasic<O extends object, K extends Key> = K extends keyof O ? O[K] : never;
   type AtStrict<O extends object, K extends Key> = O[K & keyof O];
-  type AtLoose<O extends object, K extends Key> = O extends unknown
-    ? AtStrict<O, K>
-    : never;
-  export type At<
-    O extends object,
-    K extends Key,
-    strict extends Boolean = 1,
-  > = {
+  type AtLoose<O extends object, K extends Key> = O extends unknown ? AtStrict<O, K> : never;
+  export type At<O extends object, K extends Key, strict extends Boolean = 1> = {
     1: AtStrict<O, K>;
     0: AtLoose<O, K>;
   }[strict];
@@ -583,9 +557,7 @@ export namespace Prisma {
       ? 1
       : 0;
 
-  export type Has<U extends Union, U1 extends Union> = Not<
-    Extends<Exclude<U1, U>, U1>
-  >;
+  export type Has<U extends Union, U1 extends Union> = Not<Extends<Exclude<U1, U>, U1>>;
 
   export type Or<B1 extends Boolean, B2 extends Boolean> = {
     0: {
@@ -614,23 +586,16 @@ export namespace Prisma {
       }
     : never;
 
-  type FieldPaths<
-    T,
-    U = Omit<T, "_avg" | "_sum" | "_count" | "_min" | "_max">,
-  > = IsObject<T> extends True ? U : T;
+  type FieldPaths<T, U = Omit<T, "_avg" | "_sum" | "_count" | "_min" | "_max">> =
+    IsObject<T> extends True ? U : T;
 
   type GetHavingFields<T> = {
-    [K in keyof T]: Or<
-      Or<Extends<"OR", K>, Extends<"AND", K>>,
-      Extends<"NOT", K>
-    > extends True
+    [K in keyof T]: Or<Or<Extends<"OR", K>, Extends<"AND", K>>, Extends<"NOT", K>> extends True
       ? // infer is only needed to not hit TS limit
         // based on the brilliant idea of Pierre-Antoine Mills
         // https://github.com/microsoft/TypeScript/issues/30188#issuecomment-478938437
         T[K] extends infer TK
-        ? GetHavingFields<
-            UnEnumerate<TK> extends object ? Merge<UnEnumerate<TK>> : never
-          >
+        ? GetHavingFields<UnEnumerate<TK> extends object ? Merge<UnEnumerate<TK>> : never>
         : never
       : {} extends FieldPaths<T[K]>
         ? never
@@ -647,17 +612,15 @@ export namespace Prisma {
   /**
    * Like `Pick`, but additionally can also accept an array of keys
    */
-  type PickEnumerable<
+  type PickEnumerable<T, K extends Enumerable<keyof T> | keyof T> = Prisma__Pick<
     T,
-    K extends Enumerable<keyof T> | keyof T,
-  > = Prisma__Pick<T, MaybeTupleToUnion<K>>;
+    MaybeTupleToUnion<K>
+  >;
 
   /**
    * Exclude all keys with underscores
    */
-  type ExcludeUnderscoreKeys<T extends string> = T extends `_${string}`
-    ? never
-    : T;
+  type ExcludeUnderscoreKeys<T extends string> = T extends `_${string}` ? never : T;
 
   export type FieldRef<Model, FieldType> = runtime.FieldRef<Model, FieldType>;
 
@@ -677,10 +640,7 @@ export namespace Prisma {
   };
 
   interface TypeMapCb<ClientOptions = {}>
-    extends $Utils.Fn<
-      { extArgs: $Extensions.InternalArgs },
-      $Utils.Record<string, any>
-    > {
+    extends $Utils.Fn<{ extArgs: $Extensions.InternalArgs }, $Utils.Record<string, any>> {
     returns: Prisma.TypeMap<
       this["params"]["extArgs"],
       ClientOptions extends { omit: infer OmitOptions } ? OmitOptions : {}
@@ -769,9 +729,7 @@ export namespace Prisma {
           };
           count: {
             args: Prisma.DungeonMasterCountArgs<ExtArgs>;
-            result:
-              | $Utils.Optional<DungeonMasterCountAggregateOutputType>
-              | number;
+            result: $Utils.Optional<DungeonMasterCountAggregateOutputType> | number;
           };
         };
       };
@@ -948,19 +906,14 @@ export namespace Prisma {
     emit: "stdout" | "event";
   };
 
-  export type GetLogType<T extends LogLevel | LogDefinition> =
-    T extends LogDefinition
-      ? T["emit"] extends "event"
-        ? T["level"]
-        : never
-      : never;
+  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition
+    ? T["emit"] extends "event"
+      ? T["level"]
+      : never
+    : never;
   export type GetEvents<T extends any> =
     T extends Array<LogLevel | LogDefinition>
-      ?
-          | GetLogType<T[0]>
-          | GetLogType<T[1]>
-          | GetLogType<T[2]>
-          | GetLogType<T[3]>
+      ? GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
       : never;
 
   export type QueryEvent = {
@@ -1017,21 +970,16 @@ export namespace Prisma {
    */
   export type Middleware<T = any> = (
     params: MiddlewareParams,
-    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
+    next: (params: MiddlewareParams) => $Utils.JsPromise<T>
   ) => $Utils.JsPromise<T>;
 
   // tested in getLogLevel.test.ts
-  export function getLogLevel(
-    log: Array<LogLevel | LogDefinition>,
-  ): LogLevel | undefined;
+  export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
 
   /**
    * `PrismaClient` proxy available in interactive transactions.
    */
-  export type TransactionClient = Omit<
-    Prisma.DefaultPrismaClient,
-    runtime.ITXClientDenyList
-  >;
+  export type TransactionClient = Omit<Prisma.DefaultPrismaClient, runtime.ITXClientDenyList>;
 
   export type Datasource = {
     url?: string;
@@ -1159,9 +1107,7 @@ export namespace Prisma {
      *
      * Determine the order of DungeonMasters to fetch.
      */
-    orderBy?:
-      | DungeonMasterOrderByWithRelationInput
-      | DungeonMasterOrderByWithRelationInput[];
+    orderBy?: DungeonMasterOrderByWithRelationInput | DungeonMasterOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -1212,9 +1158,7 @@ export namespace Prisma {
     _max?: DungeonMasterMaxAggregateInputType;
   };
 
-  export type GetDungeonMasterAggregateType<
-    T extends DungeonMasterAggregateArgs,
-  > = {
+  export type GetDungeonMasterAggregateType<T extends DungeonMasterAggregateArgs> = {
     [P in keyof T & keyof AggregateDungeonMaster]: P extends "_count" | "count"
       ? T[P] extends true
         ? number
@@ -1226,9 +1170,7 @@ export namespace Prisma {
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     where?: DungeonMasterWhereInput;
-    orderBy?:
-      | DungeonMasterOrderByWithAggregationInput
-      | DungeonMasterOrderByWithAggregationInput[];
+    orderBy?: DungeonMasterOrderByWithAggregationInput | DungeonMasterOrderByWithAggregationInput[];
     by: DungeonMasterScalarFieldEnum[] | DungeonMasterScalarFieldEnum;
     having?: DungeonMasterScalarWhereWithAggregatesInput;
     take?: number;
@@ -1251,19 +1193,17 @@ export namespace Prisma {
     _max: DungeonMasterMaxAggregateOutputType | null;
   };
 
-  type GetDungeonMasterGroupByPayload<T extends DungeonMasterGroupByArgs> =
-    Prisma.PrismaPromise<
-      Array<
-        PickEnumerable<DungeonMasterGroupByOutputType, T["by"]> & {
-          [P in keyof T &
-            keyof DungeonMasterGroupByOutputType]: P extends "_count"
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], DungeonMasterGroupByOutputType[P]>
-            : GetScalarType<T[P], DungeonMasterGroupByOutputType[P]>;
-        }
-      >
-    >;
+  type GetDungeonMasterGroupByPayload<T extends DungeonMasterGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DungeonMasterGroupByOutputType, T["by"]> & {
+        [P in keyof T & keyof DungeonMasterGroupByOutputType]: P extends "_count"
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], DungeonMasterGroupByOutputType[P]>
+          : GetScalarType<T[P], DungeonMasterGroupByOutputType[P]>;
+      }
+    >
+  >;
 
   export type DungeonMasterSelect<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
@@ -1308,10 +1248,7 @@ export namespace Prisma {
 
   export type DungeonMasterOmit<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = $Extensions.GetOmit<
-    "id" | "name" | "createdAt",
-    ExtArgs["result"]["dungeonMaster"]
-  >;
+  > = $Extensions.GetOmit<"id" | "name" | "createdAt", ExtArgs["result"]["dungeonMaster"]>;
   export type DungeonMasterInclude<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
@@ -1343,18 +1280,13 @@ export namespace Prisma {
     composites: {};
   };
 
-  type DungeonMasterGetPayload<
-    S extends boolean | null | undefined | DungeonMasterDefaultArgs,
-  > = $Result.GetResult<Prisma.$DungeonMasterPayload, S>;
+  type DungeonMasterGetPayload<S extends boolean | null | undefined | DungeonMasterDefaultArgs> =
+    $Result.GetResult<Prisma.$DungeonMasterPayload, S>;
 
-  type DungeonMasterCountArgs<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = Omit<
-    DungeonMasterFindManyArgs,
-    "select" | "include" | "distinct" | "omit"
-  > & {
-    select?: DungeonMasterCountAggregateInputType | true;
-  };
+  type DungeonMasterCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DungeonMasterFindManyArgs, "select" | "include" | "distinct" | "omit"> & {
+      select?: DungeonMasterCountAggregateInputType | true;
+    };
 
   export interface DungeonMasterDelegate<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
@@ -1376,7 +1308,7 @@ export namespace Prisma {
      * })
      */
     findUnique<T extends DungeonMasterFindUniqueArgs>(
-      args: SelectSubset<T, DungeonMasterFindUniqueArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterFindUniqueArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1402,7 +1334,7 @@ export namespace Prisma {
      * })
      */
     findUniqueOrThrow<T extends DungeonMasterFindUniqueOrThrowArgs>(
-      args: SelectSubset<T, DungeonMasterFindUniqueOrThrowArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterFindUniqueOrThrowArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1429,7 +1361,7 @@ export namespace Prisma {
      * })
      */
     findFirst<T extends DungeonMasterFindFirstArgs>(
-      args?: SelectSubset<T, DungeonMasterFindFirstArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterFindFirstArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1457,7 +1389,7 @@ export namespace Prisma {
      * })
      */
     findFirstOrThrow<T extends DungeonMasterFindFirstOrThrowArgs>(
-      args?: SelectSubset<T, DungeonMasterFindFirstOrThrowArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterFindFirstOrThrowArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1487,14 +1419,9 @@ export namespace Prisma {
      *
      */
     findMany<T extends DungeonMasterFindManyArgs>(
-      args?: SelectSubset<T, DungeonMasterFindManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterFindManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
-      $Result.GetResult<
-        Prisma.$DungeonMasterPayload<ExtArgs>,
-        T,
-        "findMany",
-        GlobalOmitOptions
-      >
+      $Result.GetResult<Prisma.$DungeonMasterPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>
     >;
 
     /**
@@ -1510,14 +1437,9 @@ export namespace Prisma {
      *
      */
     create<T extends DungeonMasterCreateArgs>(
-      args: SelectSubset<T, DungeonMasterCreateArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterCreateArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
-      $Result.GetResult<
-        Prisma.$DungeonMasterPayload<ExtArgs>,
-        T,
-        "create",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$DungeonMasterPayload<ExtArgs>, T, "create", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -1536,7 +1458,7 @@ export namespace Prisma {
      *
      */
     createMany<T extends DungeonMasterCreateManyArgs>(
-      args?: SelectSubset<T, DungeonMasterCreateManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterCreateManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -1562,7 +1484,7 @@ export namespace Prisma {
      *
      */
     createManyAndReturn<T extends DungeonMasterCreateManyAndReturnArgs>(
-      args?: SelectSubset<T, DungeonMasterCreateManyAndReturnArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterCreateManyAndReturnArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1585,14 +1507,9 @@ export namespace Prisma {
      *
      */
     delete<T extends DungeonMasterDeleteArgs>(
-      args: SelectSubset<T, DungeonMasterDeleteArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterDeleteArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
-      $Result.GetResult<
-        Prisma.$DungeonMasterPayload<ExtArgs>,
-        T,
-        "delete",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$DungeonMasterPayload<ExtArgs>, T, "delete", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -1614,14 +1531,9 @@ export namespace Prisma {
      *
      */
     update<T extends DungeonMasterUpdateArgs>(
-      args: SelectSubset<T, DungeonMasterUpdateArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterUpdateArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
-      $Result.GetResult<
-        Prisma.$DungeonMasterPayload<ExtArgs>,
-        T,
-        "update",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$DungeonMasterPayload<ExtArgs>, T, "update", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -1640,7 +1552,7 @@ export namespace Prisma {
      *
      */
     deleteMany<T extends DungeonMasterDeleteManyArgs>(
-      args?: SelectSubset<T, DungeonMasterDeleteManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, DungeonMasterDeleteManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -1661,7 +1573,7 @@ export namespace Prisma {
      *
      */
     updateMany<T extends DungeonMasterUpdateManyArgs>(
-      args: SelectSubset<T, DungeonMasterUpdateManyArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterUpdateManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -1693,7 +1605,7 @@ export namespace Prisma {
      *
      */
     updateManyAndReturn<T extends DungeonMasterUpdateManyAndReturnArgs>(
-      args: SelectSubset<T, DungeonMasterUpdateManyAndReturnArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterUpdateManyAndReturnArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
       $Result.GetResult<
         Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -1721,14 +1633,9 @@ export namespace Prisma {
      * })
      */
     upsert<T extends DungeonMasterUpsertArgs>(
-      args: SelectSubset<T, DungeonMasterUpsertArgs<ExtArgs>>,
+      args: SelectSubset<T, DungeonMasterUpsertArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
-      $Result.GetResult<
-        Prisma.$DungeonMasterPayload<ExtArgs>,
-        T,
-        "upsert",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$DungeonMasterPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -1748,7 +1655,7 @@ export namespace Prisma {
      * })
      **/
     count<T extends DungeonMasterCountArgs>(
-      args?: Subset<T, DungeonMasterCountArgs>,
+      args?: Subset<T, DungeonMasterCountArgs>
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<"select", any>
         ? T["select"] extends true
@@ -1782,7 +1689,7 @@ export namespace Prisma {
      * })
      **/
     aggregate<T extends DungeonMasterAggregateArgs>(
-      args: Subset<T, DungeonMasterAggregateArgs>,
+      args: Subset<T, DungeonMasterAggregateArgs>
     ): Prisma.PrismaPromise<GetDungeonMasterAggregateType<T>>;
 
     /**
@@ -1805,16 +1712,11 @@ export namespace Prisma {
      **/
     groupBy<
       T extends DungeonMasterGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<"skip", Keys<T>>,
-        Extends<"take", Keys<T>>
-      >,
+      HasSelectOrTake extends Or<Extends<"skip", Keys<T>>, Extends<"take", Keys<T>>>,
       OrderByArg extends True extends HasSelectOrTake
         ? { orderBy: DungeonMasterGroupByArgs["orderBy"] }
         : { orderBy?: DungeonMasterGroupByArgs["orderBy"] },
-      OrderFields extends ExcludeUnderscoreKeys<
-        Keys<MaybeTupleToUnion<T["orderBy"]>>
-      >,
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T["orderBy"]>>>,
       ByFields extends MaybeTupleToUnion<T["by"]>,
       ByValid extends Has<ByFields, OrderFields>,
       HavingFields extends GetHavingFields<T["having"]>,
@@ -1828,12 +1730,7 @@ export namespace Prisma {
                 ? never
                 : P extends string
                   ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-                  : [
-                      Error,
-                      "Field ",
-                      P,
-                      ` in "having" needs to be provided in "by"`,
-                    ];
+                  : [Error, "Field ", P, ` in "having" needs to be provided in "by"`];
             }[HavingFields]
           : "take" extends Keys<T>
             ? "orderBy" extends Keys<T>
@@ -1863,8 +1760,7 @@ export namespace Prisma {
                       : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
                   }[OrderFields],
     >(
-      args: SubsetIntersection<T, DungeonMasterGroupByArgs, OrderByArg> &
-        InputErrors,
+      args: SubsetIntersection<T, DungeonMasterGroupByArgs, OrderByArg> & InputErrors
     ): {} extends InputErrors
       ? GetDungeonMasterGroupByPayload<T>
       : Prisma.PrismaPromise<InputErrors>;
@@ -1888,15 +1784,9 @@ export namespace Prisma {
   > extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise";
     sessions<T extends DungeonMaster$sessionsArgs<ExtArgs> = {}>(
-      args?: Subset<T, DungeonMaster$sessionsArgs<ExtArgs>>,
+      args?: Subset<T, DungeonMaster$sessionsArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
-      | $Result.GetResult<
-          Prisma.$SessionPayload<ExtArgs>,
-          T,
-          "findMany",
-          GlobalOmitOptions
-        >
-      | Null
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null
     >;
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1905,14 +1795,8 @@ export namespace Prisma {
      * @returns A Promise for the completion of which ever callback is executed.
      */
     then<TResult1 = T, TResult2 = never>(
-      onfulfilled?:
-        | ((value: T) => TResult1 | PromiseLike<TResult1>)
-        | undefined
-        | null,
-      onrejected?:
-        | ((reason: any) => TResult2 | PromiseLike<TResult2>)
-        | undefined
-        | null,
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
     ): $Utils.JsPromise<TResult1 | TResult2>;
     /**
      * Attaches a callback for only the rejection of the Promise.
@@ -1920,10 +1804,7 @@ export namespace Prisma {
      * @returns A Promise for the completion of the callback.
      */
     catch<TResult = never>(
-      onrejected?:
-        | ((reason: any) => TResult | PromiseLike<TResult>)
-        | undefined
-        | null,
+      onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
     ): $Utils.JsPromise<T | TResult>;
     /**
      * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
@@ -2019,9 +1900,7 @@ export namespace Prisma {
      *
      * Determine the order of DungeonMasters to fetch.
      */
-    orderBy?:
-      | DungeonMasterOrderByWithRelationInput
-      | DungeonMasterOrderByWithRelationInput[];
+    orderBy?: DungeonMasterOrderByWithRelationInput | DungeonMasterOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -2075,9 +1954,7 @@ export namespace Prisma {
      *
      * Determine the order of DungeonMasters to fetch.
      */
-    orderBy?:
-      | DungeonMasterOrderByWithRelationInput
-      | DungeonMasterOrderByWithRelationInput[];
+    orderBy?: DungeonMasterOrderByWithRelationInput | DungeonMasterOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -2131,9 +2008,7 @@ export namespace Prisma {
      *
      * Determine the order of DungeonMasters to fetch.
      */
-    orderBy?:
-      | DungeonMasterOrderByWithRelationInput
-      | DungeonMasterOrderByWithRelationInput[];
+    orderBy?: DungeonMasterOrderByWithRelationInput | DungeonMasterOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -2250,10 +2125,7 @@ export namespace Prisma {
     /**
      * The data used to update DungeonMasters.
      */
-    data: XOR<
-      DungeonMasterUpdateManyMutationInput,
-      DungeonMasterUncheckedUpdateManyInput
-    >;
+    data: XOR<DungeonMasterUpdateManyMutationInput, DungeonMasterUncheckedUpdateManyInput>;
     /**
      * Filter which DungeonMasters to update
      */
@@ -2281,10 +2153,7 @@ export namespace Prisma {
     /**
      * The data used to update DungeonMasters.
      */
-    data: XOR<
-      DungeonMasterUpdateManyMutationInput,
-      DungeonMasterUncheckedUpdateManyInput
-    >;
+    data: XOR<DungeonMasterUpdateManyMutationInput, DungeonMasterUncheckedUpdateManyInput>;
     /**
      * Filter which DungeonMasters to update
      */
@@ -2386,9 +2255,7 @@ export namespace Prisma {
      */
     include?: SessionInclude<ExtArgs> | null;
     where?: SessionWhereInput;
-    orderBy?:
-      | SessionOrderByWithRelationInput
-      | SessionOrderByWithRelationInput[];
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[];
     cursor?: SessionWhereUniqueInput;
     take?: number;
     skip?: number;
@@ -2509,9 +2376,7 @@ export namespace Prisma {
      *
      * Determine the order of Sessions to fetch.
      */
-    orderBy?:
-      | SessionOrderByWithRelationInput
-      | SessionOrderByWithRelationInput[];
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -2574,9 +2439,7 @@ export namespace Prisma {
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     where?: SessionWhereInput;
-    orderBy?:
-      | SessionOrderByWithAggregationInput
-      | SessionOrderByWithAggregationInput[];
+    orderBy?: SessionOrderByWithAggregationInput | SessionOrderByWithAggregationInput[];
     by: SessionScalarFieldEnum[] | SessionScalarFieldEnum;
     having?: SessionScalarWhereWithAggregatesInput;
     take?: number;
@@ -2601,32 +2464,30 @@ export namespace Prisma {
     _max: SessionMaxAggregateOutputType | null;
   };
 
-  type GetSessionGroupByPayload<T extends SessionGroupByArgs> =
-    Prisma.PrismaPromise<
-      Array<
-        PickEnumerable<SessionGroupByOutputType, T["by"]> & {
-          [P in keyof T & keyof SessionGroupByOutputType]: P extends "_count"
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], SessionGroupByOutputType[P]>
-            : GetScalarType<T[P], SessionGroupByOutputType[P]>;
-        }
-      >
-    >;
-
-  export type SessionSelect<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = $Extensions.GetSelect<
-    {
-      id?: boolean;
-      title?: boolean;
-      date?: boolean;
-      createdAt?: boolean;
-      dmId?: boolean;
-      dm?: boolean | DungeonMasterDefaultArgs<ExtArgs>;
-    },
-    ExtArgs["result"]["session"]
+  type GetSessionGroupByPayload<T extends SessionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SessionGroupByOutputType, T["by"]> & {
+        [P in keyof T & keyof SessionGroupByOutputType]: P extends "_count"
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], SessionGroupByOutputType[P]>
+          : GetScalarType<T[P], SessionGroupByOutputType[P]>;
+      }
+    >
   >;
+
+  export type SessionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetSelect<
+      {
+        id?: boolean;
+        title?: boolean;
+        date?: boolean;
+        createdAt?: boolean;
+        dmId?: boolean;
+        dm?: boolean | DungeonMasterDefaultArgs<ExtArgs>;
+      },
+      ExtArgs["result"]["session"]
+    >;
 
   export type SessionSelectCreateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
@@ -2664,15 +2525,12 @@ export namespace Prisma {
     dmId?: boolean;
   };
 
-  export type SessionOmit<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = $Extensions.GetOmit<
-    "id" | "title" | "date" | "createdAt" | "dmId",
-    ExtArgs["result"]["session"]
-  >;
-  export type SessionInclude<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = {
+  export type SessionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    $Extensions.GetOmit<
+      "id" | "title" | "date" | "createdAt" | "dmId",
+      ExtArgs["result"]["session"]
+    >;
+  export type SessionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     dm?: boolean | DungeonMasterDefaultArgs<ExtArgs>;
   };
   export type SessionIncludeCreateManyAndReturn<
@@ -2686,33 +2544,32 @@ export namespace Prisma {
     dm?: boolean | DungeonMasterDefaultArgs<ExtArgs>;
   };
 
-  export type $SessionPayload<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = {
-    name: "Session";
-    objects: {
-      dm: Prisma.$DungeonMasterPayload<ExtArgs>;
+  export type $SessionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    {
+      name: "Session";
+      objects: {
+        dm: Prisma.$DungeonMasterPayload<ExtArgs>;
+      };
+      scalars: $Extensions.GetPayloadResult<
+        {
+          id: number;
+          title: string;
+          date: Date;
+          createdAt: Date;
+          dmId: number;
+        },
+        ExtArgs["result"]["session"]
+      >;
+      composites: {};
     };
-    scalars: $Extensions.GetPayloadResult<
-      {
-        id: number;
-        title: string;
-        date: Date;
-        createdAt: Date;
-        dmId: number;
-      },
-      ExtArgs["result"]["session"]
-    >;
-    composites: {};
-  };
 
-  type SessionGetPayload<
-    S extends boolean | null | undefined | SessionDefaultArgs,
-  > = $Result.GetResult<Prisma.$SessionPayload, S>;
+  type SessionGetPayload<S extends boolean | null | undefined | SessionDefaultArgs> =
+    $Result.GetResult<Prisma.$SessionPayload, S>;
 
-  type SessionCountArgs<
-    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = Omit<SessionFindManyArgs, "select" | "include" | "distinct" | "omit"> & {
+  type SessionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Omit<
+    SessionFindManyArgs,
+    "select" | "include" | "distinct" | "omit"
+  > & {
     select?: SessionCountAggregateInputType | true;
   };
 
@@ -2736,14 +2593,9 @@ export namespace Prisma {
      * })
      */
     findUnique<T extends SessionFindUniqueArgs>(
-      args: SelectSubset<T, SessionFindUniqueArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionFindUniqueArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "findUnique",
-        GlobalOmitOptions
-      > | null,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null,
       null,
       ExtArgs,
       GlobalOmitOptions
@@ -2762,14 +2614,9 @@ export namespace Prisma {
      * })
      */
     findUniqueOrThrow<T extends SessionFindUniqueOrThrowArgs>(
-      args: SelectSubset<T, SessionFindUniqueOrThrowArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionFindUniqueOrThrowArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "findUniqueOrThrow",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -2789,14 +2636,9 @@ export namespace Prisma {
      * })
      */
     findFirst<T extends SessionFindFirstArgs>(
-      args?: SelectSubset<T, SessionFindFirstArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionFindFirstArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "findFirst",
-        GlobalOmitOptions
-      > | null,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null,
       null,
       ExtArgs,
       GlobalOmitOptions
@@ -2817,14 +2659,9 @@ export namespace Prisma {
      * })
      */
     findFirstOrThrow<T extends SessionFindFirstOrThrowArgs>(
-      args?: SelectSubset<T, SessionFindFirstOrThrowArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionFindFirstOrThrowArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "findFirstOrThrow",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -2847,14 +2684,9 @@ export namespace Prisma {
      *
      */
     findMany<T extends SessionFindManyArgs>(
-      args?: SelectSubset<T, SessionFindManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionFindManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "findMany",
-        GlobalOmitOptions
-      >
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>
     >;
 
     /**
@@ -2870,14 +2702,9 @@ export namespace Prisma {
      *
      */
     create<T extends SessionCreateArgs>(
-      args: SelectSubset<T, SessionCreateArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionCreateArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "create",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "create", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -2896,7 +2723,7 @@ export namespace Prisma {
      *
      */
     createMany<T extends SessionCreateManyArgs>(
-      args?: SelectSubset<T, SessionCreateManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionCreateManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -2922,7 +2749,7 @@ export namespace Prisma {
      *
      */
     createManyAndReturn<T extends SessionCreateManyAndReturnArgs>(
-      args?: SelectSubset<T, SessionCreateManyAndReturnArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionCreateManyAndReturnArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
       $Result.GetResult<
         Prisma.$SessionPayload<ExtArgs>,
@@ -2945,14 +2772,9 @@ export namespace Prisma {
      *
      */
     delete<T extends SessionDeleteArgs>(
-      args: SelectSubset<T, SessionDeleteArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionDeleteArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "delete",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -2974,14 +2796,9 @@ export namespace Prisma {
      *
      */
     update<T extends SessionUpdateArgs>(
-      args: SelectSubset<T, SessionUpdateArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionUpdateArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "update",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "update", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -3000,7 +2817,7 @@ export namespace Prisma {
      *
      */
     deleteMany<T extends SessionDeleteManyArgs>(
-      args?: SelectSubset<T, SessionDeleteManyArgs<ExtArgs>>,
+      args?: SelectSubset<T, SessionDeleteManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -3021,7 +2838,7 @@ export namespace Prisma {
      *
      */
     updateMany<T extends SessionUpdateManyArgs>(
-      args: SelectSubset<T, SessionUpdateManyArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionUpdateManyArgs<ExtArgs>>
     ): Prisma.PrismaPromise<BatchPayload>;
 
     /**
@@ -3053,7 +2870,7 @@ export namespace Prisma {
      *
      */
     updateManyAndReturn<T extends SessionUpdateManyAndReturnArgs>(
-      args: SelectSubset<T, SessionUpdateManyAndReturnArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionUpdateManyAndReturnArgs<ExtArgs>>
     ): Prisma.PrismaPromise<
       $Result.GetResult<
         Prisma.$SessionPayload<ExtArgs>,
@@ -3081,14 +2898,9 @@ export namespace Prisma {
      * })
      */
     upsert<T extends SessionUpsertArgs>(
-      args: SelectSubset<T, SessionUpsertArgs<ExtArgs>>,
+      args: SelectSubset<T, SessionUpsertArgs<ExtArgs>>
     ): Prisma__SessionClient<
-      $Result.GetResult<
-        Prisma.$SessionPayload<ExtArgs>,
-        T,
-        "upsert",
-        GlobalOmitOptions
-      >,
+      $Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>,
       never,
       ExtArgs,
       GlobalOmitOptions
@@ -3108,7 +2920,7 @@ export namespace Prisma {
      * })
      **/
     count<T extends SessionCountArgs>(
-      args?: Subset<T, SessionCountArgs>,
+      args?: Subset<T, SessionCountArgs>
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<"select", any>
         ? T["select"] extends true
@@ -3142,7 +2954,7 @@ export namespace Prisma {
      * })
      **/
     aggregate<T extends SessionAggregateArgs>(
-      args: Subset<T, SessionAggregateArgs>,
+      args: Subset<T, SessionAggregateArgs>
     ): Prisma.PrismaPromise<GetSessionAggregateType<T>>;
 
     /**
@@ -3165,16 +2977,11 @@ export namespace Prisma {
      **/
     groupBy<
       T extends SessionGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<"skip", Keys<T>>,
-        Extends<"take", Keys<T>>
-      >,
+      HasSelectOrTake extends Or<Extends<"skip", Keys<T>>, Extends<"take", Keys<T>>>,
       OrderByArg extends True extends HasSelectOrTake
         ? { orderBy: SessionGroupByArgs["orderBy"] }
         : { orderBy?: SessionGroupByArgs["orderBy"] },
-      OrderFields extends ExcludeUnderscoreKeys<
-        Keys<MaybeTupleToUnion<T["orderBy"]>>
-      >,
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T["orderBy"]>>>,
       ByFields extends MaybeTupleToUnion<T["by"]>,
       ByValid extends Has<ByFields, OrderFields>,
       HavingFields extends GetHavingFields<T["having"]>,
@@ -3188,12 +2995,7 @@ export namespace Prisma {
                 ? never
                 : P extends string
                   ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-                  : [
-                      Error,
-                      "Field ",
-                      P,
-                      ` in "having" needs to be provided in "by"`,
-                    ];
+                  : [Error, "Field ", P, ` in "having" needs to be provided in "by"`];
             }[HavingFields]
           : "take" extends Keys<T>
             ? "orderBy" extends Keys<T>
@@ -3223,10 +3025,8 @@ export namespace Prisma {
                       : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
                   }[OrderFields],
     >(
-      args: SubsetIntersection<T, SessionGroupByArgs, OrderByArg> & InputErrors,
-    ): {} extends InputErrors
-      ? GetSessionGroupByPayload<T>
-      : Prisma.PrismaPromise<InputErrors>;
+      args: SubsetIntersection<T, SessionGroupByArgs, OrderByArg> & InputErrors
+    ): {} extends InputErrors ? GetSessionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>;
     /**
      * Fields of the Session model
      */
@@ -3247,7 +3047,7 @@ export namespace Prisma {
   > extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise";
     dm<T extends DungeonMasterDefaultArgs<ExtArgs> = {}>(
-      args?: Subset<T, DungeonMasterDefaultArgs<ExtArgs>>,
+      args?: Subset<T, DungeonMasterDefaultArgs<ExtArgs>>
     ): Prisma__DungeonMasterClient<
       | $Result.GetResult<
           Prisma.$DungeonMasterPayload<ExtArgs>,
@@ -3267,14 +3067,8 @@ export namespace Prisma {
      * @returns A Promise for the completion of which ever callback is executed.
      */
     then<TResult1 = T, TResult2 = never>(
-      onfulfilled?:
-        | ((value: T) => TResult1 | PromiseLike<TResult1>)
-        | undefined
-        | null,
-      onrejected?:
-        | ((reason: any) => TResult2 | PromiseLike<TResult2>)
-        | undefined
-        | null,
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
     ): $Utils.JsPromise<TResult1 | TResult2>;
     /**
      * Attaches a callback for only the rejection of the Promise.
@@ -3282,10 +3076,7 @@ export namespace Prisma {
      * @returns A Promise for the completion of the callback.
      */
     catch<TResult = never>(
-      onrejected?:
-        | ((reason: any) => TResult | PromiseLike<TResult>)
-        | undefined
-        | null,
+      onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
     ): $Utils.JsPromise<T | TResult>;
     /**
      * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
@@ -3383,9 +3174,7 @@ export namespace Prisma {
      *
      * Determine the order of Sessions to fetch.
      */
-    orderBy?:
-      | SessionOrderByWithRelationInput
-      | SessionOrderByWithRelationInput[];
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -3439,9 +3228,7 @@ export namespace Prisma {
      *
      * Determine the order of Sessions to fetch.
      */
-    orderBy?:
-      | SessionOrderByWithRelationInput
-      | SessionOrderByWithRelationInput[];
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -3495,9 +3282,7 @@ export namespace Prisma {
      *
      * Determine the order of Sessions to fetch.
      */
-    orderBy?:
-      | SessionOrderByWithRelationInput
-      | SessionOrderByWithRelationInput[];
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[];
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      *
@@ -3808,42 +3593,27 @@ export namespace Prisma {
   /**
    * Reference to a field of type 'Int'
    */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "Int"
-  >;
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "Int">;
 
   /**
    * Reference to a field of type 'Int[]'
    */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "Int[]"
-  >;
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "Int[]">;
 
   /**
    * Reference to a field of type 'String'
    */
-  export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "String"
-  >;
+  export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "String">;
 
   /**
    * Reference to a field of type 'String[]'
    */
-  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "String[]"
-  >;
+  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "String[]">;
 
   /**
    * Reference to a field of type 'DateTime'
    */
-  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "DateTime"
-  >;
+  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "DateTime">;
 
   /**
    * Reference to a field of type 'DateTime[]'
@@ -3856,18 +3626,12 @@ export namespace Prisma {
   /**
    * Reference to a field of type 'Float'
    */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "Float"
-  >;
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "Float">;
 
   /**
    * Reference to a field of type 'Float[]'
    */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    "Float[]"
-  >;
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, "Float[]">;
 
   /**
    * Deep Input Types
@@ -3977,13 +3741,9 @@ export namespace Prisma {
   };
 
   export type SessionScalarWhereWithAggregatesInput = {
-    AND?:
-      | SessionScalarWhereWithAggregatesInput
-      | SessionScalarWhereWithAggregatesInput[];
+    AND?: SessionScalarWhereWithAggregatesInput | SessionScalarWhereWithAggregatesInput[];
     OR?: SessionScalarWhereWithAggregatesInput[];
-    NOT?:
-      | SessionScalarWhereWithAggregatesInput
-      | SessionScalarWhereWithAggregatesInput[];
+    NOT?: SessionScalarWhereWithAggregatesInput | SessionScalarWhereWithAggregatesInput[];
     id?: IntWithAggregatesFilter<"Session"> | number;
     title?: StringWithAggregatesFilter<"Session"> | string;
     date?: DateTimeWithAggregatesFilter<"Session"> | Date | string;
@@ -4251,9 +4011,7 @@ export namespace Prisma {
       | XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>
       | SessionCreateWithoutDmInput[]
       | SessionUncheckedCreateWithoutDmInput[];
-    connectOrCreate?:
-      | SessionCreateOrConnectWithoutDmInput
-      | SessionCreateOrConnectWithoutDmInput[];
+    connectOrCreate?: SessionCreateOrConnectWithoutDmInput | SessionCreateOrConnectWithoutDmInput[];
     createMany?: SessionCreateManyDmInputEnvelope;
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[];
   };
@@ -4263,9 +4021,7 @@ export namespace Prisma {
       | XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>
       | SessionCreateWithoutDmInput[]
       | SessionUncheckedCreateWithoutDmInput[];
-    connectOrCreate?:
-      | SessionCreateOrConnectWithoutDmInput
-      | SessionCreateOrConnectWithoutDmInput[];
+    connectOrCreate?: SessionCreateOrConnectWithoutDmInput | SessionCreateOrConnectWithoutDmInput[];
     createMany?: SessionCreateManyDmInputEnvelope;
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[];
   };
@@ -4283,9 +4039,7 @@ export namespace Prisma {
       | XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>
       | SessionCreateWithoutDmInput[]
       | SessionUncheckedCreateWithoutDmInput[];
-    connectOrCreate?:
-      | SessionCreateOrConnectWithoutDmInput
-      | SessionCreateOrConnectWithoutDmInput[];
+    connectOrCreate?: SessionCreateOrConnectWithoutDmInput | SessionCreateOrConnectWithoutDmInput[];
     upsert?:
       | SessionUpsertWithWhereUniqueWithoutDmInput
       | SessionUpsertWithWhereUniqueWithoutDmInput[];
@@ -4316,9 +4070,7 @@ export namespace Prisma {
       | XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>
       | SessionCreateWithoutDmInput[]
       | SessionUncheckedCreateWithoutDmInput[];
-    connectOrCreate?:
-      | SessionCreateOrConnectWithoutDmInput
-      | SessionCreateOrConnectWithoutDmInput[];
+    connectOrCreate?: SessionCreateOrConnectWithoutDmInput | SessionCreateOrConnectWithoutDmInput[];
     upsert?:
       | SessionUpsertWithWhereUniqueWithoutDmInput
       | SessionUpsertWithWhereUniqueWithoutDmInput[];
@@ -4471,10 +4223,7 @@ export namespace Prisma {
 
   export type SessionCreateOrConnectWithoutDmInput = {
     where: SessionWhereUniqueInput;
-    create: XOR<
-      SessionCreateWithoutDmInput,
-      SessionUncheckedCreateWithoutDmInput
-    >;
+    create: XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>;
   };
 
   export type SessionCreateManyDmInputEnvelope = {
@@ -4484,30 +4233,18 @@ export namespace Prisma {
 
   export type SessionUpsertWithWhereUniqueWithoutDmInput = {
     where: SessionWhereUniqueInput;
-    update: XOR<
-      SessionUpdateWithoutDmInput,
-      SessionUncheckedUpdateWithoutDmInput
-    >;
-    create: XOR<
-      SessionCreateWithoutDmInput,
-      SessionUncheckedCreateWithoutDmInput
-    >;
+    update: XOR<SessionUpdateWithoutDmInput, SessionUncheckedUpdateWithoutDmInput>;
+    create: XOR<SessionCreateWithoutDmInput, SessionUncheckedCreateWithoutDmInput>;
   };
 
   export type SessionUpdateWithWhereUniqueWithoutDmInput = {
     where: SessionWhereUniqueInput;
-    data: XOR<
-      SessionUpdateWithoutDmInput,
-      SessionUncheckedUpdateWithoutDmInput
-    >;
+    data: XOR<SessionUpdateWithoutDmInput, SessionUncheckedUpdateWithoutDmInput>;
   };
 
   export type SessionUpdateManyWithWhereWithoutDmInput = {
     where: SessionScalarWhereInput;
-    data: XOR<
-      SessionUpdateManyMutationInput,
-      SessionUncheckedUpdateManyWithoutDmInput
-    >;
+    data: XOR<SessionUpdateManyMutationInput, SessionUncheckedUpdateManyWithoutDmInput>;
   };
 
   export type SessionScalarWhereInput = {

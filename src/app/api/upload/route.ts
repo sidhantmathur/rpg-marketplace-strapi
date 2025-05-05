@@ -12,10 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!authHeader) {
-      return NextResponse.json(
-        { error: "No authorization token provided" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "No authorization token provided" }, { status: 401 });
     }
 
     // Create an authenticated Supabase client
@@ -28,7 +25,7 @@ export async function POST(request: NextRequest) {
             Authorization: authHeader,
           },
         },
-      },
+      }
     );
 
     // Validate file type
@@ -36,17 +33,14 @@ export async function POST(request: NextRequest) {
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         { error: "Invalid file type. Only images are allowed." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File too large. Maximum size is 5MB." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "File too large. Maximum size is 5MB." }, { status: 400 });
     }
 
     // Generate a unique filename
@@ -55,22 +49,19 @@ export async function POST(request: NextRequest) {
     const filePath = `sessions/${fileName}`;
 
     // Upload to Supabase Storage using authenticated client
-    const { error } = await supabaseAuth.storage
-      .from("sessions")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+    const { error } = await supabaseAuth.storage.from("sessions").upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
 
     if (error) {
       console.error("Upload error:", error);
       if (error.message.includes("bucket")) {
         return NextResponse.json(
           {
-            error:
-              "Storage bucket not found. Please check your Supabase configuration.",
+            error: "Storage bucket not found. Please check your Supabase configuration.",
           },
-          { status: 500 },
+          { status: 500 }
         );
       }
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
@@ -84,9 +75,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ imageUrl: publicUrl });
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

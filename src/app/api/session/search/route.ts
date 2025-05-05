@@ -18,7 +18,7 @@ const searchParamsSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
-    
+
     // Validate search parameters
     const validatedParams = searchParamsSchema.safeParse(searchParams);
     if (!validatedParams.success) {
@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } = validatedParams.data;
+    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } =
+      validatedParams.data;
 
     const where: Prisma.SessionWhereInput = {
       status: "upcoming",
@@ -44,13 +45,13 @@ export async function GET(req: NextRequest) {
     if (game) where.game = game;
     if (genre) where.genre = genre;
     if (experienceLevel) where.experienceLevel = experienceLevel;
-    
+
     if (dateFrom || dateTo) {
       where.date = {};
       if (dateFrom) where.date.gte = new Date(dateFrom);
       if (dateTo) where.date.lte = new Date(dateTo);
     }
-    
+
     if (dmId) where.dmId = Number(dmId);
     if (tags) {
       const tagArray = tags.split(",");
@@ -97,9 +98,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(sessions);
   } catch (error) {
     console.error("Error searching sessions:", error);
-    return NextResponse.json(
-      { error: "Failed to search sessions" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to search sessions" }, { status: 500 });
   }
 }

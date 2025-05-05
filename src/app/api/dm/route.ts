@@ -8,14 +8,11 @@ interface DMCreateRequest {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json() as DMCreateRequest;
+  const body = (await req.json()) as DMCreateRequest;
   const { name, userId } = body;
 
   if (!name || !userId) {
-    return NextResponse.json(
-      { error: "Missing name or userId" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Missing name or userId" }, { status: 400 });
   }
 
   const dm = await prisma.dungeonMaster.create({

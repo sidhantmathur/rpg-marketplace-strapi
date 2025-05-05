@@ -16,11 +16,7 @@ interface RouteParams {
 function handleError(err: unknown) {
   console.error("[Profile] API error:", err);
   const message =
-    err instanceof Error
-      ? err.message
-      : typeof err === "string"
-        ? err
-        : "Unknown error";
+    err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
   return NextResponse.json({ error: message }, { status: 500 });
 }
 

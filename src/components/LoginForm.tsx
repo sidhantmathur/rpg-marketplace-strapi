@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormState(prev => ({ ...prev, error: "", isLoading: true }));
+    setFormState((prev) => ({ ...prev, error: "", isLoading: true }));
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -38,12 +38,10 @@ export default function LoginPage() {
 
       router.push("/");
     } catch (error) {
-      const message = error instanceof AuthError 
-        ? error.message 
-        : "An unexpected error occurred";
-      setFormState(prev => ({ ...prev, error: message }));
+      const message = error instanceof AuthError ? error.message : "An unexpected error occurred";
+      setFormState((prev) => ({ ...prev, error: message }));
     } finally {
-      setFormState(prev => ({ ...prev, isLoading: false }));
+      setFormState((prev) => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -54,7 +52,7 @@ export default function LoginPage() {
         <input
           type="email"
           value={formState.email}
-          onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
+          onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
           placeholder="Email"
           className="w-full border p-2 rounded"
           required
@@ -62,7 +60,7 @@ export default function LoginPage() {
         <input
           type="password"
           value={formState.password}
-          onChange={(e) => setFormState(prev => ({ ...prev, password: e.target.value }))}
+          onChange={(e) => setFormState((prev) => ({ ...prev, password: e.target.value }))}
           placeholder="Password"
           className="w-full border p-2 rounded"
           required
@@ -74,9 +72,7 @@ export default function LoginPage() {
         >
           {formState.isLoading ? "Logging in..." : "Log In"}
         </button>
-        {formState.error && (
-          <p className="text-red-500 text-sm">{formState.error}</p>
-        )}
+        {formState.error && <p className="text-red-500 text-sm">{formState.error}</p>}
         <p className="text-sm mt-2">
           Don't have an account?{" "}
           <Link href="/signup" className="text-blue-600 hover:underline">

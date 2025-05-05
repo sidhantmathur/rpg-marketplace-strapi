@@ -28,12 +28,7 @@ const GENRE_OPTIONS = [
   "Other",
 ];
 
-const EXPERIENCE_LEVELS = [
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "All Levels",
-];
+const EXPERIENCE_LEVELS = ["Beginner", "Intermediate", "Advanced", "All Levels"];
 
 interface Booking {
   userId: string;
@@ -129,7 +124,7 @@ export default function SessionSearch() {
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
-      const responseData = await response.json() as unknown;
+      const responseData = (await response.json()) as unknown;
       if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
         throw new Error("Invalid response format");
       }
@@ -151,7 +146,7 @@ export default function SessionSearch() {
       if (!response.ok) {
         throw new Error("Failed to fetch joined sessions");
       }
-      const responseData = await response.json() as unknown;
+      const responseData = (await response.json()) as unknown;
       if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
         throw new Error("Invalid response format");
       }
@@ -177,9 +172,7 @@ export default function SessionSearch() {
     await fetchSessions();
   };
 
-  const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
@@ -197,7 +190,7 @@ export default function SessionSearch() {
         method: "DELETE",
       });
 
-      const data = await response.json() as ApiResponse<null>;
+      const data = (await response.json()) as ApiResponse<null>;
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete session");
@@ -207,9 +200,7 @@ export default function SessionSearch() {
       await fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to delete session",
-      );
+      alert(error instanceof Error ? error.message : "Failed to delete session");
     }
   };
 
@@ -293,17 +284,12 @@ export default function SessionSearch() {
       setManagingSession(null);
     } catch (error) {
       console.error("Error removing participant:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to remove participant",
-      );
+      alert(error instanceof Error ? error.message : "Failed to remove participant");
     }
   };
 
   const removeFromWaitlist = async (sessionId: number, userId: string) => {
-    if (
-      !confirm("Are you sure you want to remove this user from the waitlist?")
-    )
-      return;
+    if (!confirm("Are you sure you want to remove this user from the waitlist?")) return;
 
     try {
       const response = await fetch("/api/waitlist", {
@@ -321,20 +307,14 @@ export default function SessionSearch() {
       setManagingSession(null);
     } catch (error) {
       console.error("Error removing from waitlist:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to remove from waitlist",
-      );
+      alert(error instanceof Error ? error.message : "Failed to remove from waitlist");
     }
   };
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-          {error}
-        </div>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">{error}</div>
       )}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-primary">Sessions</h2>
@@ -348,9 +328,7 @@ export default function SessionSearch() {
 
       {showCreateForm && (
         <div className="bg-card p-6 rounded-lg shadow-md border border-border">
-          <h3 className="text-lg font-semibold mb-4 text-primary">
-            Create New Session
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-primary">Create New Session</h3>
           <CreateSessionForm
             onCancel={() => setShowCreateForm(false)}
             onSuccess={() => void handleSessionCreated()}
@@ -360,14 +338,10 @@ export default function SessionSearch() {
 
       {/* Filters */}
       <div className="bg-card p-6 rounded-lg shadow-md border border-border">
-        <h3 className="text-lg font-semibold mb-4 text-primary">
-          Search Filters
-        </h3>
+        <h3 className="text-lg font-semibold mb-4 text-primary">Search Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Search
-            </label>
+            <label className="block text-sm font-medium text-secondary">Search</label>
             <input
               type="text"
               name="searchTerm"
@@ -379,9 +353,7 @@ export default function SessionSearch() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Game
-            </label>
+            <label className="block text-sm font-medium text-secondary">Game</label>
             <select
               name="game"
               value={filters.game}
@@ -398,9 +370,7 @@ export default function SessionSearch() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Genre
-            </label>
+            <label className="block text-sm font-medium text-secondary">Genre</label>
             <select
               name="genre"
               value={filters.genre}
@@ -417,9 +387,7 @@ export default function SessionSearch() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Experience Level
-            </label>
+            <label className="block text-sm font-medium text-secondary">Experience Level</label>
             <select
               name="experienceLevel"
               value={filters.experienceLevel}
@@ -436,9 +404,7 @@ export default function SessionSearch() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Date From
-            </label>
+            <label className="block text-sm font-medium text-secondary">Date From</label>
             <input
               type="date"
               name="dateFrom"
@@ -449,9 +415,7 @@ export default function SessionSearch() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary">
-              Date To
-            </label>
+            <label className="block text-sm font-medium text-secondary">Date To</label>
             <input
               type="date"
               name="dateTo"
@@ -462,9 +426,7 @@ export default function SessionSearch() {
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-secondary">
-              Tags
-            </label>
+            <label className="block text-sm font-medium text-secondary">Tags</label>
             <input
               type="text"
               value={filters.tags.join(", ")}
@@ -500,12 +462,8 @@ export default function SessionSearch() {
               )}
             </div>
             <div className="p-4">
-              <h3 className="text-xl font-semibold text-primary mb-2">
-                {session.title}
-              </h3>
-              <p className="text-secondary mb-4 line-clamp-2">
-                {session.description}
-              </p>
+              <h3 className="text-xl font-semibold text-primary mb-2">{session.title}</h3>
+              <p className="text-secondary mb-4 line-clamp-2">{session.description}</p>
               <div className="grid grid-cols-2 gap-2 text-sm text-muted mb-4">
                 <div>
                   <span className="font-medium">Game:</span> {session.game}
@@ -514,8 +472,7 @@ export default function SessionSearch() {
                   <span className="font-medium">Genre:</span> {session.genre}
                 </div>
                 <div>
-                  <span className="font-medium">Level:</span>{" "}
-                  {session.experienceLevel}
+                  <span className="font-medium">Level:</span> {session.experienceLevel}
                 </div>
                 <div>
                   <span className="font-medium">Date:</span>{" "}
@@ -533,8 +490,7 @@ export default function SessionSearch() {
                 ))}
               </div>
               <div className="text-sm text-muted mb-2">
-                {session.bookings.length} / {session.maxParticipants}{" "}
-                participants
+                {session.bookings.length} / {session.maxParticipants} participants
                 {session.waitlist.length > 0 && (
                   <span className="ml-2 text-yellow-600">
                     ({session.waitlist.length} on waitlist)
@@ -631,8 +587,7 @@ export default function SessionSearch() {
               {/* Participants Section */}
               <div>
                 <h4 className="text-md font-semibold mb-2">
-                  Participants ({managingSession.bookings.length}/
-                  {managingSession.maxParticipants})
+                  Participants ({managingSession.bookings.length}/{managingSession.maxParticipants})
                 </h4>
                 <div className="space-y-2">
                   {managingSession.bookings.map((booking) => (
@@ -642,9 +597,7 @@ export default function SessionSearch() {
                     >
                       <span>{booking.user?.email}</span>
                       <button
-                        onClick={() =>
-                          void removeParticipant(managingSession.id, booking.userId)
-                        }
+                        onClick={() => void removeParticipant(managingSession.id, booking.userId)}
                         className="px-2 py-1 text-sm text-error hover:text-error"
                       >
                         Remove
@@ -669,10 +622,7 @@ export default function SessionSearch() {
                         <span>{waitlist.user?.email}</span>
                         <button
                           onClick={() =>
-                            void removeFromWaitlist(
-                              managingSession.id,
-                              waitlist.userId,
-                            )
+                            void removeFromWaitlist(managingSession.id, waitlist.userId)
                           }
                           className="px-2 py-1 text-sm text-error hover:text-error"
                         >
@@ -693,9 +643,7 @@ export default function SessionSearch() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-primary">
-                Edit Session
-              </h3>
+              <h3 className="text-lg font-semibold text-primary">Edit Session</h3>
               <button
                 onClick={() => setEditingSession(null)}
                 className="text-secondary hover:text-primary"

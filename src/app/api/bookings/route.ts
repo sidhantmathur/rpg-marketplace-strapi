@@ -20,16 +20,16 @@ interface SessionWithBookingsAndDM {
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json() as BookingRequest;
+    const { sessionId, userId } = (await req.json()) as BookingRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const session = await prisma.session.findUnique({
+    const session = (await prisma.session.findUnique({
       where: { id: Number(sessionId) },
       include: { bookings: true, dm: true },
-    }) as SessionWithBookingsAndDM | null;
+    })) as SessionWithBookingsAndDM | null;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -37,10 +37,7 @@ export async function POST(req: NextRequest) {
 
     const alreadyJoined = session.bookings.some((b) => b.userId === userId);
     if (alreadyJoined) {
-      return NextResponse.json(
-        { error: "You already joined this session" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "You already joined this session" }, { status: 400 });
     }
 
     if (session.bookings.length >= session.maxParticipants) {
@@ -56,7 +53,7 @@ export async function POST(req: NextRequest) {
       console.error("Session DM or DM's userId missing:", session.dm);
       return NextResponse.json(
         { error: "Session Dungeon Master data invalid or incomplete." },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -66,9 +63,7 @@ export async function POST(req: NextRequest) {
         .findUnique({
           where: { id: session.dmId },
         })
-        .then((dm) =>
-          dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null,
-        ),
+        .then((dm) => (dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null)),
     ]);
 
     if (user && dmProfile) {
@@ -76,7 +71,7 @@ export async function POST(req: NextRequest) {
         to: user.email,
         subject: `Booking Confirmed: ${session.title}`,
         html: `<p>You successfully joined <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date,
+          session.date
         ).toLocaleString()}.</p>`,
       });
 
@@ -84,7 +79,7 @@ export async function POST(req: NextRequest) {
         to: dmProfile.email,
         subject: `New Booking: ${session.title}`,
         html: `<p>${user.email} has joined your session <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date,
+          session.date
         ).toLocaleString()}.</p>`,
       });
     } else {
@@ -94,25 +89,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(booking);
   } catch (error) {
     console.error("POST /api/bookings unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json() as BookingRequest;
+    const { sessionId, userId } = (await req.json()) as BookingRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const session = await prisma.session.findUnique({
+    const session = (await prisma.session.findUnique({
       where: { id: Number(sessionId) },
       include: { bookings: true, waitlist: true },
-    }) as SessionWithBookingsAndDM | null;
+    })) as SessionWithBookingsAndDM | null;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -149,9 +141,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(booking);
   } catch (error) {
     console.error("DELETE /api/bookings unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
   }
 }

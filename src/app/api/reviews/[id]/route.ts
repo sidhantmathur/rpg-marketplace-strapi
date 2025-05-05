@@ -26,15 +26,11 @@ interface ReviewDeleteRequest {
 export async function PATCH(req: NextRequest, context: RouteParams) {
   try {
     const id = Number(context.params.id);
-    const { authorId, rating, comment } = await req.json() as ReviewUpdateRequest;
+    const { authorId, rating, comment } = (await req.json()) as ReviewUpdateRequest;
 
-    if (!authorId)
-      return NextResponse.json({ error: "authorId required" }, { status: 400 });
+    if (!authorId) return NextResponse.json({ error: "authorId required" }, { status: 400 });
     if (rating !== undefined && (rating < 1 || rating > 5))
-      return NextResponse.json(
-        { error: "rating must be 1‑5" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "rating must be 1‑5" }, { status: 400 });
     if (rating === undefined && comment === undefined)
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
@@ -56,10 +52,7 @@ export async function PATCH(req: NextRequest, context: RouteParams) {
     return NextResponse.json(updated);
   } catch (err) {
     console.error("PATCH /api/reviews/[id] error:", err);
-    return NextResponse.json(
-      { error: "Failed to update review" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update review" }, { status: 500 });
   }
 }
 
@@ -67,10 +60,9 @@ export async function PATCH(req: NextRequest, context: RouteParams) {
 export async function DELETE(req: NextRequest, context: RouteParams) {
   try {
     const id = Number(context.params.id);
-    const { authorId } = await req.json() as ReviewDeleteRequest;
+    const { authorId } = (await req.json()) as ReviewDeleteRequest;
 
-    if (!authorId)
-      return NextResponse.json({ error: "authorId required" }, { status: 400 });
+    if (!authorId) return NextResponse.json({ error: "authorId required" }, { status: 400 });
 
     const review = await prisma.review.findUnique({ where: { id } });
     if (!review || review.deleted)
@@ -90,9 +82,6 @@ export async function DELETE(req: NextRequest, context: RouteParams) {
     return NextResponse.json(deleted);
   } catch (err) {
     console.error("DELETE /api/reviews/[id] error:", err);
-    return NextResponse.json(
-      { error: "Failed to delete review" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
   }
 }

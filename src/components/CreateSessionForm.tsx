@@ -30,12 +30,7 @@ const GENRE_OPTIONS = [
   "Other",
 ];
 
-const EXPERIENCE_LEVELS = [
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "All Levels",
-];
+const EXPERIENCE_LEVELS = ["Beginner", "Intermediate", "Advanced", "All Levels"];
 
 interface CreateSessionFormProps {
   onCancel: () => void;
@@ -101,9 +96,7 @@ export default function CreateSessionForm({
     title: session?.title || "",
     description: session?.description || "",
     date: session?.date ? new Date(session.date) : new Date(),
-    time: session?.date
-      ? new Date(session.date).toISOString().split("T")[1].slice(0, 5)
-      : "",
+    time: session?.date ? new Date(session.date).toISOString().split("T")[1].slice(0, 5) : "",
     duration: session?.duration || 120,
     game: session?.game || "",
     genre: session?.genre || "",
@@ -113,9 +106,7 @@ export default function CreateSessionForm({
     imageUrl: session?.imageUrl || "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    session?.imageUrl || null,
-  );
+  const [imagePreview, setImagePreview] = useState<string | null>(session?.imageUrl || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingSessions, setExistingSessions] = useState<Date[]>([]);
@@ -130,7 +121,7 @@ export default function CreateSessionForm({
         const response = await fetch(`/api/session/search?dmId=${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
 
-        const data = await response.json() as ApiResponse<SessionResponse[]>;
+        const data = (await response.json()) as ApiResponse<SessionResponse[]>;
         if (data.error) {
           throw new Error(data.error);
         }
@@ -160,7 +151,7 @@ export default function CreateSessionForm({
             title: formData.title,
             description: formData.description,
             date: new Date(
-              `${formData.date.toISOString().split("T")[0]}T${formData.time}`,
+              `${formData.date.toISOString().split("T")[0]}T${formData.time}`
             ).toISOString(),
             duration: parseInt(formData.duration.toString()),
             game: formData.game,
@@ -179,9 +170,9 @@ export default function CreateSessionForm({
         if (imageFile) {
           const path = `${user?.id}/session/${session.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          const { data: uploadData, error: uploadError } = (await supabase.storage
             .from("sessions")
-            .upload(path, imageFile, { cacheControl: "3600", upsert: false }) as UploadResponse;
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false })) as UploadResponse;
 
           if (uploadError) {
             console.error("Upload error:", uploadError);
@@ -189,9 +180,9 @@ export default function CreateSessionForm({
           }
 
           // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from("sessions")
-            .getPublicUrl(uploadData.path);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with new image URL
           const updateResponse = await fetch(`/api/session/${session.id}`, {
@@ -216,7 +207,7 @@ export default function CreateSessionForm({
           body: JSON.stringify({
             ...formData,
             date: new Date(
-              `${formData.date.toISOString().split("T")[0]}T${formData.time}`,
+              `${formData.date.toISOString().split("T")[0]}T${formData.time}`
             ).toISOString(),
             duration: parseInt(formData.duration.toString()),
             maxParticipants: parseInt(formData.maxParticipants.toString()),
@@ -229,15 +220,15 @@ export default function CreateSessionForm({
           throw new Error("Failed to create session");
         }
 
-        const sessionData = await sessionResponse.json() as SessionResponse;
+        const sessionData = (await sessionResponse.json()) as SessionResponse;
 
         // If there's an image, upload it
         if (imageFile) {
           const path = `${user?.id}/session/${sessionData.id}/${Date.now()}-${imageFile.name}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          const { data: uploadData, error: uploadError } = (await supabase.storage
             .from("sessions")
-            .upload(path, imageFile, { cacheControl: "3600", upsert: false }) as UploadResponse;
+            .upload(path, imageFile, { cacheControl: "3600", upsert: false })) as UploadResponse;
 
           if (uploadError) {
             console.error("Upload error:", uploadError);
@@ -245,9 +236,9 @@ export default function CreateSessionForm({
           }
 
           // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from("sessions")
-            .getPublicUrl(uploadData.path);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("sessions").getPublicUrl(uploadData.path);
 
           // Update session with image URL
           const updateResponse = await fetch(`/api/session/${sessionData.id}`, {
@@ -308,9 +299,7 @@ export default function CreateSessionForm({
     sessionId?: string
   ): Promise<boolean> => {
     try {
-      const sessionDateTime = new Date(
-        `${date.toISOString().split("T")[0]}T${time}`
-      );
+      const sessionDateTime = new Date(`${date.toISOString().split("T")[0]}T${time}`);
       const sessionEndTime = addMinutes(sessionDateTime, duration);
 
       const response = await fetch(
@@ -323,7 +312,7 @@ export default function CreateSessionForm({
         throw new Error("Failed to check for conflicts");
       }
 
-      const responseData = await response.json() as unknown;
+      const responseData = (await response.json()) as unknown;
       if (!Array.isArray(responseData)) {
         throw new Error("Invalid response format");
       }
@@ -333,8 +322,8 @@ export default function CreateSessionForm({
         if (!item || typeof item !== "object") return false;
         const conflict = item as Record<string, unknown>;
         return (
-          "id" in conflict && 
-          "date" in conflict && 
+          "id" in conflict &&
+          "date" in conflict &&
           "duration" in conflict &&
           typeof conflict.id !== "undefined" &&
           typeof conflict.date !== "undefined" &&
@@ -349,10 +338,7 @@ export default function CreateSessionForm({
       const conflicts: ConflictResponse[] = responseData;
       const hasConflicts = conflicts.some((conflict) => {
         const conflictDate = new Date(conflict.date);
-        const conflictEndTime = addMinutes(
-          conflictDate,
-          conflict.duration
-        );
+        const conflictEndTime = addMinutes(conflictDate, conflict.duration);
 
         return (
           (sessionDateTime >= conflictDate && sessionDateTime < conflictEndTime) ||
@@ -398,9 +384,7 @@ export default function CreateSessionForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-secondary">
-          Title
-        </label>
+        <label className="block text-sm font-medium text-secondary">Title</label>
         <input
           type="text"
           value={formData.title}
@@ -411,23 +395,17 @@ export default function CreateSessionForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">
-          Description
-        </label>
+        <label className="block text-sm font-medium text-secondary">Description</label>
         <textarea
           value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           rows={3}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary mb-2">
-          Session Schedule
-        </label>
+        <label className="block text-sm font-medium text-secondary mb-2">Session Schedule</label>
         <SessionCalendar
           onDateSelect={(date) => void handleDateSelect(date)}
           onTimeSelect={(time) => void handleTimeSelect(time)}
@@ -444,9 +422,7 @@ export default function CreateSessionForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-secondary">
-            Max Participants
-          </label>
+          <label className="block text-sm font-medium text-secondary">Max Participants</label>
           <input
             type="number"
             value={formData.maxParticipants}
@@ -465,9 +441,7 @@ export default function CreateSessionForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-secondary">
-            Game
-          </label>
+          <label className="block text-sm font-medium text-secondary">Game</label>
           <select
             value={formData.game}
             onChange={(e) => setFormData({ ...formData, game: e.target.value })}
@@ -484,14 +458,10 @@ export default function CreateSessionForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-secondary">
-            Genre
-          </label>
+          <label className="block text-sm font-medium text-secondary">Genre</label>
           <select
             value={formData.genre}
-            onChange={(e) =>
-              setFormData({ ...formData, genre: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
             required
             className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
           >
@@ -506,14 +476,10 @@ export default function CreateSessionForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">
-          Experience Level
-        </label>
+        <label className="block text-sm font-medium text-secondary">Experience Level</label>
         <select
           value={formData.experienceLevel}
-          onChange={(e) =>
-            setFormData({ ...formData, experienceLevel: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
           required
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         >
@@ -527,9 +493,7 @@ export default function CreateSessionForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">
-          Tags (comma separated)
-        </label>
+        <label className="block text-sm font-medium text-secondary">Tags (comma separated)</label>
         <input
           type="text"
           value={formData.tags.join(", ")}
@@ -545,9 +509,7 @@ export default function CreateSessionForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary">
-          Session Image
-        </label>
+        <label className="block text-sm font-medium text-secondary">Session Image</label>
         <input
           type="file"
           accept="image/*"

@@ -22,4 +22,4 @@ declare global {
       toHaveValue(value?: string | string[] | number): R;
     }
   }
-} 
+}

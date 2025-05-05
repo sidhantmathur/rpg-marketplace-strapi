@@ -57,13 +57,13 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
       }
     }
 
-    setFormState(prev => ({ ...prev, errors: newErrors }));
+    setFormState((prev) => ({ ...prev, errors: newErrors }));
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       data: { ...prev.data, [name]: value },
       errors: { ...prev.errors, [name]: undefined },
@@ -72,12 +72,12 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    setFormState(prev => ({ ...prev, isLoading: true }));
+    setFormState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       await onSubmit(formState.data);
@@ -88,7 +88,7 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
         isLoading: false,
       });
     } catch (error) {
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         errors: {
           ...prev.errors,
@@ -114,9 +114,7 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
           className="w-full border p-2 rounded"
           disabled={formState.isLoading}
         />
-        {formState.errors.name && (
-          <p className="text-red-500 text-sm">{formState.errors.name}</p>
-        )}
+        {formState.errors.name && <p className="text-red-500 text-sm">{formState.errors.name}</p>}
       </div>
 
       <div className="space-y-2">
@@ -132,9 +130,7 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
           className="w-full border p-2 rounded"
           disabled={formState.isLoading}
         />
-        {formState.errors.email && (
-          <p className="text-red-500 text-sm">{formState.errors.email}</p>
-        )}
+        {formState.errors.email && <p className="text-red-500 text-sm">{formState.errors.email}</p>}
       </div>
 
       <div className="space-y-2">
@@ -156,9 +152,7 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
         )}
       </div>
 
-      {formState.errors.submit && (
-        <p className="text-red-500 text-sm">{formState.errors.submit}</p>
-      )}
+      {formState.errors.submit && <p className="text-red-500 text-sm">{formState.errors.submit}</p>}
 
       <button
         type="submit"

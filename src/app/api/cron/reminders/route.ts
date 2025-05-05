@@ -54,16 +54,13 @@ export async function GET(_: NextRequest) {
           date: session.date,
           id: session.id,
         },
-        participants,
+        participants
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error sending session reminders:", error);
-    return NextResponse.json(
-      { error: "Failed to send reminders" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to send reminders" }, { status: 500 });
   }
 }
