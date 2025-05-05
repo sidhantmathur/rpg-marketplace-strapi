@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Review } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { recalcRating } from "@/lib/recalcRating";
 
@@ -16,13 +16,24 @@ interface ReviewDeleteRequest {
   authorId: string;
 }
 
-/* PATCH /api/reviews/[id] ------------------------------------------------ */
+function handleError(err: unknown): NextResponse<{ error: string }> {
+  console.error("[Review API] Error:", err);
+  const message =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 export async function PATCH(
   req: NextRequest,
-  context: any
-) {
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<Review | { error: string }>> {
   try {
-    const id = Number(context.params.id);
+    const { id } = await params;
+    const reviewId = Number(id);
+    if (Number.isNaN(reviewId)) {
+      return NextResponse.json({ error: "Invalid review id" }, { status: 400 });
+    }
+
     const { authorId, rating, comment } = (await req.json()) as ReviewUpdateRequest;
 
     if (!authorId) return NextResponse.json({ error: "authorId required" }, { status: 400 });
@@ -31,7 +42,7 @@ export async function PATCH(
     if (rating === undefined && comment === undefined)
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
-    const existing = await prisma.review.findUnique({ where: { id } });
+    const existing = await prisma.review.findUnique({ where: { id: reviewId } });
     if (!existing || existing.deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (existing.authorId !== authorId)
@@ -39,7 +50,7 @@ export async function PATCH(
 
     const updated = await prisma.$transaction(async (tx) => {
       const r = await tx.review.update({
-        where: { id },
+        where: { id: reviewId },
         data: { rating, comment },
       });
       await recalcRating(r.targetId);
@@ -48,23 +59,26 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error("PATCH /api/reviews/[id] error:", err);
-    return NextResponse.json({ error: "Failed to update review" }, { status: 500 });
+    return handleError(err);
   }
 }
 
-/* DELETE /api/reviews/[id] ---------------------------------------------- */
 export async function DELETE(
   req: NextRequest,
-  context: any
-) {
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<Review | { error: string }>> {
   try {
-    const id = Number(context.params.id);
+    const { id } = await params;
+    const reviewId = Number(id);
+    if (Number.isNaN(reviewId)) {
+      return NextResponse.json({ error: "Invalid review id" }, { status: 400 });
+    }
+
     const { authorId } = (await req.json()) as ReviewDeleteRequest;
 
     if (!authorId) return NextResponse.json({ error: "authorId required" }, { status: 400 });
 
-    const review = await prisma.review.findUnique({ where: { id } });
+    const review = await prisma.review.findUnique({ where: { id: reviewId } });
     if (!review || review.deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (review.authorId !== authorId)
@@ -72,7 +86,7 @@ export async function DELETE(
 
     const deleted = await prisma.$transaction(async (tx) => {
       const r = await tx.review.update({
-        where: { id },
+        where: { id: reviewId },
         data: { deleted: true },
       });
       await recalcRating(r.targetId);
@@ -81,7 +95,6 @@ export async function DELETE(
 
     return NextResponse.json(deleted);
   } catch (err) {
-    console.error("DELETE /api/reviews/[id] error:", err);
-    return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
+    return handleError(err);
   }
 }

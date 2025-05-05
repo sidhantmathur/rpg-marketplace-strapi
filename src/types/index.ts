@@ -3,8 +3,7 @@ export interface Profile {
   email: string;
   roles: string[];
   createdAt: string;
-  updatedAt: string;
-  avatarUrl?: string;
+  avatarUrl: string | null;
   ratingAvg: number;
   ratingCount: number;
 }

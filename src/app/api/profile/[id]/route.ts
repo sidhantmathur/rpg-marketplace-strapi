@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { Profile } from "@/types";
 
-// Helper to centralize 500 responses
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function handleError(err: unknown): NextResponse<{ error: string }> {
   console.error("[Profile API] Error:", err);
   const message =
@@ -12,10 +14,10 @@ function handleError(err: unknown): NextResponse<{ error: string }> {
 
 export async function GET(
   request: NextRequest,
-  context: any
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await params;
     console.warn("[Profile API] Starting request for ID:", id);
 
     if (!id) {
@@ -23,7 +25,6 @@ export async function GET(
       return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
     }
 
-    console.warn("[Profile API] Querying database...");
     const profile = await prisma.profile.findUnique({
       where: { id },
       select: {
@@ -38,19 +39,14 @@ export async function GET(
     });
 
     if (!profile) {
-      console.warn("[Profile API] No profile found for id:", id);
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Format profile to match Profile type
     const formattedProfile: Profile = {
       ...profile,
       createdAt: profile.createdAt.toISOString(),
-      updatedAt: profile.createdAt.toISOString(), // Use createdAt as updatedAt since it's not in schema
-      avatarUrl: profile.avatarUrl ?? undefined, // Convert null to undefined
     };
 
-    console.warn("[Profile API] Found profile:", formattedProfile);
     return NextResponse.json(formattedProfile);
   } catch (err) {
     return handleError(err);

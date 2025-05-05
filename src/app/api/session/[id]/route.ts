@@ -2,12 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendSessionModification, sendSessionCancellation } from "@/utils/emailTemplates";
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import type { Session } from "@prisma/client";
 
 interface SessionInfo {
   title: string;
@@ -28,7 +23,7 @@ interface SessionUpdateRequest {
   imageUrl?: string;
 }
 
-function handleError(err: unknown) {
+function handleError(err: unknown): NextResponse<{ error: string }> {
   console.error("[Session] Uncaught error:", err);
   const message =
     err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
@@ -37,10 +32,10 @@ function handleError(err: unknown) {
 
 export async function GET(
   request: NextRequest,
-  context: any
-) {
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<Session | { error: string }>> {
   try {
-    const { id } = context.params;
+    const { id } = await params;
     console.warn("[Session] Fetching session id:", id);
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
@@ -71,10 +66,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  context: any
-) {
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<Session | { error: string }>> {
   try {
-    const { id } = context.params;
+    const { id } = await params;
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
       return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
@@ -165,10 +160,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  context: any
-) {
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<Session | { error: string }>> {
   try {
-    const { id } = context.params;
+    const { id } = await params;
     const sessionId = Number(id);
     if (Number.isNaN(sessionId)) {
       return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
