@@ -1,4 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
+import { add } from "@/utils/math";
 
 describe("Utils", () => {
   it("should pass a basic test", () => {
@@ -6,7 +7,6 @@ describe("Utils", () => {
   });
 
   it("should add numbers correctly", () => {
-    const add = (a: number, b: number): number => a + b;
     const result = add(1, 2);
     expect(result).toBe(3);
   });

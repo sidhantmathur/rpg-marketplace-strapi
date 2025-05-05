@@ -6,8 +6,9 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
 
 import "@testing-library/jest-dom";
-import { screen, fireEvent, waitFor, act, render } from "@testing-library/react";
-import LoginForm from "../LoginForm";
+import { screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render } from "@/test-utils";
+import LoginForm from "@/components/LoginForm";
 import { AuthResponse, User, Session, AuthError } from "@supabase/supabase-js";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 import { AppRouterContextProviderMock } from "../../lib/test-utils";

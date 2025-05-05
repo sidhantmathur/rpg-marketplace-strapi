@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
 import { expect } from "@jest/globals";
+import { TextEncoder, TextDecoder } from "util";
 
 // Set up environment variables for all tests
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
@@ -11,3 +12,7 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+// Add TextEncoder/TextDecoder polyfills
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;

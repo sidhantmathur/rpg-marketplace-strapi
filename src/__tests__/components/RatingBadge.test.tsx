@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import RatingBadge from "../RatingBadge";
+import { screen } from "@testing-library/react";
+import { render } from "@/test-utils";
+import RatingBadge from "@/components/RatingBadge";
 import { expect, describe, it } from "@jest/globals";
 
 interface RatingBadgeProps {

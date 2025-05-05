@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import BookingForm from "../BookingForm";
+import { screen, fireEvent, act } from "@testing-library/react";
+import { render } from "@/test-utils";
+import BookingForm from "@/components/BookingForm";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 
 interface BookingFormData {

@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import SessionCard from "../SessionCard";
+import { screen } from "@testing-library/react";
+import { render } from "@/test-utils";
+import SessionCard from "@/components/SessionCard";
 import { expect, describe, it } from "@jest/globals";
 
 interface Session {
