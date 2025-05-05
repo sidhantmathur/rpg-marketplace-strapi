@@ -9,6 +9,12 @@ interface RouteParams {
   };
 }
 
+interface SessionInfo {
+  title: string;
+  date: Date;
+  id: number;
+}
+
 interface SessionUpdateRequest {
   title?: string;
   description?: string;
@@ -22,12 +28,6 @@ interface SessionUpdateRequest {
   imageUrl?: string;
 }
 
-interface SessionInfo {
-  title: string;
-  date: Date;
-  id: number;
-}
-
 function handleError(err: unknown) {
   console.error("[Session] Uncaught error:", err);
   const message =
@@ -35,7 +35,10 @@ function handleError(err: unknown) {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-export async function GET(request: NextRequest, context: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  context: any
+) {
   try {
     const { id } = context.params;
     console.warn("[Session] Fetching session id:", id);
@@ -66,7 +69,10 @@ export async function GET(request: NextRequest, context: RouteParams) {
   }
 }
 
-export async function PATCH(request: NextRequest, context: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  context: any
+) {
   try {
     const { id } = context.params;
     const sessionId = Number(id);
@@ -119,20 +125,18 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
         tags: tags
           ? {
               set: [],
-              create: tags.map((tag) => ({ name: tag })),
+              create: tags.map((tag: string) => ({ name: tag })),
             }
           : undefined,
       },
     });
 
-    // Notify all booked users about the changes
-    if (session.bookings.length > 0) {
-      const users = session.bookings.map((booking) => ({ email: booking.user.email }));
-      const sessionInfo: SessionInfo = {
-        title: updatedSession.title,
-        date: updatedSession.date,
-        id: updatedSession.id,
-      };
+    // Send email notifications to all participants
+    const participants = session.bookings.map((booking) => ({
+      email: booking.user.email,
+    }));
+
+    if (participants.length > 0) {
       const changes = [
         title && `title changed to "${title}"`,
         date && `date changed to ${new Date(date).toLocaleString()}`,
@@ -142,7 +146,15 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
         .filter(Boolean)
         .join(", ");
 
-      await sendSessionModification(sessionInfo, users, changes);
+      await sendSessionModification(
+        {
+          title: session.title,
+          date: session.date,
+          id: session.id,
+        },
+        participants,
+        changes
+      );
     }
 
     return NextResponse.json(updatedSession);
@@ -151,7 +163,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteParams) {
+export async function DELETE(
+  request: NextRequest,
+  context: any
+) {
   try {
     const { id } = context.params;
     const sessionId = Number(id);
@@ -174,28 +189,27 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Delete all bookings first
-    await prisma.booking.deleteMany({
-      where: { sessionId },
-    });
-
-    // Delete the session
-    await prisma.session.delete({
+    const deletedSession = await prisma.session.delete({
       where: { id: sessionId },
     });
 
-    // Notify all booked users about the cancellation
-    if (session.bookings.length > 0) {
-      const users = session.bookings.map((booking) => ({ email: booking.user.email }));
-      const sessionInfo: SessionInfo = {
-        title: session.title,
-        date: session.date,
-        id: session.id,
-      };
-      await sendSessionCancellation(sessionInfo, users);
+    // Send cancellation emails to all participants
+    const participants = session.bookings.map((booking) => ({
+      email: booking.user.email,
+    }));
+
+    if (participants.length > 0) {
+      await sendSessionCancellation(
+        {
+          title: session.title,
+          date: session.date,
+          id: session.id,
+        },
+        participants
+      );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(deletedSession);
   } catch (err) {
     return handleError(err);
   }

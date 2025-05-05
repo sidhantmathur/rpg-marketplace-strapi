@@ -1,61 +1,45 @@
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-
-// Prisma singleton
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-// Helper to centralize 500 responses
-function handleError(err: unknown) {
-  console.error("[UserSessions] API error:", err);
-  const message =
-    err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
-  return NextResponse.json({ error: message }, { status: 500 });
-}
+import prisma from "@/lib/prisma";
 
 export async function GET(
-  _: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
   try {
-    const { id } = await Promise.resolve(context.params);
-    console.warn("[UserSessions] Fetching sessions for user:", id);
+    const { id } = context.params;
+    console.warn("[User Joined Sessions] Fetching sessions for user:", id);
 
-    // Optional: validate format of `id` here
-    // e.g. if you expect a UUID: if (!isValidUUID(id)) { … }
-
-    const bookings = await prisma.booking.findMany({
-      where: { userId: id },
-      include: {
-        session: {
-          include: {
-            dm: true,
-            bookings: {
-              include: {
-                user: {
-                  select: {
-                    email: true,
-                  },
-                },
-              },
-            },
-            waitlist: {
-              include: {
-                user: {
-                  select: {
-                    email: true,
-                  },
-                },
-              },
-            },
+    const sessions = await prisma.session.findMany({
+      where: {
+        bookings: {
+          some: {
+            userId: id,
           },
         },
       },
+      include: {
+        dm: true,
+        bookings: {
+          include: {
+            user: true,
+          },
+        },
+        reviews: {
+          where: { deleted: false },
+          orderBy: { createdAt: "desc" },
+          include: { author: true },
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
     });
 
-    return NextResponse.json(bookings);
+    return NextResponse.json(sessions);
   } catch (err) {
-    return handleError(err);
+    console.error("[User Joined Sessions] Error:", err);
+    const message =
+      err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

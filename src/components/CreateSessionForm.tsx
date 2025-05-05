@@ -75,6 +75,22 @@ interface SessionResponse {
   imageUrl: string;
 }
 
+interface ApiErrorResponse {
+  error: string;
+}
+
+type ApiResponse = ApiErrorResponse | Session[];
+
+function isErrorResponse(response: unknown): response is ApiErrorResponse {
+  return typeof response === "object" && response !== null && "error" in response;
+}
+
+function isSessionsResponse(response: unknown): response is Session[] {
+  return Array.isArray(response) && response.every(
+    (item) => typeof item === "object" && item !== null && "id" in item && "date" in item && "duration" in item
+  );
+}
+
 export default function CreateSessionForm({
   onCancel,
   onSuccess,
@@ -121,21 +137,19 @@ export default function CreateSessionForm({
           throw new Error("No access token in session");
         }
 
-        const response = await fetch(`/api/sessions`, {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-        
-        const responseData = await response.json() as { error?: string; id?: number; date?: string; duration?: number }[];
-        
-        if (!response.ok) {
+        const response = await fetch(`/api/user-sessions/${user.id}`);
+        const responseData = await response.json() as ApiResponse;
+
+        if (!response.ok || isErrorResponse(responseData)) {
           console.error("[CreateSessionForm] API error:", responseData);
-          throw new Error(responseData.error || "Failed to fetch sessions");
+          throw new Error(isErrorResponse(responseData) ? responseData.error : "Failed to fetch sessions");
         }
 
-        const sessions = responseData as { id: number; date: string; duration: number }[];
-        setExistingSessions(sessions.map((s) => new Date(s.date)));
+        if (!isSessionsResponse(responseData)) {
+          throw new Error("Invalid response format");
+        }
+
+        setExistingSessions(responseData.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("[CreateSessionForm] Error fetching sessions:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch sessions");
@@ -334,15 +348,23 @@ export default function CreateSessionForm({
         }
       );
 
-      const responseData = await response.json() as { error?: string; id?: number; date?: string; duration?: number }[];
+      const responseData = await response.json();
 
       if (!response.ok) {
         console.error("[CreateSessionForm] Conflict check error:", responseData);
-        throw new Error(responseData.error || "Failed to check for conflicts");
+        if (isErrorResponse(responseData)) {
+          throw new Error(responseData.error);
+        }
+        throw new Error("Failed to check for conflicts");
       }
 
-      const sessions = responseData as { id: number; date: string; duration: number }[];
+      if (!isSessionsResponse(responseData)) {
+        throw new Error("Invalid response format");
+      }
+
+      const sessions = responseData;
       const hasConflicts = sessions.some((session) => {
+        if (typeof session.duration !== "number") return false;
         const sessionDate = new Date(session.date);
         const sessionEndTime = addMinutes(sessionDate, session.duration);
 

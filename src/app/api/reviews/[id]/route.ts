@@ -6,12 +6,6 @@ const gp = global as unknown as { prisma?: PrismaClient };
 const prisma = gp.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== "production") gp.prisma = prisma;
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 interface ReviewUpdateRequest {
   authorId: string;
   rating?: number;
@@ -23,7 +17,10 @@ interface ReviewDeleteRequest {
 }
 
 /* PATCH /api/reviews/[id] ------------------------------------------------ */
-export async function PATCH(req: NextRequest, context: RouteParams) {
+export async function PATCH(
+  req: NextRequest,
+  context: any
+) {
   try {
     const id = Number(context.params.id);
     const { authorId, rating, comment } = (await req.json()) as ReviewUpdateRequest;
@@ -57,7 +54,10 @@ export async function PATCH(req: NextRequest, context: RouteParams) {
 }
 
 /* DELETE /api/reviews/[id] ---------------------------------------------- */
-export async function DELETE(req: NextRequest, context: RouteParams) {
+export async function DELETE(
+  req: NextRequest,
+  context: any
+) {
   try {
     const id = Number(context.params.id);
     const { authorId } = (await req.json()) as ReviewDeleteRequest;
