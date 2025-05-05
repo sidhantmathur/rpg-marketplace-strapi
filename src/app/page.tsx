@@ -2,6 +2,7 @@
 
 import { useUser } from "@/hooks/useUser";
 import { SignOutButton } from "@/components/SignOutButton";
+import { ProfileButton } from "@/components/ProfileButton";
 import SessionSearch from "@/components/SessionSearch";
 import Link from "next/link";
 
@@ -15,7 +16,10 @@ export default function HomePage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-primary">RPG Marketplace</h1>
         {user ? (
-          <SignOutButton />
+          <div className="flex gap-2">
+            <ProfileButton />
+            <SignOutButton />
+          </div>
         ) : (
           <Link href="/login" className="text-link hover:text-link-hover">
             Log in

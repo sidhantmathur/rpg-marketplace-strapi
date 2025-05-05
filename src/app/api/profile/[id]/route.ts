@@ -1,39 +1,50 @@
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-
-// Prisma singleton
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import prisma from "@/lib/prisma";
 
 // Helper to centralize 500 responses
-function handleError(err: unknown) {
-  console.error("[Profile] API error:", err);
+function handleError(err: unknown): NextResponse {
+  console.error("[Profile API] Error:", err);
   const message =
     err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-export async function GET(_: NextRequest, context: RouteParams) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   try {
-    const { id } = context.params;
-    console.warn("[Profile] Fetching profile for id:", id);
+    const { id } = params;
+    console.log("[Profile API] Starting request for ID:", id);
 
+    if (!id) {
+      console.error("[Profile API] No ID provided");
+      return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
+    }
+
+    console.log("[Profile API] Querying database...");
     const profile = await prisma.profile.findUnique({
       where: { id },
+      select: {
+        id: true,
+        email: true,
+        roles: true,
+        createdAt: true,
+        avatarUrl: true,
+        ratingAvg: true,
+        ratingCount: true,
+      },
     });
+
     if (!profile) {
+      console.warn("[Profile API] No profile found for id:", id);
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
+    console.log("[Profile API] Found profile:", profile);
     return NextResponse.json(profile);
   } catch (err) {
+    console.error("[Profile API] Unexpected error:", err);
     return handleError(err);
   }
 }
