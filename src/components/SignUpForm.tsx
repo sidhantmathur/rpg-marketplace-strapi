@@ -93,7 +93,7 @@ export default function SignupPage() {
   return (
     <main className="p-6 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-4">Sign Up</h1>
-      <form onSubmit={handleSignUp} className="space-y-4">
+      <form onSubmit={(e) => void handleSignUp(e)} className="space-y-4">
         <input
           type="email"
           value={formState.email}

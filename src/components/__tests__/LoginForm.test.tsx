@@ -1,20 +1,18 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 import LoginPage from "@/app/login/page";
-import { AuthError, AuthResponse } from "@supabase/supabase-js";
+import { AuthResponse, User, Session } from "@supabase/supabase-js";
+import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 
-// Mock the next/navigation module
-jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
-}));
+type SignInWithPasswordFn = (credentials: { email: string; password: string }) => Promise<AuthResponse>;
 
-// Mock the supabase client
-jest.mock("@/lib/supabase", () => ({
+jest.mock("next/navigation");
+jest.mock("@/lib/supabaseClient", () => ({
   supabase: {
     auth: {
-      signInWithPassword: jest.fn(),
+      signInWithPassword: jest.fn<SignInWithPasswordFn>(),
     },
   },
 }));
@@ -25,7 +23,6 @@ describe("LoginPage", () => {
   };
 
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
   });
@@ -40,10 +37,35 @@ describe("LoginPage", () => {
   });
 
   it("handles successful login", async () => {
-    // Mock successful login
-    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
+    const mockUser: User = {
+      id: "test-id",
+      email: "test@example.com",
+      created_at: new Date().toISOString(),
+      aud: "authenticated",
+      role: "authenticated",
+      app_metadata: {},
+      user_metadata: {},
+    };
+
+    const mockSession: Session = {
+      access_token: "test-token",
+      refresh_token: "test-refresh-token",
+      expires_in: 3600,
+      expires_at: Date.now() + 3600,
+      token_type: "bearer",
+      user: mockUser,
+    };
+
+    const mockAuthResponse: AuthResponse = {
+      data: {
+        user: mockUser,
+        session: mockSession,
+      },
       error: null,
-    } as AuthResponse);
+    };
+
+    const mockSignIn = supabase.auth.signInWithPassword as jest.MockedFunction<SignInWithPasswordFn>;
+    mockSignIn.mockResolvedValue(mockAuthResponse);
 
     render(<LoginPage />);
 
@@ -60,7 +82,7 @@ describe("LoginPage", () => {
 
     // Wait for and verify the redirect
     await waitFor(() => {
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      expect(mockSignIn).toHaveBeenCalledWith({
         email: "test@example.com",
         password: "password123",
       });
@@ -68,19 +90,11 @@ describe("LoginPage", () => {
     });
   });
 
-  it("displays error message on login failure", async () => {
-    // Mock login failure
-    const errorMessage = "Invalid credentials";
-    const mockError = {
-      message: errorMessage,
-      name: "AuthError",
-      status: 400,
-      code: "invalid_credentials",
-      __isAuthError: true,
-    } as AuthError;
-    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValueOnce({
-      error: mockError,
-    } as AuthResponse);
+  it("handles login error", async () => {
+    const mockError = new Error("Invalid credentials");
+
+    const mockSignIn = supabase.auth.signInWithPassword as jest.MockedFunction<SignInWithPasswordFn>;
+    mockSignIn.mockRejectedValue(mockError);
 
     render(<LoginPage />);
 
@@ -97,7 +111,7 @@ describe("LoginPage", () => {
 
     // Wait for and verify error message
     await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(screen.getByText("Invalid credentials")).toBeInTheDocument();
     });
     expect(mockRouter.push).not.toHaveBeenCalled();
   });

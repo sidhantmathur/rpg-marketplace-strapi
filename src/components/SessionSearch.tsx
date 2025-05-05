@@ -80,10 +80,6 @@ interface JoinedSession {
   };
 }
 
-interface ApiError {
-  error: string;
-}
-
 interface ApiResponse<T> {
   data: T;
   error?: string;
@@ -133,14 +129,19 @@ export default function SessionSearch() {
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
-      const data: SessionResponse = await response.json();
+      const responseData = await response.json() as unknown;
+      if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
+        throw new Error("Invalid response format");
+      }
+      const data = responseData as SessionResponse;
       if (data.error) {
         throw new Error(data.error);
       }
       setSessions(data.sessions);
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : "Failed to load sessions";
       console.error("Error fetching sessions:", error);
-      setError("Failed to load sessions");
+      setError(error);
     }
   }, [filters]);
 
@@ -150,14 +151,19 @@ export default function SessionSearch() {
       if (!response.ok) {
         throw new Error("Failed to fetch joined sessions");
       }
-      const data: JoinedSessionsResponse = await response.json();
+      const responseData = await response.json() as unknown;
+      if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
+        throw new Error("Invalid response format");
+      }
+      const data = responseData as JoinedSessionsResponse;
       if (data.error) {
         throw new Error(data.error);
       }
       setJoinedSessionIds(data.sessions.map((b) => b.session.id));
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : "Failed to load joined sessions";
       console.error("Error fetching joined sessions:", error);
-      setError("Failed to load joined sessions");
+      setError(error);
     }
   }, []);
 
@@ -198,7 +204,7 @@ export default function SessionSearch() {
       }
 
       // Refresh the session list
-      void fetchSessions();
+      await fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
       alert(
@@ -223,7 +229,7 @@ export default function SessionSearch() {
         throw new Error("Failed to join session");
       }
       setJoinedSessionIds((prev) => [...prev, sessionId]);
-      void fetchSessions();
+      await fetchSessions();
     } catch (error) {
       console.error("Error joining session:", error);
     }
@@ -241,7 +247,7 @@ export default function SessionSearch() {
         throw new Error("Failed to leave session");
       }
       setJoinedSessionIds((prev) => prev.filter((id) => id !== sessionId));
-      void fetchSessions();
+      await fetchSessions();
     } catch (error) {
       console.error("Error leaving session:", error);
     }
@@ -258,7 +264,7 @@ export default function SessionSearch() {
       if (!res.ok) {
         throw new Error("Failed to join waitlist");
       }
-      void fetchSessions();
+      await fetchSessions();
     } catch (error) {
       console.error("Error joining waitlist:", error);
     }
@@ -283,7 +289,7 @@ export default function SessionSearch() {
       }
 
       // Refresh sessions and close management modal
-      fetchSessions();
+      await fetchSessions();
       setManagingSession(null);
     } catch (error) {
       console.error("Error removing participant:", error);
@@ -311,7 +317,7 @@ export default function SessionSearch() {
       }
 
       // Refresh sessions and close management modal
-      fetchSessions();
+      await fetchSessions();
       setManagingSession(null);
     } catch (error) {
       console.error("Error removing from waitlist:", error);
@@ -325,6 +331,11 @@ export default function SessionSearch() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-primary">Sessions</h2>
         <button

@@ -100,7 +100,7 @@ export default function BookingForm({ onSubmit }: BookingFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={(e) => void handleSubmit(e)} noValidate className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="name" className="block text-sm font-medium">
           Name

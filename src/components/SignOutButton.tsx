@@ -39,7 +39,7 @@ export function SignOutButton({ className = "" }: SignOutButtonProps) {
   return (
     <div className="flex flex-col items-end">
       <button
-        onClick={handleSignOut}
+        onClick={() => void handleSignOut()}
         className={`text-sm text-link hover:text-link-hover disabled:opacity-50 ${className}`}
         disabled={isLoading}
       >

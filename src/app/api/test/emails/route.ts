@@ -8,9 +8,22 @@ import {
   sendWelcomeEmail,
 } from "@/utils/emailTemplates";
 
+interface EmailTestRequest {
+  type: string;
+  sessionId?: string;
+  email?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { type, sessionId, email } = await req.json();
+    const body = await req.json() as unknown;
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+    const { type, sessionId, email } = body as EmailTestRequest;
 
     if (!type) {
       return NextResponse.json(
@@ -256,6 +269,12 @@ export async function POST(req: NextRequest) {
       }
 
       case "welcome": {
+        if (!email) {
+          return NextResponse.json(
+            { error: "Email is required for welcome email" },
+            { status: 400 }
+          );
+        }
         await sendWelcomeEmail({ email });
         break;
       }

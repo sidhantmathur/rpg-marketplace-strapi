@@ -85,6 +85,12 @@ interface UploadResponse {
   error: Error | null;
 }
 
+interface ConflictResponse {
+  id: string;
+  date: string;
+  duration: number;
+}
+
 export default function CreateSessionForm({
   onCancel,
   onSuccess,
@@ -317,7 +323,30 @@ export default function CreateSessionForm({
         throw new Error("Failed to check for conflicts");
       }
 
-      const conflicts: SessionResponse[] = await response.json();
+      const responseData = await response.json() as unknown;
+      if (!Array.isArray(responseData)) {
+        throw new Error("Invalid response format");
+      }
+
+      // Validate each item in the array has the required properties
+      const isValidConflict = (item: unknown): item is ConflictResponse => {
+        if (!item || typeof item !== "object") return false;
+        const conflict = item as Record<string, unknown>;
+        return (
+          "id" in conflict && 
+          "date" in conflict && 
+          "duration" in conflict &&
+          typeof conflict.id !== "undefined" &&
+          typeof conflict.date !== "undefined" &&
+          typeof conflict.duration !== "undefined"
+        );
+      };
+
+      if (!responseData.every(isValidConflict)) {
+        throw new Error("Invalid conflict data format");
+      }
+
+      const conflicts: ConflictResponse[] = responseData;
       const hasConflicts = conflicts.some((conflict) => {
         const conflictDate = new Date(conflict.date);
         const conflictEndTime = addMinutes(
@@ -367,7 +396,7 @@ export default function CreateSessionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-secondary">
           Title
@@ -400,9 +429,9 @@ export default function CreateSessionForm({
           Session Schedule
         </label>
         <SessionCalendar
-          onDateSelect={handleDateSelect}
-          onTimeSelect={handleTimeSelect}
-          onDurationSelect={handleDurationSelect}
+          onDateSelect={(date) => void handleDateSelect(date)}
+          onTimeSelect={(time) => void handleTimeSelect(time)}
+          onDurationSelect={(duration) => void handleDurationSelect(duration)}
           timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
           existingSessions={existingSessions}
         />

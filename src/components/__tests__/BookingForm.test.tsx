@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import BookingForm from "../BookingForm";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
 
@@ -9,12 +9,8 @@ interface BookingFormData {
   players: string;
 }
 
-interface BookingFormProps {
-  onSubmit: (data: BookingFormData) => Promise<void>;
-}
-
 describe("BookingForm", () => {
-  const mockOnSubmit = jest.fn(async (data: BookingFormData) => {
+  const mockOnSubmit = jest.fn(async (_data: BookingFormData) => {
     await Promise.resolve();
   });
 
@@ -43,13 +39,13 @@ describe("BookingForm", () => {
       players: "4",
     };
 
-    fireEvent.change(screen.getByLabelText(/name/i), {
+    await fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: testData.name },
     });
-    fireEvent.change(screen.getByLabelText(/email/i), {
+    await fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: testData.email },
     });
-    fireEvent.change(screen.getByLabelText(/number of players/i), {
+    await fireEvent.change(screen.getByLabelText(/number of players/i), {
       target: { value: testData.players },
     });
 

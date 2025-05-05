@@ -105,7 +105,7 @@ export default function ReviewModal({
           </button>
           <button
             className="bg-blue-600 text-white px-3 py-1 text-sm rounded disabled:opacity-50"
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={formState.isLoading}
           >
             {formState.isLoading ? "Submitting..." : "Submit Review"}
