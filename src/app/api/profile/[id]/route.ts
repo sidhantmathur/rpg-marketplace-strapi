@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
 // Helper to centralize 500 responses
 function handleError(err: unknown): NextResponse {
   console.error("[Profile API] Error:", err);
@@ -11,7 +17,7 @@ function handleError(err: unknown): NextResponse {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id } = await Promise.resolve(context.params);
