@@ -21,7 +21,6 @@ export default [
       "**/.swc/**",
       "**/public/**",
       "**/coverage/**",
-      "**/jest.setup.js",
       "**/jest.config.js",
       "**/jest.integration.config.js",
       "**/prisma/generated/**",

@@ -1,34 +1,75 @@
+// Reset modules before any imports
+jest.resetModules();
+
+// Mock environment variables before any imports
+process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
+
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import LoginPage from "@/app/login/page";
-import { AuthResponse, User, Session } from "@supabase/supabase-js";
+import { screen, fireEvent, waitFor, act, render } from "@testing-library/react";
+import LoginForm from "../LoginForm";
+import { AuthResponse, User, Session, AuthError } from "@supabase/supabase-js";
 import { expect, jest, describe, it, beforeEach } from "@jest/globals";
+import { AppRouterContextProviderMock } from "../../lib/test-utils";
 
-type SignInWithPasswordFn = (credentials: { email: string; password: string }) => Promise<AuthResponse>;
+// Mock the entire next/navigation module
+jest.mock("next/navigation", () => {
+  const mockRouter = {
+    push: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  };
 
-jest.mock("next/navigation");
-jest.mock("@/lib/supabaseClient", () => ({
+  return {
+    useRouter: () => mockRouter,
+    usePathname: () => "/",
+    useSearchParams: () => new URLSearchParams(),
+  };
+});
+
+// Create mock function
+const mockSignInWithPassword = jest.fn();
+
+// Mock Supabase client with proper implementation
+jest.mock("../../lib/supabaseClient", () => ({
   supabase: {
     auth: {
-      signInWithPassword: jest.fn<SignInWithPasswordFn>(),
+      signInWithPassword: mockSignInWithPassword,
     },
   },
 }));
 
-describe("LoginPage", () => {
+// Import the mocked module after defining the mock
+import { supabase } from "../../lib/supabaseClient";
+
+describe("LoginForm", () => {
   const mockRouter = {
     push: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
   };
 
   beforeEach(() => {
+    // Clear all mocks and reset modules
     jest.clearAllMocks();
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    jest.resetModules();
+    
+    // Log mock status for debugging
+    console.log("Is signInWithPassword mocked?", jest.isMockFunction(supabase.auth.signInWithPassword));
   });
 
   it("renders login form", () => {
-    render(<LoginPage />);
+    render(
+      <AppRouterContextProviderMock router={mockRouter}>
+        <LoginForm />
+      </AppRouterContextProviderMock>
+    );
 
     expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
@@ -64,25 +105,36 @@ describe("LoginPage", () => {
       error: null,
     };
 
-    const mockSignIn = supabase.auth.signInWithPassword as jest.MockedFunction<SignInWithPasswordFn>;
-    mockSignIn.mockResolvedValue(mockAuthResponse);
+    // Setup mock implementation
+    mockSignInWithPassword.mockImplementationOnce(() => Promise.resolve(mockAuthResponse));
 
-    render(<LoginPage />);
+    render(
+      <AppRouterContextProviderMock router={mockRouter}>
+        <LoginForm />
+      </AppRouterContextProviderMock>
+    );
 
     // Fill in the form
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-      target: { value: "test@example.com" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Password"), {
-      target: { value: "password123" },
+    await act(async () => {
+      fireEvent.change(screen.getByPlaceholderText("Email"), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByPlaceholderText("Password"), {
+        target: { value: "password123" },
+      });
     });
 
     // Submit the form
-    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    });
+
+    // Log mock calls for debugging
+    console.log("Mock calls:", mockSignInWithPassword.mock.calls);
 
     // Wait for and verify the redirect
     await waitFor(() => {
-      expect(mockSignIn).toHaveBeenCalledWith({
+      expect(mockSignInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
         password: "password123",
       });
@@ -91,23 +143,41 @@ describe("LoginPage", () => {
   });
 
   it("handles login error", async () => {
-    const mockError = new Error("Invalid credentials");
+    const mockError = new AuthError("Invalid credentials", 400);
+    const mockAuthResponse: AuthResponse = {
+      data: {
+        user: null,
+        session: null,
+      },
+      error: mockError,
+    };
 
-    const mockSignIn = supabase.auth.signInWithPassword as jest.MockedFunction<SignInWithPasswordFn>;
-    mockSignIn.mockRejectedValue(mockError);
+    // Setup mock implementation
+    mockSignInWithPassword.mockImplementationOnce(() => Promise.resolve(mockAuthResponse));
 
-    render(<LoginPage />);
+    render(
+      <AppRouterContextProviderMock router={mockRouter}>
+        <LoginForm />
+      </AppRouterContextProviderMock>
+    );
 
     // Fill in the form
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-      target: { value: "test@example.com" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Password"), {
-      target: { value: "wrongpassword" },
+    await act(async () => {
+      fireEvent.change(screen.getByPlaceholderText("Email"), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByPlaceholderText("Password"), {
+        target: { value: "wrongpassword" },
+      });
     });
 
     // Submit the form
-    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+    });
+
+    // Log mock calls for debugging
+    console.log("Mock calls:", mockSignInWithPassword.mock.calls);
 
     // Wait for and verify error message
     await waitFor(() => {
