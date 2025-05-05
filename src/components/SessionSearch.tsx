@@ -353,7 +353,7 @@ export default function SessionSearch() {
           </h3>
           <CreateSessionForm
             onCancel={() => setShowCreateForm(false)}
-            onSuccess={handleSessionCreated}
+            onSuccess={() => void handleSessionCreated()}
           />
         </div>
       )}
@@ -546,7 +546,7 @@ export default function SessionSearch() {
                   {!joinedSessionIds.includes(session.id) &&
                     session.bookings.length < session.maxParticipants && (
                       <button
-                        onClick={() => joinSession(session.id)}
+                        onClick={() => void joinSession(session.id)}
                         className="px-3 py-1 text-sm text-link hover:text-link-hover"
                       >
                         Join Session
@@ -555,7 +555,7 @@ export default function SessionSearch() {
                   {!joinedSessionIds.includes(session.id) &&
                     session.bookings.length >= session.maxParticipants && (
                       <button
-                        onClick={() => joinWaitlist(session.id)}
+                        onClick={() => void joinWaitlist(session.id)}
                         className="px-3 py-1 text-sm text-yellow-600 hover:text-yellow-700"
                       >
                         Join Waitlist
@@ -563,7 +563,7 @@ export default function SessionSearch() {
                     )}
                   {joinedSessionIds.includes(session.id) && (
                     <button
-                      onClick={() => leaveSession(session.id)}
+                      onClick={() => void leaveSession(session.id)}
                       className="px-3 py-1 text-sm text-error hover:text-error"
                     >
                       Leave Session
@@ -586,7 +586,7 @@ export default function SessionSearch() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteSession(session.id)}
+                    onClick={() => void handleDeleteSession(session.id)}
                     className="px-3 py-1 text-sm text-error hover:text-error"
                   >
                     Delete
@@ -643,7 +643,7 @@ export default function SessionSearch() {
                       <span>{booking.user?.email}</span>
                       <button
                         onClick={() =>
-                          removeParticipant(managingSession.id, booking.userId)
+                          void removeParticipant(managingSession.id, booking.userId)
                         }
                         className="px-2 py-1 text-sm text-error hover:text-error"
                       >
@@ -669,7 +669,7 @@ export default function SessionSearch() {
                         <span>{waitlist.user?.email}</span>
                         <button
                           onClick={() =>
-                            removeFromWaitlist(
+                            void removeFromWaitlist(
                               managingSession.id,
                               waitlist.userId,
                             )
@@ -721,7 +721,7 @@ export default function SessionSearch() {
               onCancel={() => setEditingSession(null)}
               onSuccess={() => {
                 setEditingSession(null);
-                fetchSessions();
+                void fetchSessions();
               }}
             />
           </div>
