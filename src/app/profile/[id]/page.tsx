@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import UpcomingSessions from "@/components/UpcomingSessions";
 
 interface Profile {
   id: string;
@@ -78,9 +79,9 @@ export default function ProfilePage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -89,8 +90,8 @@ export default function ProfilePage() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="mb-4 text-red-500">{error}</div>
-        <Link href="/" className="text-blue-500 hover:underline">
+        <div className="mb-4 text-destructive">{error}</div>
+        <Link href="/" className="text-primary hover:text-primary/90">
           Back to Home
         </Link>
       </div>
@@ -100,8 +101,8 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="p-6">
-        <div className="mb-4 text-red-500">Profile not found</div>
-        <Link href="/" className="text-blue-500 hover:underline">
+        <div className="mb-4 text-destructive">Profile not found</div>
+        <Link href="/" className="text-primary hover:text-primary/90">
           Back to Home
         </Link>
       </div>
@@ -109,15 +110,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <Link href="/" className="text-blue-500 hover:underline">
+        <h1 className="text-2xl font-bold text-primary">Profile</h1>
+        <Link href="/" className="text-primary hover:text-primary/90">
           Back to Home
         </Link>
       </div>
       
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-card p-6 rounded-lg shadow-md border border-border mb-8">
         <div className="flex items-center mb-6">
           {profile.avatarUrl && (
             <div className="mr-4">
@@ -131,22 +132,24 @@ export default function ProfilePage() {
             </div>
           )}
           <div>
-            <h2 className="text-xl font-semibold mb-2">{profile.email}</h2>
+            <h2 className="text-xl font-semibold mb-2 text-primary">{profile.email}</h2>
             <div className="flex items-center gap-2">
               <span className="text-yellow-500">★</span>
-              <span>{profile.ratingAvg.toFixed(1)} ({profile.ratingCount} reviews)</span>
+              <span className="text-muted-foreground">
+                {profile.ratingAvg.toFixed(1)} ({profile.ratingCount} reviews)
+              </span>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4">
           <div>
-            <label className="font-semibold block mb-1">Roles:</label>
+            <label className="font-semibold block mb-1 text-primary">Roles:</label>
             <div className="flex gap-2">
               {profile.roles.map((role) => (
                 <span
                   key={role}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                 >
                   {role}
                 </span>
@@ -155,16 +158,19 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="font-semibold block mb-1">Member Since:</label>
-            <p>{new Date(profile.createdAt).toLocaleDateString()}</p>
+            <label className="font-semibold block mb-1 text-primary">Member Since:</label>
+            <p className="text-muted-foreground">{new Date(profile.createdAt).toLocaleDateString()}</p>
           </div>
 
           <div>
-            <label className="font-semibold block mb-1">ID:</label>
-            <p className="font-mono text-sm">{profile.id}</p>
+            <label className="font-semibold block mb-1 text-primary">ID:</label>
+            <p className="font-mono text-sm text-muted-foreground">{profile.id}</p>
           </div>
         </div>
       </div>
+
+      {/* Upcoming Sessions Section */}
+      <UpcomingSessions className="bg-card p-6 rounded-lg shadow-md border border-border" />
     </div>
   );
 } 

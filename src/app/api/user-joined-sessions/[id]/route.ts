@@ -11,43 +11,30 @@ function handleError(err: unknown): NextResponse<{ error: string }> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse<Session[] | { error: string }>> {
+  { params }: { params: { id: string } }
+): Promise<NextResponse<{ session: { id: number } }[] | { error: string }>> {
   try {
-    const { id } = await params;
+    const { id } = params;
     console.warn("[User Joined Sessions] Fetching sessions for user:", id);
 
     if (!id) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    const sessions = await prisma.session.findMany({
+    const bookings = await prisma.booking.findMany({
       where: {
-        bookings: {
-          some: {
-            userId: id,
+        userId: id,
+      },
+      select: {
+        session: {
+          select: {
+            id: true,
           },
         },
-      },
-      include: {
-        dm: true,
-        bookings: {
-          include: {
-            user: true,
-          },
-        },
-        reviews: {
-          where: { deleted: false },
-          orderBy: { createdAt: "desc" },
-          include: { author: true },
-        },
-      },
-      orderBy: {
-        date: "desc",
       },
     });
 
-    return NextResponse.json(sessions);
+    return NextResponse.json(bookings);
   } catch (err) {
     return handleError(err);
   }
