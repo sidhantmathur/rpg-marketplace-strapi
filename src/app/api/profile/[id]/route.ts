@@ -10,11 +10,11 @@ function handleError(err: unknown): NextResponse {
 }
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = await Promise.resolve(context.params);
     console.warn("[Profile API] Starting request for ID:", id);
 
     if (!id) {
