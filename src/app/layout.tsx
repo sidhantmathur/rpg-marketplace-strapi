@@ -38,9 +38,6 @@ export default function RootLayout({
                   <Link href="/" className="text-secondary hover:text-primary">
                     Home
                   </Link>
-                  <Link href="/sessions" className="text-secondary hover:text-primary">
-                    Sessions
-                  </Link>
                 </nav>
                 <ThemeToggle />
               </div>

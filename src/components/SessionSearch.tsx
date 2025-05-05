@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import CreateSessionForm from "./CreateSessionForm";
 import { useUser } from "@/hooks/useUser";
+import { useProfile } from "@/hooks/useProfile";
 import { Session as PrismaSession } from "@prisma/client";
 import Image from "next/image";
 
@@ -92,6 +93,7 @@ export default function SessionSearch() {
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useUser();
+  const { profile } = useProfile(user?.id);
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -290,12 +292,14 @@ export default function SessionSearch() {
       )}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-primary">Sessions</h2>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
-        >
-          {showCreateForm ? "Cancel" : "Create New Session"}
-        </button>
+        {profile?.roles.includes("dm") && (
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
+          >
+            {showCreateForm ? "Cancel" : "Create New Session"}
+          </button>
+        )}
       </div>
 
       {showCreateForm && (

@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { Profile } from "../types";
-import { PostgrestError } from "@supabase/supabase-js";
-
-interface SupabaseResponse<T> {
-  data: T | null;
-  error: PostgrestError | null;
-}
 
 export const useProfile = (userId: string | undefined) => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -23,13 +16,11 @@ export const useProfile = (userId: string | undefined) => {
 
     const fetchProfile = async () => {
       try {
-        const { data, error: fetchError }: SupabaseResponse<Profile> = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .single();
-
-        if (fetchError) throw fetchError;
+        const response = await fetch(`/api/profile/${userId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+        const data = await response.json();
         setProfile(data);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Failed to fetch profile"));
