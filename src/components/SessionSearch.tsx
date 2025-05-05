@@ -69,24 +69,8 @@ interface Filters {
   tags: string[];
 }
 
-interface JoinedSession {
-  session: {
-    id: number;
-  };
-}
-
 interface ApiResponse<T> {
   data: T;
-  error?: string;
-}
-
-interface SessionResponse {
-  sessions: Session[];
-  error?: string;
-}
-
-interface JoinedSessionsResponse {
-  sessions: JoinedSession[];
   error?: string;
 }
 

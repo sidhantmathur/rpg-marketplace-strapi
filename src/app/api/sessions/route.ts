@@ -4,8 +4,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function GET(request: Request) {
   try {
-    console.log("[Sessions API] Starting request");
-    
     // Get the authorization header
     const authHeader = request.headers.get("Authorization");
     if (!authHeader) {
@@ -33,13 +31,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
 
-    console.log("[Sessions API] User authenticated:", user.id);
-
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    console.log("[Sessions API] Fetching profile for user:", user.id);
     // Get the user's profile to check roles
     const profile = await prisma.profile.findUnique({
       where: { id: user.id },
@@ -51,11 +46,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 });
     }
 
-    console.log("[Sessions API] Profile found, roles:", profile.roles);
-
     // If user is a DM, fetch their sessions
     if (profile.roles.includes("dm")) {
-      console.log("[Sessions API] User is a DM, fetching sessions");
       try {
         const sessions = await prisma.session.findMany({
           where: {
@@ -72,7 +64,6 @@ export async function GET(request: Request) {
           },
         });
 
-        console.log("[Sessions API] Found sessions:", sessions.length);
         return NextResponse.json(sessions);
       } catch (dbError) {
         console.error("[Sessions API] Database error:", dbError);
@@ -80,7 +71,6 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log("[Sessions API] User is not a DM, returning empty array");
     // If not a DM, return empty array
     return NextResponse.json([]);
   } catch (error) {

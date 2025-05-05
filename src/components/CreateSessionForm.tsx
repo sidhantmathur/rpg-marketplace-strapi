@@ -40,25 +40,6 @@ interface CreateSessionFormProps {
   };
 }
 
-interface ApiResponse<T> {
-  data: T;
-  error?: string;
-}
-
-interface SessionResponse {
-  id: string;
-  date: string;
-  title: string;
-  description: string;
-  duration: number;
-  game: string;
-  genre: string;
-  experienceLevel: string;
-  maxParticipants: number;
-  tags: { name: string }[];
-  imageUrl: string;
-}
-
 interface FormData {
   title: string;
   description: string;
@@ -80,10 +61,18 @@ interface UploadResponse {
   error: Error | null;
 }
 
-interface ConflictResponse {
+interface SessionResponse {
   id: string;
   date: string;
+  title: string;
+  description: string;
   duration: number;
+  game: string;
+  genre: string;
+  experienceLevel: string;
+  maxParticipants: number;
+  tags: { name: string }[];
+  imageUrl: string;
 }
 
 export default function CreateSessionForm({
@@ -116,12 +105,10 @@ export default function CreateSessionForm({
   useEffect(() => {
     const fetchExistingSessions = async () => {
       if (!user) {
-        console.log("[CreateSessionForm] No user, skipping session fetch");
         return;
       }
 
       try {
-        console.log("[CreateSessionForm] Fetching sessions for user:", user.id);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -140,7 +127,7 @@ export default function CreateSessionForm({
           },
         });
         
-        const responseData = await response.json();
+        const responseData = await response.json() as { error?: string; id?: number; date?: string; duration?: number }[];
         
         if (!response.ok) {
           console.error("[CreateSessionForm] API error:", responseData);
@@ -148,7 +135,6 @@ export default function CreateSessionForm({
         }
 
         const sessions = responseData as { id: number; date: string; duration: number }[];
-        console.log("[CreateSessionForm] Successfully fetched sessions:", sessions.length);
         setExistingSessions(sessions.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("[CreateSessionForm] Error fetching sessions:", err);
@@ -321,7 +307,7 @@ export default function CreateSessionForm({
     date: Date,
     time: string,
     duration: number,
-    sessionId?: string
+    _sessionId?: string
   ): Promise<boolean> => {
     try {
       const sessionDateTime = new Date(`${date.toISOString().split("T")[0]}T${time}`);
@@ -348,7 +334,7 @@ export default function CreateSessionForm({
         }
       );
 
-      const responseData = await response.json();
+      const responseData = await response.json() as { error?: string; id?: number; date?: string; duration?: number }[];
 
       if (!response.ok) {
         console.error("[CreateSessionForm] Conflict check error:", responseData);
