@@ -11,10 +11,10 @@ function handleError(err: unknown): NextResponse<{ error: string }> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ session: { id: number } }[] | { error: string }>> {
   try {
-    const { id } = params;
+    const { id } = await params;
     console.warn("[User Joined Sessions] Fetching sessions for user:", id);
 
     if (!id) {
