@@ -9,26 +9,20 @@ function handleError(err: unknown): NextResponse {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function GET(
   _request: NextRequest,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
-    console.log("[Profile API] Starting request for ID:", id);
+    const { id } = params;
+    console.warn("[Profile API] Starting request for ID:", id);
 
     if (!id) {
       console.error("[Profile API] No ID provided");
       return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
     }
 
-    console.log("[Profile API] Querying database...");
+    console.warn("[Profile API] Querying database...");
     const profile = await prisma.profile.findUnique({
       where: { id },
       select: {
@@ -47,7 +41,7 @@ export async function GET(
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    console.log("[Profile API] Found profile:", profile);
+    console.warn("[Profile API] Found profile:", profile);
     return NextResponse.json(profile);
   } catch (err) {
     console.error("[Profile API] Unexpected error:", err);
