@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import { supabase } from "@/lib/supabaseClient";
 
 // Define validation schema for search parameters
 const searchParamsSchema = z.object({
@@ -17,6 +18,33 @@ const searchParamsSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("[Session Search] No authorization header");
+      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
+    }
+
+    // Extract the token
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("[Session Search] No token in authorization header");
+      return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError) {
+      console.error("[Session Search] Auth error:", authError);
+      return NextResponse.json({ error: "Authentication error", details: authError.message }, { status: 401 });
+    }
+
+    if (!user) {
+      console.error("[Session Search] No user found");
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
     const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
 
     // Validate search parameters
@@ -97,7 +125,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(sessions);
   } catch (error) {
-    console.error("Error searching sessions:", error);
+    console.error("[Session Search] Error:", error);
     return NextResponse.json({ error: "Failed to search sessions" }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { useUser } from "@/hooks/useUser";
 import { useProfile } from "@/hooks/useProfile";
 import { Session as PrismaSession } from "@prisma/client";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -97,6 +98,11 @@ export default function SessionSearch() {
 
   const fetchSessions = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const params = new URLSearchParams();
       if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
       if (filters.game) params.append("game", filters.game);
@@ -106,16 +112,25 @@ export default function SessionSearch() {
       if (filters.dateTo) params.append("dateTo", filters.dateTo);
       if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
 
-      const response = await fetch(`/api/session/search?${params.toString()}`);
+      const response = await fetch(`/api/session/search?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error("Failed to fetch sessions");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch sessions");
       }
+
       const sessions = (await response.json()) as Session[];
       setSessions(sessions);
+      setError(null);
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : "Failed to load sessions";
       console.error("Error fetching sessions:", error);
       setError(error);
+      setSessions([]);
     }
   }, [filters]);
 
@@ -123,16 +138,30 @@ export default function SessionSearch() {
     if (!user) return;
     
     try {
-      const response = await fetch(`/api/user-joined-sessions/${user.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch joined sessions");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
       }
+
+      const response = await fetch(`/api/user-joined-sessions/${user.id}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch joined sessions");
+      }
+
       const bookings = (await response.json()) as { session: { id: number } }[];
       setJoinedSessionIds(bookings.map((b) => b.session.id));
+      setError(null);
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : "Failed to load joined sessions";
       console.error("Error fetching joined sessions:", error);
       setError(error);
+      setJoinedSessionIds([]);
     }
   }, [user]);
 
@@ -160,8 +189,16 @@ export default function SessionSearch() {
     if (!confirm("Are you sure you want to delete this session?")) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const response = await fetch(`/api/session/${sessionId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       const data = (await response.json()) as ApiResponse<null>;
@@ -185,9 +222,17 @@ export default function SessionSearch() {
   const joinSession = async (sessionId: number) => {
     if (!user) return;
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const res = await fetch("/api/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ sessionId, userId: user.id }),
       });
       if (!res.ok) {
@@ -203,9 +248,17 @@ export default function SessionSearch() {
   const leaveSession = async (sessionId: number) => {
     if (!user) return;
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const res = await fetch("/api/bookings", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ sessionId, userId: user.id }),
       });
       if (!res.ok) {
@@ -221,9 +274,17 @@ export default function SessionSearch() {
   const joinWaitlist = async (sessionId: number) => {
     if (!user) return;
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const res = await fetch("/api/waitlist", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ sessionId, userId: user.id }),
       });
       if (!res.ok) {
@@ -243,9 +304,17 @@ export default function SessionSearch() {
     if (!confirm("Are you sure you want to remove this participant?")) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const response = await fetch("/api/bookings", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ sessionId, userId }),
       });
 
@@ -266,9 +335,17 @@ export default function SessionSearch() {
     if (!confirm("Are you sure you want to remove this user from the waitlist?")) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
       const response = await fetch("/api/waitlist", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ sessionId, userId }),
       });
 

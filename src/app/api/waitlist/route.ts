@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendEmail } from "@/utils/sendEmail";
+import { supabase } from "@/lib/supabaseClient";
 
 interface WaitlistRequest {
   sessionId: string | number;
@@ -18,10 +19,43 @@ interface SessionWithBookingsAndWaitlist {
 
 export async function POST(req: NextRequest) {
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("[Waitlist] No authorization header");
+      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
+    }
+
+    // Extract the token
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("[Waitlist] No token in authorization header");
+      return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError) {
+      console.error("[Waitlist] Auth error:", authError);
+      return NextResponse.json({ error: "Authentication error", details: authError.message }, { status: 401 });
+    }
+
+    if (!user) {
+      console.error("[Waitlist] No user found");
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
     const { sessionId, userId } = (await req.json()) as WaitlistRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    // Verify that the requesting user is the same as the user being added to waitlist
+    if (user.id !== userId) {
+      console.error("[Waitlist] Unauthorized access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const session = (await prisma.session.findUnique({
@@ -62,15 +96,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dungeon Master not found" }, { status: 404 });
     }
 
-    const [user, dmProfile] = await Promise.all([
+    const [userProfile, dmProfile] = await Promise.all([
       prisma.profile.findUnique({ where: { id: userId } }),
       prisma.profile.findUnique({ where: { id: dm.userId } }),
     ]);
 
-    if (user && dmProfile) {
+    if (userProfile && dmProfile) {
       await sendEmail({
-        to: user.email,
-        subject: `Added to Waitlist: ${session.title}`,
+        to: userProfile.email,
+        subject: `Waitlist Confirmed: ${session.title}`,
         html: `<p>You have been added to the waitlist for <strong>${session.title}</strong> scheduled on ${new Date(
           session.date
         ).toLocaleString()}.</p>`,
@@ -79,10 +113,12 @@ export async function POST(req: NextRequest) {
       await sendEmail({
         to: dmProfile.email,
         subject: `New Waitlist Entry: ${session.title}`,
-        html: `<p>${user.email} has been added to the waitlist for your session <strong>${session.title}</strong> scheduled on ${new Date(
+        html: `<p>${userProfile.email} has joined the waitlist for your session <strong>${session.title}</strong> scheduled on ${new Date(
           session.date
         ).toLocaleString()}.</p>`,
       });
+    } else {
+      console.error("Missing user or DM Profile:", { userProfile, dmProfile });
     }
 
     return NextResponse.json(waitlistEntry);
@@ -94,10 +130,43 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("[Waitlist] No authorization header");
+      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
+    }
+
+    // Extract the token
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("[Waitlist] No token in authorization header");
+      return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError) {
+      console.error("[Waitlist] Auth error:", authError);
+      return NextResponse.json({ error: "Authentication error", details: authError.message }, { status: 401 });
+    }
+
+    if (!user) {
+      console.error("[Waitlist] No user found");
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
     const { sessionId, userId } = (await req.json()) as WaitlistRequest;
 
     if (!sessionId || !userId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    // Verify that the requesting user is the same as the user being removed from waitlist
+    if (user.id !== userId) {
+      console.error("[Waitlist] Unauthorized access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const waitlistEntry = await prisma.waitlist.delete({

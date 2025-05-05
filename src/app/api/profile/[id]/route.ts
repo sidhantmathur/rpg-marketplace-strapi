@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { Profile } from "@/types";
+import { supabase } from "@/lib/supabaseClient";
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,33 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
+    // Get the authorization header
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("[Profile API] No authorization header");
+      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
+    }
+
+    // Extract the token
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("[Profile API] No token in authorization header");
+      return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
+    }
+
+    // Verify the token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError) {
+      console.error("[Profile API] Auth error:", authError);
+      return NextResponse.json({ error: "Authentication error", details: authError.message }, { status: 401 });
+    }
+
+    if (!user) {
+      console.error("[Profile API] No user found");
+      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
     const { id } = await params;
     console.warn("[Profile API] Starting request for ID:", id);
 

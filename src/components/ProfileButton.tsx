@@ -10,7 +10,7 @@ interface ProfileButtonProps {
 
 export function ProfileButton({ className = "" }: ProfileButtonProps) {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, loading } = useUser();
 
   const handleClick = () => {
     if (!user?.id) {
@@ -21,8 +21,19 @@ export function ProfileButton({ className = "" }: ProfileButtonProps) {
     router.push(`/profile/${user.id}`);
   };
 
+  if (loading) {
+    return (
+      <button
+        disabled
+        className={`flex items-center gap-2 rounded-lg bg-gray-300 px-4 py-2 text-white cursor-not-allowed ${className}`}
+      >
+        <User className="h-5 w-5" />
+        <span>Loading...</span>
+      </button>
+    );
+  }
+
   if (!user) {
-    console.log("[ProfileButton] No user available");
     return null;
   }
 

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import UpcomingSessions from "@/components/UpcomingSessions";
+import { supabase } from "@/lib/supabaseClient";
 
 interface Profile {
   id: string;
@@ -38,10 +39,14 @@ export default function ProfilePage() {
     async function fetchProfile() {
       console.log("[Profile Page] Starting fetch for id:", id);
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error("No access token available");
+        }
+
         const response = await fetch(`/api/profile/${id}`, {
-          method: "GET",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
         });
         
@@ -56,11 +61,13 @@ export default function ProfilePage() {
         console.log("[Profile Page] Received data:", data);
         if (isMounted) {
           setProfile(data);
+          setError(null);
         }
       } catch (err) {
         console.error("[Profile Page] Error:", err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : "An error occurred");
+          setProfile(null);
         }
       } finally {
         if (isMounted) {
