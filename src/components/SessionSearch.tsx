@@ -120,19 +120,12 @@ export default function SessionSearch() {
       if (filters.dateTo) params.append("dateTo", filters.dateTo);
       if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
 
-      const response = await fetch(`/api/sessions?${params.toString()}`);
+      const response = await fetch(`/api/session/search?${params.toString()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
-      const responseData = (await response.json()) as unknown;
-      if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
-        throw new Error("Invalid response format");
-      }
-      const data = responseData as SessionResponse;
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      setSessions(data.sessions);
+      const sessions = (await response.json()) as Session[];
+      setSessions(sessions);
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : "Failed to load sessions";
       console.error("Error fetching sessions:", error);
@@ -141,26 +134,21 @@ export default function SessionSearch() {
   }, [filters]);
 
   const fetchJoinedSessions = useCallback(async () => {
+    if (!user) return;
+    
     try {
-      const response = await fetch("/api/sessions/joined");
+      const response = await fetch(`/api/user-joined-sessions/${user.id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch joined sessions");
       }
-      const responseData = (await response.json()) as unknown;
-      if (!responseData || typeof responseData !== "object" || !("sessions" in responseData)) {
-        throw new Error("Invalid response format");
-      }
-      const data = responseData as JoinedSessionsResponse;
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      setJoinedSessionIds(data.sessions.map((b) => b.session.id));
+      const bookings = (await response.json()) as { session: { id: number } }[];
+      setJoinedSessionIds(bookings.map((b) => b.session.id));
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : "Failed to load joined sessions";
       console.error("Error fetching joined sessions:", error);
       setError(error);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     void fetchSessions();

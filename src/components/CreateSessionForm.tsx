@@ -118,14 +118,11 @@ export default function CreateSessionForm({
       if (!user) return;
 
       try {
-        const response = await fetch(`/api/session/search?dmId=${user.id}`);
+        const response = await fetch(`/api/sessions?dmId=${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
 
-        const data = (await response.json()) as ApiResponse<SessionResponse[]>;
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        setExistingSessions(data.data.map((s) => new Date(s.date)));
+        const sessions = (await response.json()) as { id: number; date: string; duration: number }[];
+        setExistingSessions(sessions.map((s) => new Date(s.date)));
       } catch (err) {
         console.error("Error fetching sessions:", err);
       }
@@ -303,47 +300,22 @@ export default function CreateSessionForm({
       const sessionEndTime = addMinutes(sessionDateTime, duration);
 
       const response = await fetch(
-        `/api/session/conflicts?date=${date.toISOString()}&time=${time}&duration=${duration}${
-          sessionId ? `&sessionId=${sessionId}` : ""
-        }`
+        `/api/sessions?dmId=${user?.id}&startDate=${date.toISOString()}&endDate=${sessionEndTime.toISOString()}`
       );
 
       if (!response.ok) {
         throw new Error("Failed to check for conflicts");
       }
 
-      const responseData = (await response.json()) as unknown;
-      if (!Array.isArray(responseData)) {
-        throw new Error("Invalid response format");
-      }
-
-      // Validate each item in the array has the required properties
-      const isValidConflict = (item: unknown): item is ConflictResponse => {
-        if (!item || typeof item !== "object") return false;
-        const conflict = item as Record<string, unknown>;
-        return (
-          "id" in conflict &&
-          "date" in conflict &&
-          "duration" in conflict &&
-          typeof conflict.id !== "undefined" &&
-          typeof conflict.date !== "undefined" &&
-          typeof conflict.duration !== "undefined"
-        );
-      };
-
-      if (!responseData.every(isValidConflict)) {
-        throw new Error("Invalid conflict data format");
-      }
-
-      const conflicts: ConflictResponse[] = responseData;
-      const hasConflicts = conflicts.some((conflict) => {
-        const conflictDate = new Date(conflict.date);
-        const conflictEndTime = addMinutes(conflictDate, conflict.duration);
+      const sessions = (await response.json()) as { id: number; date: string; duration: number }[];
+      const hasConflicts = sessions.some((session) => {
+        const sessionDate = new Date(session.date);
+        const sessionEndTime = addMinutes(sessionDate, session.duration);
 
         return (
-          (sessionDateTime >= conflictDate && sessionDateTime < conflictEndTime) ||
-          (sessionEndTime > conflictDate && sessionEndTime <= conflictEndTime) ||
-          (sessionDateTime <= conflictDate && sessionEndTime >= conflictEndTime)
+          (sessionDateTime >= sessionDate && sessionDateTime < sessionEndTime) ||
+          (sessionEndTime > sessionDate && sessionEndTime <= sessionEndTime) ||
+          (sessionDateTime <= sessionDate && sessionEndTime >= sessionEndTime)
         );
       });
 
