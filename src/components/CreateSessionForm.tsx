@@ -115,16 +115,44 @@ export default function CreateSessionForm({
   // Fetch existing sessions for the DM
   useEffect(() => {
     const fetchExistingSessions = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log("[CreateSessionForm] No user, skipping session fetch");
+        return;
+      }
 
       try {
-        const response = await fetch(`/api/sessions?dmId=${user.id}`);
-        if (!response.ok) throw new Error("Failed to fetch sessions");
+        console.log("[CreateSessionForm] Fetching sessions for user:", user.id);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("[CreateSessionForm] Session error:", sessionError);
+          throw new Error("Failed to get session");
+        }
 
-        const sessions = (await response.json()) as { id: number; date: string; duration: number }[];
+        if (!session?.access_token) {
+          console.error("[CreateSessionForm] No access token in session");
+          throw new Error("No access token in session");
+        }
+
+        const response = await fetch(`/api/sessions`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+          console.error("[CreateSessionForm] API error:", responseData);
+          throw new Error(responseData.error || "Failed to fetch sessions");
+        }
+
+        const sessions = responseData as { id: number; date: string; duration: number }[];
+        console.log("[CreateSessionForm] Successfully fetched sessions:", sessions.length);
         setExistingSessions(sessions.map((s) => new Date(s.date)));
       } catch (err) {
-        console.error("Error fetching sessions:", err);
+        console.error("[CreateSessionForm] Error fetching sessions:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch sessions");
       }
     };
 
@@ -299,15 +327,35 @@ export default function CreateSessionForm({
       const sessionDateTime = new Date(`${date.toISOString().split("T")[0]}T${time}`);
       const sessionEndTime = addMinutes(sessionDateTime, duration);
 
-      const response = await fetch(
-        `/api/sessions?dmId=${user?.id}&startDate=${date.toISOString()}&endDate=${sessionEndTime.toISOString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to check for conflicts");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("[CreateSessionForm] Session error:", sessionError);
+        throw new Error("Failed to get session");
       }
 
-      const sessions = (await response.json()) as { id: number; date: string; duration: number }[];
+      if (!session?.access_token) {
+        console.error("[CreateSessionForm] No access token in session");
+        throw new Error("No access token in session");
+      }
+
+      const response = await fetch(
+        `/api/sessions?startDate=${date.toISOString()}&endDate=${sessionEndTime.toISOString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error("[CreateSessionForm] Conflict check error:", responseData);
+        throw new Error(responseData.error || "Failed to check for conflicts");
+      }
+
+      const sessions = responseData as { id: number; date: string; duration: number }[];
       const hasConflicts = sessions.some((session) => {
         const sessionDate = new Date(session.date);
         const sessionEndTime = addMinutes(sessionDate, session.duration);
@@ -329,7 +377,8 @@ export default function CreateSessionForm({
 
       return hasConflicts;
     } catch (err) {
-      console.error("Error checking for conflicts:", err);
+      console.error("[CreateSessionForm] Error checking for conflicts:", err);
+      setError(err instanceof Error ? err.message : "Failed to check for conflicts");
       return false;
     }
   };
