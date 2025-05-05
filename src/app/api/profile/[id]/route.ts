@@ -9,18 +9,12 @@ function handleError(err: unknown): NextResponse {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function GET(
   _request: NextRequest,
-  context: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = params;
     console.log("[Profile API] Starting request for ID:", id);
 
     if (!id) {
