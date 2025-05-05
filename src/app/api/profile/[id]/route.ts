@@ -17,7 +17,7 @@ interface RouteParams {
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id } = context.params;
