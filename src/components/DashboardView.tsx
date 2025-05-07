@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { useProfile } from "@/hooks/useProfile";
 import ReviewModal from "@/components/ReviewModal";
+import Link from "next/link";
 
 type Review = {
   id: number;
@@ -456,14 +457,42 @@ export default function Home() {
   };
 
   // Loading or not authenticated
-  if (userLoading || profileLoading) return <p className="p-6">Loading...</p>;
-  if (!user)
+  if (userLoading || profileLoading) {
     return (
-      <main className="p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
-        <p className="text-gray-700">Please log in to create or view sessions.</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen p-6 max-w-xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4 text-primary">Welcome to the RPG Marketplace</h1>
+        <div className="fantasy-border p-6 text-center">
+          <p className="text-ink mb-4">Join our community of adventurers and storytellers!</p>
+          <Link 
+            href="/login" 
+            className="fantasy-button inline-block px-6 py-2"
+          >
+            Log In
+          </Link>
+          <p className="text-ink mt-4">
+            New to the realm?{" "}
+            <Link 
+              href="/signup" 
+              className="text-ink hover:text-ink-light underline font-bold"
+            >
+              Create an Account
+            </Link>
+          </p>
+        </div>
       </main>
     );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

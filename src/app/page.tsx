@@ -21,7 +21,7 @@ export default function HomePage() {
             <SignOutButton />
           </div>
         ) : (
-          <Link href="/login" className="text-link hover:text-link-hover">
+          <Link href="/login" className="text-ink hover:text-ink-light">
             Log in
           </Link>
         )}
@@ -29,13 +29,13 @@ export default function HomePage() {
 
       {user ? (
         <>
-          <p className="mb-4 text-sm text-secondary">Welcome, {user.email}</p>
+          <p className="mb-4 text-sm text-ink">Welcome, {user.email}</p>
           <SessionSearch />
         </>
       ) : (
-        <p className="text-secondary">
+        <p className="text-ink">
           Please{" "}
-          <Link href="/login" className="text-link hover:text-link-hover">
+          <Link href="/login" className="text-ink hover:text-ink-light">
             log in
           </Link>{" "}
           to create or view sessions.
