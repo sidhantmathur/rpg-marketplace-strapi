@@ -10,7 +10,7 @@ import { AuthError } from "@supabase/supabase-js";
 interface SignUpFormState {
   email: string;
   password: string;
-  isDm: boolean;
+  role: "player" | "dm";
   isLoading: boolean;
   error: string | null;
 }
@@ -22,7 +22,7 @@ export default function SignupPage() {
   const [formState, setFormState] = useState<SignUpFormState>({
     email: "",
     password: "",
-    isDm: false,
+    role: "player",
     isLoading: false,
     error: null,
   });
@@ -67,7 +67,7 @@ export default function SignupPage() {
         {
           id: signUpData.user.id,
           email: formState.email,
-          is_dm: formState.isDm,
+          roles: [formState.role],
         },
       ]);
 
@@ -110,15 +110,32 @@ export default function SignupPage() {
           required
           minLength={6}
         />
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isDm"
-            checked={formState.isDm}
-            onChange={(e) => setFormState((prev) => ({ ...prev, isDm: e.target.checked }))}
-            className="mr-2"
-          />
-          <label htmlFor="isDm">I want to be a Dungeon Master</label>
+        <div className="space-y-2">
+          <label className="block font-medium">I want to sign up as:</label>
+          <div className="flex gap-4">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="role"
+                value="player"
+                checked={formState.role === "player"}
+                onChange={(e) => setFormState((prev) => ({ ...prev, role: "player" }))}
+                className="form-radio"
+              />
+              <span>Player</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="role"
+                value="dm"
+                checked={formState.role === "dm"}
+                onChange={(e) => setFormState((prev) => ({ ...prev, role: "dm" }))}
+                className="form-radio"
+              />
+              <span>Dungeon Master</span>
+            </label>
+          </div>
         </div>
         <button
           type="submit"
