@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
     const now = new Date();
 
-    // If user is a DM, fetch their past sessions
+    // If user is a DM, fetch their hosted past sessions
     if (profile.roles.includes("dm")) {
       try {
         const sessions = await prisma.session.findMany({
@@ -79,8 +79,42 @@ export async function GET(request: Request) {
       }
     }
 
-    // If not a DM, return empty array
-    return NextResponse.json([]);
+    // If user is a regular user, fetch their joined past sessions
+    try {
+      const sessions = await prisma.session.findMany({
+        where: {
+          bookings: {
+            some: {
+              userId: user.id,
+            },
+          },
+          date: {
+            lt: now,
+          },
+        },
+        include: {
+          dm: true,
+          bookings: {
+            include: {
+              user: true,
+            },
+          },
+          reviews: {
+            where: { deleted: false },
+            orderBy: { createdAt: "desc" },
+            include: { author: true },
+          },
+        },
+        orderBy: {
+          date: "desc",
+        },
+      });
+
+      return NextResponse.json(sessions);
+    } catch (dbError) {
+      console.error("[Past Sessions API] Database error:", dbError);
+      return NextResponse.json({ error: "Database error", details: "Failed to fetch sessions" }, { status: 500 });
+    }
   } catch (error) {
     console.error("[Past Sessions API] Unexpected error:", error);
     return NextResponse.json({ 
