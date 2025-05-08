@@ -49,22 +49,65 @@ export async function GET(request: Request) {
     // If user is a DM, fetch their sessions
     if (profile.roles.includes("dm")) {
       try {
-        const sessions = await prisma.session.findMany({
-          where: {
-            userId: user.id,
-            date: {
-              gte: startDate ? new Date(startDate) : undefined,
-              lte: endDate ? new Date(endDate) : undefined,
+        const now = new Date();
+        const [upcomingSessions, pastSessions] = await Promise.all([
+          // Fetch upcoming sessions
+          prisma.session.findMany({
+            where: {
+              userId: user.id,
+              date: {
+                gte: now,
+                lte: endDate ? new Date(endDate) : undefined,
+              },
             },
-          },
-          select: {
-            id: true,
-            date: true,
-            duration: true,
-          },
-        });
+            include: {
+              dm: true,
+              bookings: {
+                include: {
+                  user: true,
+                },
+              },
+              reviews: {
+                where: { deleted: false },
+                orderBy: { createdAt: "desc" },
+                include: { author: true },
+              },
+            },
+            orderBy: {
+              date: "asc",
+            },
+          }),
+          // Fetch past sessions
+          prisma.session.findMany({
+            where: {
+              userId: user.id,
+              date: {
+                lt: now,
+              },
+            },
+            include: {
+              dm: true,
+              bookings: {
+                include: {
+                  user: true,
+                },
+              },
+              reviews: {
+                where: { deleted: false },
+                orderBy: { createdAt: "desc" },
+                include: { author: true },
+              },
+            },
+            orderBy: {
+              date: "desc",
+            },
+          }),
+        ]);
 
-        return NextResponse.json(sessions);
+        return NextResponse.json({
+          upcoming: upcomingSessions,
+          past: pastSessions,
+        });
       } catch (dbError) {
         console.error("[Sessions API] Database error:", dbError);
         return NextResponse.json({ error: "Database error", details: "Failed to fetch sessions" }, { status: 500 });

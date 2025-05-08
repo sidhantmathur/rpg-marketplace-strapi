@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import UpcomingSessions from "@/components/UpcomingSessions";
+import PastSessions from "@/components/PastSessions";
 import { supabase } from "@/lib/supabaseClient";
 
 interface Profile {
@@ -177,7 +178,10 @@ export default function ProfilePage() {
       </div>
 
       {/* Upcoming Sessions Section */}
-      <UpcomingSessions className="bg-card p-6 rounded-lg shadow-md border border-border" />
+      <UpcomingSessions className="bg-card p-6 rounded-lg shadow-md border border-border mb-8" />
+
+      {/* Past Sessions Section */}
+      <PastSessions className="bg-card p-6 rounded-lg shadow-md border border-border" />
     </div>
   );
 } 
