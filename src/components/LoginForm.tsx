@@ -14,6 +14,37 @@ interface LoginFormState {
   isLoading: boolean;
 }
 
+// Add password validation
+const validatePassword = (password: string): string | null => {
+  const minLength = 6;
+  if (password.length < minLength) {
+    return `Password must be at least ${minLength} characters long`;
+  }
+
+  // Future password requirements - commented out for now
+  /*
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!hasUpperCase) {
+    return "Password must contain at least one uppercase letter";
+  }
+  if (!hasLowerCase) {
+    return "Password must contain at least one lowercase letter";
+  }
+  if (!hasNumbers) {
+    return "Password must contain at least one number";
+  }
+  if (!hasSpecialChar) {
+    return "Password must contain at least one special character";
+  }
+  */
+
+  return null;
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [formState, setFormState] = useState<LoginFormState>({
@@ -29,6 +60,12 @@ export default function LoginPage() {
     const toastId = toast.loading("Signing in...");
 
     try {
+      // Validate password
+      const passwordError = validatePassword(formState.password);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+
       // Clear only Supabase-related storage
       const supabaseKeys = Object.keys(localStorage).filter(key => key.startsWith('sb-'));
       supabaseKeys.forEach(key => localStorage.removeItem(key));
