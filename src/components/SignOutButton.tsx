@@ -27,25 +27,23 @@ export function SignOutButton({ className = "" }: SignOutButtonProps) {
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
+      if (error) throw error;
 
-      if (error) {
-        throw error;
-      }
+      // Wait for session to be fully cleared
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Verify sign out
+      // Single session verification
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        throw new Error("Failed to sign out");
+        throw new Error("Session not cleared");
       }
 
       toast.success("Successfully signed out!", { id: toastId });
-
-      // Navigate to home page, replacing the current history entry
       await router.replace('/');
     } catch (error) {
-      const message = error instanceof AuthError ? error.message : "An unexpected error occurred";
-      setError(message);
-      toast.error(message, { id: toastId });
+      console.error("Sign out error:", error);
+      setError(error instanceof Error ? error.message : "Failed to sign out");
+      toast.error(error instanceof Error ? error.message : "Failed to sign out", { id: toastId });
     } finally {
       setIsLoading(false);
     }

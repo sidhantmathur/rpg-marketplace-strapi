@@ -19,6 +19,7 @@ console.log(`[DB] Attempting to connect to database: ${maskedUrl}`);
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
+const CONNECTION_LIMIT = 5; // Limit concurrent connections
 
 // Helper function to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -56,6 +57,11 @@ if (!global.prisma) {
       { level: 'error', emit: 'stdout' },
       { level: 'info', emit: 'stdout' },
     ],
+    datasources: {
+      db: {
+        url: dbUrl,
+      },
+    },
   });
 
   // Log connection attempts with retry

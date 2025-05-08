@@ -33,33 +33,51 @@ export default function LoginPage() {
       const supabaseKeys = Object.keys(localStorage).filter(key => key.startsWith('sb-'));
       supabaseKeys.forEach(key => localStorage.removeItem(key));
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formState.email,
-        password: formState.password,
-      });
+      // Add retry logic for sign in
+      let retryCount = 0;
+      const maxRetries = 3;
+      let lastError: Error | null = null;
 
-      if (error) {
-        throw error;
+      while (retryCount < maxRetries) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: formState.email,
+            password: formState.password,
+          });
+
+          if (error) throw error;
+          if (!data.session) throw new Error("No session created");
+
+          // Wait for session to be fully established
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Single session verification
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            throw new Error("Session not persisted");
+          }
+
+          toast.success("Successfully signed in!", { id: toastId });
+          await router.replace('/');
+          return;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error("Unknown error");
+          retryCount++;
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between retries
+          }
+        }
       }
 
-      if (!data.session) {
-        throw new Error("No session created");
-      }
-
-      // Verify session persistence
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Session not persisted");
-      }
-
-      toast.success("Successfully signed in!", { id: toastId });
-      
-      // Navigate to home page, replacing the current history entry
-      await router.replace('/');
+      throw lastError || new Error("Failed to sign in after multiple attempts");
     } catch (error) {
-      const message = error instanceof AuthError ? error.message : "An unexpected error occurred";
-      setFormState((prev) => ({ ...prev, error: message }));
-      toast.error(message, { id: toastId });
+      console.error("Sign in error:", error);
+      setFormState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Failed to sign in",
+        isLoading: false,
+      }));
+      toast.error(error instanceof Error ? error.message : "Failed to sign in", { id: toastId });
     } finally {
       setFormState((prev) => ({ ...prev, isLoading: false }));
     }

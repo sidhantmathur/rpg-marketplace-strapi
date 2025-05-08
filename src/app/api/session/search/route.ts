@@ -32,8 +32,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
     }
 
-    // Verify the token with Supabase
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Verify the token with Supabase with timeout
+    const authPromise = supabase.auth.getUser(token);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Auth verification timeout")), 5000)
+    );
+
+    const { data: { user }, error: authError } = await Promise.race([authPromise, timeoutPromise]) as any;
     
     if (authError) {
       console.error("[Session Search] Auth error:", authError);
@@ -94,7 +99,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const sessions = await prisma.session.findMany({
+    // Add timeout to database query
+    const dbPromise = prisma.session.findMany({
       where,
       include: {
         dm: true,
@@ -123,9 +129,18 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const dbTimeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Database query timeout")), 8000)
+    );
+
+    const sessions = await Promise.race([dbPromise, dbTimeoutPromise]) as any;
+
     return NextResponse.json(sessions);
   } catch (error) {
     console.error("[Session Search] Error:", error);
+    if (error instanceof Error && error.message.includes("timeout")) {
+      return NextResponse.json({ error: "Request timeout", details: error.message }, { status: 504 });
+    }
     return NextResponse.json({ error: "Failed to search sessions" }, { status: 500 });
   }
 }
