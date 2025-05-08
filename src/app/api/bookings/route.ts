@@ -16,7 +16,9 @@ interface SessionWithBookingsAndDM {
   dmId: number;
   bookings: Array<{ userId: string }>;
   waitlist: Array<{ userId: string }>;
-  dm: { userId: string } | null;
+  dm: { 
+    userId: string;
+  } | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -62,7 +64,10 @@ export async function POST(req: NextRequest) {
 
     const session = (await prisma.session.findUnique({
       where: { id: Number(sessionId) },
-      include: { bookings: true, dm: true },
+      include: { 
+        bookings: true, 
+        dm: true
+      },
     })) as SessionWithBookingsAndDM | null;
 
     if (!session) {
@@ -91,33 +96,68 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [userProfile, dmProfile] = await Promise.all([
-      prisma.profile.findUnique({ where: { id: userId } }),
-      prisma.dungeonMaster
-        .findUnique({
-          where: { id: session.dmId },
-        })
-        .then((dm) => (dm ? prisma.profile.findUnique({ where: { id: dm.userId } }) : null)),
-    ]);
+    // Debug: Log the raw user ID we're trying to find
+    console.error("[DEBUG] Looking up user profile for ID:", userId);
 
-    if (userProfile && dmProfile) {
-      await sendEmail({
-        to: userProfile.email,
-        subject: `Booking Confirmed: ${session.title}`,
-        html: `<p>You successfully joined <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date
-        ).toLocaleString()}.</p>`,
+    // Get both user and DM profiles with more detailed error handling
+    let userProfile = null;
+    let dmProfile = null;
+    try {
+      userProfile = await prisma.profile.findUnique({ 
+        where: { id: userId },
+        select: { email: true }
       });
+      console.error("[DEBUG] Found user profile:", userProfile);
 
-      await sendEmail({
-        to: dmProfile.email,
-        subject: `New Booking: ${session.title}`,
-        html: `<p>${userProfile.email} has joined your session <strong>${session.title}</strong> scheduled on ${new Date(
-          session.date
-        ).toLocaleString()}.</p>`,
+      dmProfile = await prisma.profile.findUnique({ 
+        where: { id: session.dm.userId },
+        select: { email: true }
       });
+      console.error("[DEBUG] Found DM profile:", dmProfile);
+    } catch (error) {
+      console.error("[DEBUG] Error fetching profiles:", error);
+      return NextResponse.json({ error: "Failed to fetch user profiles" }, { status: 500 });
+    }
+
+    // Debug: Log the email sending attempt
+    if (!userProfile?.email) {
+      console.error("[DEBUG] No email found for user profile:", { userProfile, userId });
     } else {
-      console.error("Missing user or DM Profile:", { userProfile, dmProfile });
+      console.error("[DEBUG] Attempting to send email to user:", userProfile.email);
+      try {
+        // Send email to user
+        await sendEmail({
+          to: userProfile.email,
+          subject: `Booking Confirmed: ${session.title}`,
+          html: `<p>You successfully joined <strong>${session.title}</strong> scheduled on ${new Date(
+            session.date
+          ).toLocaleString()}.</p>`,
+        });
+        console.error("[DEBUG] Successfully sent email to user");
+      } catch (error) {
+        console.error("[DEBUG] Failed to send email to user:", error);
+        // Don't return error response, continue with the booking
+      }
+    }
+
+    if (!dmProfile?.email) {
+      console.error("[DEBUG] No email found for DM profile:", { dmProfile, dmUserId: session.dm.userId });
+    } else {
+      console.error("[DEBUG] Attempting to send email to DM:", dmProfile.email);
+      try {
+        // Send email to DM
+        await sendEmail({
+          to: dmProfile.email,
+          subject: `New Booking: ${session.title}`,
+          html: `<p>${userProfile?.email || 'A user'} has joined your session <strong>${session.title}</strong> scheduled on ${new Date(
+            session.date
+          ).toLocaleString()}.</p>`,
+        });
+        console.error("[DEBUG] Successfully sent email to DM");
+      } catch (error) {
+        console.error("[DEBUG] Failed to send email to DM:", error);
+        // Don't return error response, continue with the booking
+      }
     }
 
     return NextResponse.json(booking);
@@ -170,7 +210,11 @@ export async function DELETE(req: NextRequest) {
 
     const session = (await prisma.session.findUnique({
       where: { id: Number(sessionId) },
-      include: { bookings: true, waitlist: true },
+      include: { 
+        bookings: true, 
+        waitlist: true,
+        dm: true
+      },
     })) as SessionWithBookingsAndDM | null;
 
     if (!session) {
@@ -185,6 +229,44 @@ export async function DELETE(req: NextRequest) {
         },
       },
     });
+
+    // Get both user and DM profiles
+    const [userProfile, dmProfile] = await Promise.all([
+      prisma.profile.findUnique({ 
+        where: { id: userId },
+        select: { email: true }
+      }),
+      session.dm ? prisma.profile.findUnique({ 
+        where: { id: session.dm.userId },
+        select: { email: true }
+      }) : null
+    ]);
+
+    if (!userProfile?.email) {
+      console.error("User profile or email missing:", userProfile);
+    } else {
+      // Send email to user
+      await sendEmail({
+        to: userProfile.email,
+        subject: `Booking Cancelled: ${session.title}`,
+        html: `<p>You have left the session <strong>${session.title}</strong> scheduled on ${new Date(
+          session.date
+        ).toLocaleString()}.</p>`,
+      });
+    }
+
+    if (!dmProfile?.email) {
+      console.error("DM profile or email missing:", dmProfile);
+    } else {
+      // Send email to DM
+      await sendEmail({
+        to: dmProfile.email,
+        subject: `Booking Cancelled: ${session.title}`,
+        html: `<p>${userProfile?.email || 'A user'} has left your session <strong>${session.title}</strong> scheduled on ${new Date(
+          session.date
+        ).toLocaleString()}.</p>`,
+      });
+    }
 
     // Move first person from waitlist to booking if any
     if (session.waitlist.length > 0) {
