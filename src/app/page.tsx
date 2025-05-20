@@ -33,13 +33,27 @@ export default function HomePage() {
           <SessionSearch />
         </>
       ) : (
-        <p className="text-ink">
-          Please{" "}
-          <Link href="/login" className="text-ink hover:text-ink-light">
-            log in
-          </Link>{" "}
-          to create or view sessions.
-        </p>
+        <div className="space-y-6">
+          <p className="text-ink">
+            Please{" "}
+            <Link href="/login" className="text-ink hover:text-ink-light">
+              log in
+            </Link>{" "}
+            to create or view sessions.
+          </p>
+          <div className="fantasy-border p-6 text-center">
+            <h2 className="text-xl font-bold text-ink mb-4">New to D&D?</h2>
+            <p className="text-ink mb-4">
+              Take our quick quiz to help us find the perfect session for you!
+            </p>
+            <Link
+              href="/onboarding"
+              className="fantasy-button inline-block px-6 py-2"
+            >
+              Start Your Adventure
+            </Link>
+          </div>
+        </div>
       )}
     </main>
   );
