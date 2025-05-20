@@ -2,7 +2,7 @@
 
 ## Month 1 (MVP - Current to End of Month)
 
-### Week 1 (Current Progress)
+### Milestone 1 (Current Progress) - Completed May 19, 2024
 
 - [x] Basic marketplace structure
   - Homepage layout
@@ -29,7 +29,7 @@
   - Text reviews
   - Review display
 
-### Week 2
+### Milestone 2 - Due May 20, 2024
 
 - [x] Session scheduling system (1 day)
   - Calendar integration
@@ -45,22 +45,28 @@
   - Waitlist signup
   - Automatic notifications for openings
   - Waitlist management UI
-- [ ] Tool category field (1 day) - SKIP
-  - Add tool selection (Roll20, Foundry, etc.)
-  - Tool-specific requirements
-  - Tool display in session cards
-- [ ] Basic payment integration (2 days) - SKIP
-  - Stripe setup
-  - Payment processing
-  - Basic transaction handling
-  - Receipt generation
-- [ ] Cancellation policies (1 day) - SKIP
-  - Policy settings
-  - Refund rules
-  - Cancellation notifications
+- [ ] New Player Quiz/Onboarding (2 days)
+  - Typeform-style questionnaire
+  - Player experience assessment
+  - DM matching algorithm
+  - Intro session recommendations
+- [ ] Enhanced Session Details Page (2 days)
+  - Detailed session information
+  - DM profile preview
+  - Session requirements
+  - Payment integration preparation
 
-### Week 3
+### Milestone 3 - Due May 27, 2024
 
+- [ ] Enhanced DM profiles (2 days)
+  - DM portfolio
+  - Session history
+  - Player reviews
+  - Availability calendar
+- [ ] Basic chat functionality (2 days)
+  - Direct messaging
+  - Session group chat
+  - Basic notifications
 - [ ] Profile customization (1 day)
   - Avatar upload
   - Bio editing
@@ -89,21 +95,12 @@
   - Basic error pages
   - User feedback forms
 
-### Week 4
+### Milestone 4 - Due June 3, 2024
 
 - [ ] Basic analytics dashboard (2 days)
   - Session statistics
   - User engagement metrics
   - Basic revenue tracking
-- [ ] Enhanced DM profiles (1 day)
-  - DM portfolio
-  - Session history
-  - Player reviews
-  - Availability calendar
-- [ ] Basic chat functionality (2 days)
-  - Direct messaging
-  - Session group chat
-  - Basic notifications
 - [ ] Notification system (1 day)
   - In-app notifications
   - Email preferences
@@ -114,9 +111,25 @@
   - Bug fixes
   - Final testing
 
+### Future Milestones (Post-MVP) - Due June 10, 2024
+
+- [ ] Tool category field (1 day)
+  - Add tool selection (Roll20, Foundry, etc.)
+  - Tool-specific requirements
+  - Tool display in session cards
+- [ ] Basic payment integration (2 days)
+  - Stripe setup
+  - Payment processing
+  - Basic transaction handling
+  - Receipt generation
+- [ ] Cancellation policies (1 day)
+  - Policy settings
+  - Refund rules
+  - Cancellation notifications
+
 ## Month 2 (Feature Enhancement)
 
-### Week 1
+### Week 1 - Due June 17, 2024
 
 - [ ] Advanced mobile UI/UX (3 days)
   - Gesture controls
@@ -134,7 +147,7 @@
   - Advanced refund handling
   - Payment analytics
 
-### Week 2
+### Week 2 - Due June 24, 2024
 
 - [ ] Community forums (1 week)
   - Forum categories
@@ -152,7 +165,7 @@
   - Feedback analytics
   - Improvement suggestions
 
-### Week 3
+### Week 3 - Due July 1, 2024
 
 - [ ] Advanced analytics (2 days)
   - User behavior tracking
@@ -175,7 +188,7 @@
   - Environment management
   - Version control
 
-### Week 4
+### Week 4 - Due July 8, 2024
 
 - [ ] Testing framework setup (2 days)
   - Unit testing
@@ -200,7 +213,7 @@
 
 ## Month 3 (Polish and Scale)
 
-### Week 1
+### Week 1 - Due July 15, 2024
 
 - [ ] Language switch feature (2 days)
   - Language selection
@@ -221,7 +234,7 @@
   - Advanced notifications
   - Mobile-specific features
 
-### Week 2
+### Week 2 - Due July 22, 2024
 
 - [ ] Advanced forum features (2 days)
   - Thread subscriptions
@@ -244,7 +257,7 @@
   - Predictive analytics
   - A/B testing
 
-### Week 3
+### Week 3 - Due July 29, 2024
 
 - [ ] Final UI/UX polish (3 days)
   - Design system
@@ -267,7 +280,7 @@
   - Data retention
   - Backup verification
 
-### Week 4
+### Week 4 - Due August 5, 2024
 
 - [ ] Final testing and QA (2 days)
   - Comprehensive testing
