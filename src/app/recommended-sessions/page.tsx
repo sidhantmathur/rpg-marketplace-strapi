@@ -1,16 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import SessionSearch from "@/components/SessionSearch";
 import Link from "next/link";
 
-export default function RecommendedSessionsPage() {
+function RecommendedSessionsContent() {
   const searchParams = useSearchParams();
   const { user } = useUser();
-  
-  // Get filter parameters from URL
-  const experience = searchParams.get("experience");
+  const experience = searchParams.get("experienceLevel");
   const type = searchParams.get("type");
   const groupSize = searchParams.get("groupSize");
 
@@ -56,5 +55,13 @@ export default function RecommendedSessionsPage() {
         />
       </div>
     </main>
+  );
+}
+
+export default function RecommendedSessionsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RecommendedSessionsContent />
+    </Suspense>
   );
 } 
