@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Session as PrismaSession } from "@prisma/client";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -69,6 +70,8 @@ interface Filters {
   dateFrom: string;
   dateTo: string;
   tags: string[];
+  type?: string;
+  groupSize?: number;
 }
 
 interface ApiResponse<T> {
@@ -76,7 +79,12 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-export default function SessionSearch() {
+interface SessionSearchProps {
+  initialFilters?: Partial<Filters>;
+  skipAuthRedirect?: boolean;
+}
+
+export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = false }: SessionSearchProps) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -84,10 +92,12 @@ export default function SessionSearch() {
     searchTerm: "",
     game: "",
     genre: "",
-    experienceLevel: "",
+    experienceLevel: initialFilters.experienceLevel || "",
     dateFrom: "",
     dateTo: "",
     tags: [],
+    type: initialFilters.type || "",
+    groupSize: initialFilters.groupSize,
   });
   const [joinedSessionIds, setJoinedSessionIds] = useState<number[]>([]);
   const [managingSession, setManagingSession] = useState<Session | null>(null);
@@ -95,12 +105,14 @@ export default function SessionSearch() {
 
   const { user } = useUser();
   const { profile } = useProfile(user?.id);
+  const router = useRouter();
 
   const fetchSessions = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("No access token available");
+      if (!session?.access_token && !skipAuthRedirect) {
+        router.push("/login?redirect=/sessions");
+        return;
       }
 
       const params = new URLSearchParams();
@@ -111,10 +123,12 @@ export default function SessionSearch() {
       if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
       if (filters.dateTo) params.append("dateTo", filters.dateTo);
       if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
+      if (filters.type) params.append("type", filters.type);
+      if (filters.groupSize) params.append("minSpots", filters.groupSize.toString());
 
       const response = await fetch(`/api/session/search?${params.toString()}`, {
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
       });
 
@@ -123,7 +137,15 @@ export default function SessionSearch() {
         throw new Error(errorData.error || "Failed to fetch sessions");
       }
 
-      const sessions = (await response.json()) as Session[];
+      let sessions = (await response.json()) as Session[];
+      
+      // Filter sessions based on group size if specified
+      if (filters.groupSize) {
+        sessions = sessions.filter(
+          session => (session.maxParticipants - session.bookings.length) >= filters.groupSize!
+        );
+      }
+
       setSessions(sessions);
       setError(null);
     } catch (err: unknown) {
@@ -132,7 +154,7 @@ export default function SessionSearch() {
       setError(error);
       setSessions([]);
     }
-  }, [filters]);
+  }, [filters, router, skipAuthRedirect]);
 
   const fetchJoinedSessions = useCallback(async () => {
     if (!user) return;

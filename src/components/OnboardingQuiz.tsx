@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 type Question = {
   id: string;
@@ -11,6 +12,7 @@ type Question = {
   options: {
     value: string;
     label: string;
+    feedback?: string;
   }[];
 };
 
@@ -19,29 +21,73 @@ const questions: Question[] = [
     id: "experience",
     text: "How much experience do you have playing D&D?",
     options: [
-      { value: "never", label: "Never" },
-      { value: "beginner", label: "Once or twice" },
-      { value: "experienced", label: "Play all the time" },
+      { 
+        value: "never", 
+        label: "Never",
+        feedback: "Perfect! We have special sessions designed for first-time players."
+      },
+      { 
+        value: "beginner", 
+        label: "Once or twice",
+        feedback: "Great! You'll fit right in with our beginner-friendly sessions."
+      },
+      { 
+        value: "experienced", 
+        label: "Play all the time",
+        feedback: "Excellent! You'll find plenty of advanced sessions to join."
+      },
     ],
   },
   {
     id: "equipment",
     text: "Do you have a laptop or desktop with a microphone? (Bonus points for webcam)",
     options: [
-      { value: "yes", label: "Yes, I have a laptop or desktop with a microphone" },
-      { value: "no", label: "No" },
+      { 
+        value: "yes", 
+        label: "Yes, I have a laptop or desktop with a microphone",
+        feedback: "Perfect! You're all set for online D&D sessions."
+      },
+      { 
+        value: "no", 
+        label: "No",
+        feedback: "No worries! We can help you find the right equipment or suggest alternatives."
+      },
     ],
   },
   {
     id: "groupSize",
     text: "Would you like to bring some friends? How many people would you like to book for?",
     options: [
-      { value: "1", label: "Just me" },
-      { value: "2", label: "2" },
-      { value: "3", label: "3" },
-      { value: "4", label: "4" },
-      { value: "5", label: "5" },
-      { value: "6", label: "6" },
+      { 
+        value: "1", 
+        label: "Just me",
+        feedback: "Great! You'll find plenty of sessions with open spots for solo players."
+      },
+      { 
+        value: "2", 
+        label: "2",
+        feedback: "Perfect! Many sessions are designed for small groups like yours."
+      },
+      { 
+        value: "3", 
+        label: "3",
+        feedback: "Excellent! You'll find sessions that can accommodate your group."
+      },
+      { 
+        value: "4", 
+        label: "4",
+        feedback: "Great! Many sessions are perfect for groups of four."
+      },
+      { 
+        value: "5", 
+        label: "5",
+        feedback: "Perfect! You'll find sessions that can host your entire party."
+      },
+      { 
+        value: "6", 
+        label: "6",
+        feedback: "Excellent! We have sessions that can accommodate larger groups."
+      },
     ],
   },
 ];
@@ -51,18 +97,28 @@ export function OnboardingQuiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState<string>("");
 
-  const handleAnswer = (questionId: string, value: string) => {
+  const handleAnswer = (questionId: string, value: string, feedback?: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setSelectedFeedback(feedback || "");
     
     // Auto-advance to next question after a short delay
     setTimeout(() => {
       if (currentStep < questions.length - 1) {
         setCurrentStep((prev) => prev + 1);
+        setSelectedFeedback("");
       } else {
         setShowRecommendations(true);
       }
-    }, 500);
+    }, 1500);
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+      setSelectedFeedback("");
+    }
   };
 
   const getRecommendations = () => {
@@ -76,7 +132,7 @@ export function OnboardingQuiz() {
       recommendations.push({
         title: "Beginner-Friendly Sessions",
         description: "Perfect for first-time players! These sessions include character creation and basic rules explanation.",
-        link: "/sessions?experience=beginner",
+        link: `/recommended-sessions?experienceLevel=Beginner${groupSize > 1 ? `&groupSize=${groupSize}` : ""}`,
       });
     }
 
@@ -84,7 +140,7 @@ export function OnboardingQuiz() {
       recommendations.push({
         title: "In-Person Sessions",
         description: "No equipment needed! Find local game stores and community centers hosting D&D sessions.",
-        link: "/sessions?type=in-person",
+        link: `/recommended-sessions?type=in-person${groupSize > 1 ? `&groupSize=${groupSize}` : ""}`,
       });
     }
 
@@ -92,7 +148,7 @@ export function OnboardingQuiz() {
       recommendations.push({
         title: "Group Sessions",
         description: `Great for groups of ${groupSize}! Find sessions that can accommodate your entire party.`,
-        link: `/sessions?groupSize=${groupSize}`,
+        link: `/recommended-sessions?groupSize=${groupSize}`,
       });
     }
 
@@ -178,7 +234,7 @@ export function OnboardingQuiz() {
               {questions[currentStep].options.map((option) => (
                 <motion.button
                   key={option.value}
-                  onClick={() => handleAnswer(questions[currentStep].id, option.value)}
+                  onClick={() => handleAnswer(questions[currentStep].id, option.value, option.feedback)}
                   className={`p-4 text-left rounded-lg border-2 transition-all ${
                     answers[questions[currentStep].id] === option.value
                       ? "border-forest bg-forest/10"
@@ -191,6 +247,28 @@ export function OnboardingQuiz() {
                 </motion.button>
               ))}
             </div>
+
+            {selectedFeedback && (
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center text-ink-light italic"
+              >
+                {selectedFeedback}
+              </motion.p>
+            )}
+
+            {currentStep > 0 && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={handleBack}
+                className="flex items-center gap-2 text-ink-light hover:text-ink transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </motion.button>
+            )}
           </div>
         </motion.div>
       </AnimatePresence>

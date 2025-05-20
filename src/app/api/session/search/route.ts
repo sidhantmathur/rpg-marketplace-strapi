@@ -18,94 +18,68 @@ const searchParamsSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    // Get the authorization header
+    // Get the authorization header if it exists
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("[Session Search] No authorization header");
-      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
-    }
+    let userId: string | undefined;
 
-    // Extract the token
-    const token = authHeader.replace("Bearer ", "");
-    if (!token) {
-      console.error("[Session Search] No token in authorization header");
-      return NextResponse.json({ error: "No token in authorization header" }, { status: 401 });
-    }
-
-    // Verify the token with Supabase with timeout
-    const authPromise = supabase.auth.getUser(token);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Auth verification timeout")), 5000)
-    );
-
-    const { data: { user }, error: authError } = await Promise.race([authPromise, timeoutPromise]) as any;
-    
-    if (authError) {
-      console.error("[Session Search] Auth error:", authError);
-      return NextResponse.json({ error: "Authentication error", details: authError.message }, { status: 401 });
-    }
-
-    if (!user) {
-      console.error("[Session Search] No user found");
-      return NextResponse.json({ error: "User not found" }, { status: 401 });
-    }
-
-    const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
-
-    // Validate search parameters
-    const validatedParams = searchParamsSchema.safeParse(searchParams);
-    if (!validatedParams.success) {
-      return NextResponse.json(
-        { error: "Invalid search parameters", details: validatedParams.error },
-        { status: 400 }
-      );
-    }
-
-    const { searchTerm, game, genre, experienceLevel, dateFrom, dateTo, tags, dmId } =
-      validatedParams.data;
-
-    const where: Prisma.SessionWhereInput = {
-      status: "upcoming",
-    };
-
-    if (searchTerm) {
-      where.OR = [
-        { title: { contains: searchTerm, mode: "insensitive" } },
-        { description: { contains: searchTerm, mode: "insensitive" } },
-      ];
-    }
-
-    if (game) where.game = game;
-    if (genre) where.genre = genre;
-    if (experienceLevel) where.experienceLevel = experienceLevel;
-
-    if (dateFrom || dateTo) {
-      where.date = {};
-      if (dateFrom) where.date.gte = new Date(dateFrom);
-      if (dateTo) where.date.lte = new Date(dateTo);
-    }
-
-    if (dmId) where.dmId = Number(dmId);
-    if (tags) {
-      const tagArray = tags.split(",");
-      if (tagArray.length > 0) {
-        where.tags = {
-          some: {
-            name: {
-              in: tagArray,
-            },
-          },
-        };
+    // If auth header exists, verify the user
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (!authError && user) {
+        userId = user.id;
       }
     }
 
-    // Add timeout to database query
-    const dbPromise = prisma.session.findMany({
+    const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
+    const validatedParams = searchParamsSchema.parse(searchParams);
+
+    // Build the where clause for the query
+    const where: Prisma.SessionWhereInput = {
+      date: {
+        gte: validatedParams.dateFrom ? new Date(validatedParams.dateFrom) : undefined,
+        lte: validatedParams.dateTo ? new Date(validatedParams.dateTo) : undefined,
+      },
+      game: validatedParams.game || undefined,
+      genre: validatedParams.genre || undefined,
+      experienceLevel: validatedParams.experienceLevel || undefined,
+      dmId: validatedParams.dmId ? Number(validatedParams.dmId) : undefined,
+    };
+
+    // Add text search if provided
+    if (validatedParams.searchTerm) {
+      where.OR = [
+        { title: { contains: validatedParams.searchTerm, mode: "insensitive" } },
+        { description: { contains: validatedParams.searchTerm, mode: "insensitive" } },
+      ];
+    }
+
+    // Add tags filter if provided
+    if (validatedParams.tags) {
+      const tagNames = validatedParams.tags.split(",").map((tag) => tag.trim());
+      where.tags = {
+        some: {
+          name: {
+            in: tagNames,
+          },
+        },
+      };
+    }
+
+    // Fetch sessions with related data
+    const sessions = await prisma.session.findMany({
       where,
       include: {
-        dm: true,
+        dm: {
+          select: {
+            name: true,
+            userId: true,
+          },
+        },
         bookings: {
-          include: {
+          select: {
+            userId: true,
             user: {
               select: {
                 email: true,
@@ -114,7 +88,8 @@ export async function GET(req: NextRequest) {
           },
         },
         waitlist: {
-          include: {
+          select: {
+            userId: true,
             user: {
               select: {
                 email: true,
@@ -129,18 +104,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const dbTimeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Database query timeout")), 8000)
-    );
-
-    const sessions = await Promise.race([dbPromise, dbTimeoutPromise]) as any;
-
     return NextResponse.json(sessions);
   } catch (error) {
     console.error("[Session Search] Error:", error);
-    if (error instanceof Error && error.message.includes("timeout")) {
-      return NextResponse.json({ error: "Request timeout", details: error.message }, { status: 504 });
-    }
-    return NextResponse.json({ error: "Failed to search sessions" }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to search sessions" },
+      { status: 500 }
+    );
   }
 }
