@@ -111,40 +111,40 @@ export default function DMsPage() {
             <Link
               key={dm.id}
               href={`/profile/${dm.userId}`}
-              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              className="card hover:shadow-lg transition-shadow"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="relative w-16 h-16">
+              <div className="flex items-start gap-4">
+                <div className="relative w-16 h-16 flex-shrink-0">
                   <Image
                     src={dm.profile.avatarUrl || "/placeholder.png"}
-                    alt={dm.name}
+                    alt="DM Avatar"
                     fill
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover border-2 border-amber"
                   />
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-primary">{dm.name}</h2>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-semibold text-primary truncate">{dm.name}</h2>
                   <div className="flex items-center gap-1">
-                    <span className="text-yellow-500">★</span>
-                    <span className="text-gray-600">
+                    <span className="text-amber">★</span>
+                    <span className="text-muted">
                       {dm.averageRating.toFixed(1)} ({dm.ratingCount} reviews)
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Active Sessions:</span>
-                  <span className="font-semibold">{dm.activeSessions}</span>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Active Sessions:</span>
+                  <span className="text-primary font-semibold">{dm.activeSessions}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Total Sessions:</span>
-                  <span className="font-semibold">{dm.totalSessions}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Total Sessions:</span>
+                  <span className="text-primary font-semibold">{dm.totalSessions}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Member Since:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Member Since:</span>
+                  <span className="text-primary font-semibold">
                     {new Date(dm.memberSince).toLocaleDateString()}
                   </span>
                 </div>

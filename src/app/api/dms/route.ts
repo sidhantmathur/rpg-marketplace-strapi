@@ -21,11 +21,6 @@ export async function GET(request: NextRequest) {
       },
       include: {
         sessions: {
-          where: {
-            date: {
-              gte: new Date(),
-            },
-          },
           select: {
             id: true,
             title: true,
@@ -62,7 +57,7 @@ export async function GET(request: NextRequest) {
       name: dm.name,
       userId: dm.userId,
       profile: profileMap[dm.userId] || null,
-      activeSessions: dm.sessions.length,
+      activeSessions: dm.sessions.filter(session => new Date(session.date) >= new Date()).length,
       totalSessions: dm.sessions.length,
       averageRating: profileMap[dm.userId]?.ratingAvg ?? 0,
       ratingCount: profileMap[dm.userId]?.ratingCount ?? 0,
