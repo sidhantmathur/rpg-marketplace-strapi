@@ -4,7 +4,7 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Get the from address from environment variable or use default
-const FROM_EMAIL = process.env.EMAIL_FROM_ADDRESS || "RPG Marketplace <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.EMAIL_FROM_ADDRESS || "Adarle20 <noreply@adarle20.com>";
 
 export const sendEmail = async ({
   to,
