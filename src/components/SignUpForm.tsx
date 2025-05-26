@@ -48,6 +48,8 @@ export default function SignupPage() {
         throw new Error("Password must be at least 6 characters long");
       }
 
+      console.log("[SignUpForm] Starting signup process for email:", formState.email);
+      
       // Sign up user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formState.email,
@@ -55,25 +57,39 @@ export default function SignupPage() {
       });
 
       if (signUpError) {
+        console.error("[SignUpForm] Auth error:", signUpError);
         throw signUpError;
       }
 
       if (!signUpData.user) {
+        console.error("[SignUpForm] No user data returned from auth signup");
         throw new Error("Failed to create user account");
       }
 
-      // Create profile
-      const { error: profileError } = await supabase.from("profiles").insert([
-        {
+      console.log("[SignUpForm] Auth signup successful, user ID:", signUpData.user.id);
+
+      // Create profile using our API endpoint
+      console.log("[SignUpForm] Creating profile for user:", signUpData.user.id);
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           id: signUpData.user.id,
           email: formState.email,
           roles: [formState.role],
-        },
-      ]);
+        }),
+      });
 
-      if (profileError) {
-        throw new Error("Failed to create user profile");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("[SignUpForm] Profile creation error:", errorData);
+        throw new Error(`Failed to create user profile: ${errorData.error}`);
       }
+
+      const profileData = await response.json();
+      console.log("[SignUpForm] Profile created successfully:", profileData);
 
       router.push("/");
     } catch (error) {

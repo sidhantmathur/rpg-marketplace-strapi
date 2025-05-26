@@ -14,12 +14,14 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as ProfileCreateRequest;
     const { id, email, roles } = body;
 
-    console.warn("[Profile] Creating new profile:", { id, email, roles });
+    console.log("[Profile API] Received profile creation request:", { id, email, roles });
 
     if (!id || !email || !roles || !Array.isArray(roles)) {
+      console.error("[Profile API] Missing or invalid fields:", { id, email, roles });
       return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
     }
 
+    console.log("[Profile API] Creating profile in database...");
     const profile = await prisma.profile.create({
       data: {
         id,
@@ -28,9 +30,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log("[Profile API] Profile created successfully:", profile);
     return NextResponse.json(profile);
   } catch (err) {
-    console.error("[Profile] Error creating profile:", err);
+    console.error("[Profile API] Error creating profile:", err);
     return NextResponse.json({ error: "Failed to create profile" }, { status: 500 });
   }
 }
