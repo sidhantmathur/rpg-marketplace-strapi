@@ -46,10 +46,10 @@
   - Automatic notifications for openings
   - Waitlist management UI
 - [ ] New Player Quiz/Onboarding (2 days)
-  - Typeform-style questionnaire
-  - Player experience assessment
-  - DM matching algorithm
-  - Intro session recommendations
+  - Typeform-style questionnaire - done
+  - Player experience assessment - done
+  - DM matching algorithm - todo
+  - Intro session recommendations - done
 - [ ] Enhanced Session Details Page (2 days)
   - Detailed session information
   - DM profile preview

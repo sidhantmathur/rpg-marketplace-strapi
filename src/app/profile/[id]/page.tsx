@@ -41,6 +41,7 @@ export default function ProfilePage() {
       console.log("[Profile Page] Starting fetch for id:", id);
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("[Profile Page] Session:", session);
         if (!session?.access_token) {
           throw new Error("No access token available");
         }

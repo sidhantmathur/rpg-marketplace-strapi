@@ -73,6 +73,12 @@ export default function RootLayout({
                   >
                     Home
                   </Link>
+                  <Link 
+                    href="/dms" 
+                    className="text-ink hover:text-ink-light font-bold"
+                  >
+                    Browse DMs
+                  </Link>
                 </nav>
                 <ThemeToggle />
               </div>
