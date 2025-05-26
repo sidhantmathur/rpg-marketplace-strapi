@@ -10,7 +10,7 @@ import { AuthError } from "@supabase/supabase-js";
 interface SignUpFormState {
   email: string;
   password: string;
-  role: "player" | "dm";
+  role: "user" | "dm";
   isLoading: boolean;
   error: string | null;
 }
@@ -22,7 +22,7 @@ export default function SignupPage() {
   const [formState, setFormState] = useState<SignUpFormState>({
     email: "",
     password: "",
-    role: "player",
+    role: "user",
     isLoading: false,
     error: null,
   });
@@ -133,12 +133,12 @@ export default function SignupPage() {
               <input
                 type="radio"
                 name="role"
-                value="player"
-                checked={formState.role === "player"}
-                onChange={(e) => setFormState((prev) => ({ ...prev, role: "player" }))}
+                value="user"
+                checked={formState.role === "user"}
+                onChange={(e) => setFormState((prev) => ({ ...prev, role: "user" }))}
                 className="form-radio"
               />
-              <span>Player</span>
+              <span>User</span>
             </label>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input

@@ -7,3 +7,7 @@ export interface Profile {
   ratingAvg: number;
   ratingCount: number;
 }
+
+export type ProfileWithDate = Omit<Profile, 'createdAt'> & {
+  createdAt: Date;
+};

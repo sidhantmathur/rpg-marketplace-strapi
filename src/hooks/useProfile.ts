@@ -23,7 +23,9 @@ export const useProfile = (userId: string | undefined) => {
           throw new Error("No access token available");
         }
 
-        const response = await fetch(`/api/profile/${userId}`, {
+        // Use absolute URL for API requests
+        const baseUrl = window.location.origin;
+        const response = await fetch(`${baseUrl}/api/profile/${userId}`, {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },

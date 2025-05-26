@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import type { Profile } from "@/types";
+import type { Profile, ProfileWithDate } from "@/types";
 import { supabase } from "@/lib/supabaseClient";
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+// Set a reasonable timeout for the request
+export const maxDuration = 30; // 30 seconds
 
 function handleError(err: unknown): NextResponse<{ error: string }> {
   console.error("[Profile API] Error:", err);
@@ -46,27 +49,34 @@ export async function GET(
     }
 
     const { id } = await params;
-    console.warn("[Profile API] Starting request for ID:", id);
+    console.log("[Profile API] Starting request for ID:", id);
 
     if (!id) {
       console.error("[Profile API] No ID provided");
       return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        roles: true,
-        createdAt: true,
-        avatarUrl: true,
-        ratingAvg: true,
-        ratingCount: true,
-      },
-    });
+    // Add timeout to the database query
+    const profile = await Promise.race<ProfileWithDate | null>([
+      prisma.profile.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          roles: true,
+          createdAt: true,
+          avatarUrl: true,
+          ratingAvg: true,
+          ratingCount: true,
+        },
+      }) as Promise<ProfileWithDate | null>,
+      new Promise<ProfileWithDate | null>((_, reject) => 
+        setTimeout(() => reject(new Error("Database query timeout")), 25000)
+      )
+    ]);
 
     if (!profile) {
+      console.error("[Profile API] Profile not found for ID:", id);
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
@@ -77,6 +87,10 @@ export async function GET(
 
     return NextResponse.json(formattedProfile);
   } catch (err) {
+    if (err instanceof Error && err.message === "Database query timeout") {
+      console.error("[Profile API] Database query timed out");
+      return NextResponse.json({ error: "Request timed out" }, { status: 504 });
+    }
     return handleError(err);
   }
 }
