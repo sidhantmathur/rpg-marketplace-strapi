@@ -29,7 +29,7 @@
   - Text reviews
   - Review display
 
-### Milestone 2 - Due May 20, 2024
+### Milestone 2 - Due June 16, 2025
 
 - [x] Session scheduling system (1 day)
   - Calendar integration
@@ -56,7 +56,7 @@
   - Session requirements
   - Payment integration preparation
 
-### Milestone 3 - Due May 27, 2024
+### Milestone 3 - Due June 23, 2025
 
 - [ ] Enhanced DM profiles (2 days)
   - DM portfolio
@@ -95,7 +95,7 @@
   - Basic error pages
   - User feedback forms
 
-### Milestone 4 - Due June 3, 2024
+### Milestone 4 - Due June 30, 2025
 
 - [ ] Basic analytics dashboard (2 days)
   - Session statistics
@@ -111,7 +111,7 @@
   - Bug fixes
   - Final testing
 
-### Future Milestones (Post-MVP) - Due June 10, 2024
+### Future Milestones (Post-MVP) - Due July 7, 2025
 
 - [ ] Tool category field (1 day)
   - Add tool selection (Roll20, Foundry, etc.)
@@ -129,7 +129,7 @@
 
 ## Month 2 (Feature Enhancement)
 
-### Week 1 - Due June 17, 2024
+### Week 1 - Due July 14, 2025
 
 - [ ] Advanced mobile UI/UX (3 days)
   - Gesture controls
@@ -147,7 +147,7 @@
   - Advanced refund handling
   - Payment analytics
 
-### Week 2 - Due June 24, 2024
+### Week 2 - Due July 21, 2025
 
 - [ ] Community forums (1 week)
   - Forum categories
@@ -165,7 +165,7 @@
   - Feedback analytics
   - Improvement suggestions
 
-### Week 3 - Due July 1, 2024
+### Week 3 - Due July 28, 2025
 
 - [ ] Advanced analytics (2 days)
   - User behavior tracking
@@ -188,7 +188,7 @@
   - Environment management
   - Version control
 
-### Week 4 - Due July 8, 2024
+### Week 4 - Due August 4, 2025
 
 - [ ] Testing framework setup (2 days)
   - Unit testing
@@ -213,7 +213,7 @@
 
 ## Month 3 (Polish and Scale)
 
-### Week 1 - Due July 15, 2024
+### Week 1 - Due August 11, 2025
 
 - [ ] Language switch feature (2 days)
   - Language selection
@@ -234,7 +234,7 @@
   - Advanced notifications
   - Mobile-specific features
 
-### Week 2 - Due July 22, 2024
+### Week 2 - Due August 18, 2025
 
 - [ ] Advanced forum features (2 days)
   - Thread subscriptions
@@ -257,7 +257,7 @@
   - Predictive analytics
   - A/B testing
 
-### Week 3 - Due July 29, 2024
+### Week 3 - Due August 25, 2025
 
 - [ ] Final UI/UX polish (3 days)
   - Design system
@@ -280,7 +280,7 @@
   - Data retention
   - Backup verification
 
-### Week 4 - Due August 5, 2024
+### Week 4 - Due September 1, 2025
 
 - [ ] Final testing and QA (2 days)
   - Comprehensive testing
