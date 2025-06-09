@@ -45,7 +45,7 @@
   - Waitlist signup
   - Automatic notifications for openings
   - Waitlist management UI
-- [ ] New Player Quiz/Onboarding (2 days)
+- [x] New Player Quiz/Onboarding (2 days)
   - Typeform-style questionnaire - done
   - Player experience assessment - done
   - DM matching algorithm - todo
@@ -59,9 +59,9 @@
 ### Milestone 3 - Due June 23, 2025
 
 - [ ] Enhanced DM profiles (2 days)
-  - DM portfolio
-  - Session history
-  - Player reviews
+  - DM portfolio - done
+  - Session history - done
+  - Player reviews - done
   - Availability calendar
 - [ ] Basic chat functionality (2 days)
   - Direct messaging
@@ -73,9 +73,9 @@
   - Game preferences
   - Social links
 - [ ] User dashboard (1 day)
-  - Upcoming sessions
-  - Past sessions
-  - Booking history
+  - Upcoming sessions - done
+  - Past sessions - done
+  - Booking history - done
   - Quick actions
 - [ ] Session history tracking (1 day)
   - Session archive
@@ -114,7 +114,7 @@
 ### Future Milestones (Post-MVP) - Due July 7, 2025
 
 - [ ] Tool category field (1 day)
-  - Add tool selection (Roll20, Foundry, etc.)
+  - Add tool selection (Roll20, Foundry, etc.)  - done
   - Tool-specific requirements
   - Tool display in session cards
 - [ ] Basic payment integration (2 days)
