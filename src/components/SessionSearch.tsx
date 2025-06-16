@@ -8,6 +8,7 @@ import { Session as PrismaSession } from "@prisma/client";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -574,15 +575,12 @@ export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = 
               </div>
               {user?.id !== session.userId && (
                 <div className="flex justify-end space-x-2">
-                  {!joinedSessionIds.includes(session.id) &&
-                    session.bookings.length < session.maxParticipants && (
-                      <button
-                        onClick={() => void joinSession(session.id)}
-                        className="px-3 py-1 text-sm text-link hover:text-link-hover"
-                      >
-                        Join Session
-                      </button>
-                    )}
+                  <button
+                    onClick={() => router.push(`/session/${session.id}`)}
+                    className="px-3 py-1 text-sm text-white hover:text-white"
+                  >
+                    View Details
+                  </button>
                   {!joinedSessionIds.includes(session.id) &&
                     session.bookings.length >= session.maxParticipants && (
                       <button

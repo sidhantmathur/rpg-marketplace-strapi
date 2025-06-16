@@ -384,6 +384,19 @@ export default function Home() {
     const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
     const isOwner = session.userId === user?.id;
 
+    console.log('Session action conditions:', {
+      sessionId: session.id,
+      isJoined,
+      isOnWaitlist,
+      isFull,
+      isOwner,
+      joinedSessionIds,
+      bookingsLength: session.bookings?.length,
+      maxParticipants: session.maxParticipants,
+      userId: user?.id,
+      sessionUserId: session.userId
+    });
+
     if (isOwner) {
       return (
         <button
@@ -429,12 +442,12 @@ export default function Home() {
     }
 
     return (
-      <button
-        onClick={() => void handleJoinSession(session.id)}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      <Link
+        href={`/session/${session.id}`}
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block text-center"
       >
-        Join Session
-      </button>
+        View Details
+      </Link>
     );
   };
 
