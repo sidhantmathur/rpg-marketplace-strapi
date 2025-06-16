@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import type { Session, Profile, DungeonMaster, Review } from "@prisma/client";
 
 interface SessionWithDetails extends Session {
-  dm: DungeonMaster;
+  dm: DungeonMaster & {
+    userId: string;
+  };
   bookings: Array<{
+    userId: string;
     user: {
       email: string;
       avatarUrl: string | null;
@@ -43,6 +47,18 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
   const isJoined = session.bookings.some((booking) => booking.user.email === user?.email);
   const isFull = session.bookings.length >= session.maxParticipants;
 
+  // Format date consistently
+  const formatDate = (date: Date) => {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
+
+  // Format time consistently
+  const formatTime = (date: Date) => {
+    const d = new Date(date);
+    return d.toISOString().split('T')[1].slice(0, 5); // HH:mm format
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -68,11 +84,11 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
             <div className="space-y-4">
               <div>
                 <span className="font-medium">Date:</span>{" "}
-                {new Date(session.date).toLocaleDateString()}
+                {formatDate(session.date)}
               </div>
               <div>
                 <span className="font-medium">Time:</span>{" "}
-                {new Date(session.date).toLocaleTimeString()}
+                {formatTime(session.date)}
               </div>
               {session.duration && (
                 <div>
@@ -95,13 +111,19 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
           {/* DM Profile */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Dungeon Master</h2>
-            <div className="flex items-center space-x-4">
+            <div className="space-y-4">
               <div>
-                <div className="font-medium">{session.dm.name}</div>
-                <div className="text-sm text-gray-600">
-                  {session.reviews.length} reviews
+                <div className="font-medium text-lg">{session.dm.name}</div>
+                <div className="text-sm text-gray-600 space-y-1 mt-2">
+                  <div>{session.reviews.length} reviews</div>
                 </div>
               </div>
+              <button
+                onClick={() => router.push(`/profile/${session.dm.userId}`)}
+                className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+              >
+                Go to DM Profile
+              </button>
             </div>
           </div>
         </div>
@@ -111,9 +133,10 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
           <h2 className="text-xl font-semibold mb-4">Participants</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {session.bookings.map((booking) => (
-              <div
+              <Link
                 key={booking.user.email}
-                className="flex items-center space-x-2 p-2 bg-gray-50 rounded"
+                href={`/profile/${booking.userId}`}
+                className="flex items-center space-x-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
               >
                 {booking.user.avatarUrl && (
                   <Image
@@ -127,7 +150,7 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
                 <div className="text-sm">
                   {booking.user.email}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
