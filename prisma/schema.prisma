@@ -47,6 +47,8 @@ model Profile {
   avatarUrl       String?
   ratingAvg       Float          @default(0)
   ratingCount     Int            @default(0)
+  description     String?        @db.VarChar(500)  // Short description/tagline
+  bio            String?        @db.Text          // Longer bio/about section
   Booking         Booking[]
   sessions        Session[]      @relation("ProfileSessions")
   reviewsAuthored Review[]       @relation("ReviewAuthor")

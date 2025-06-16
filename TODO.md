@@ -50,7 +50,7 @@
   - Player experience assessment - done
   - DM matching algorithm - todo
   - Intro session recommendations - done
-- [ ] Enhanced Session Details Page (2 days)
+- [x] Enhanced Session Details Page (2 days)
   - Detailed session information
   - DM profile preview
   - Session requirements
