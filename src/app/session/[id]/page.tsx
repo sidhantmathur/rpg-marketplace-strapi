@@ -3,13 +3,14 @@ import prisma from "@/lib/prisma";
 import SessionDetails from "@/components/session/SessionDetails";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function SessionPage({ params }: PageProps) {
-  const sessionId = Number(params.id);
+  const resolvedParams = await params;
+  const sessionId = Number(resolvedParams.id);
   
   if (Number.isNaN(sessionId)) {
     notFound();

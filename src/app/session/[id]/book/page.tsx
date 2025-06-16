@@ -3,13 +3,14 @@ import prisma from "@/lib/prisma";
 import BookingConfirmation from "@/components/session/BookingConfirmation";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function BookingPage({ params }: PageProps) {
-  const sessionId = parseInt(params.id);
+  const resolvedParams = await params;
+  const sessionId = parseInt(resolvedParams.id);
   if (isNaN(sessionId)) {
     notFound();
   }
