@@ -484,7 +484,7 @@ export default function Home() {
   if (!user) {
     return (
       <main className="min-h-screen p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4 text-primary">Welcome to the RPG Marketplace</h1>
+        <h1 className="text-2xl font-bold mb-4 text-primary">Welcome to Adarle 20</h1>
         <div className="fantasy-border p-6 text-center">
           <p className="text-ink mb-4">Join our community of adventurers and storytellers!</p>
           <Link 
@@ -509,7 +509,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">RPG Marketplace</h1>
+      <h1 className="text-2xl font-bold mb-4">Adarle 20</h1>
       {profile ? (
         <p className="text-sm text-gray-600 mb-4">
           You are logged in as: <strong>{profile.roles.join(", ")}</strong>

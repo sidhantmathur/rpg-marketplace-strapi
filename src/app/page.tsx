@@ -14,7 +14,7 @@ export default function HomePage() {
   return (
     <main className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">RPG Marketplace</h1>
+        <h1 className="text-2xl font-bold text-primary">Adarle 20</h1>
         {user ? (
           <div className="flex gap-2">
             <ProfileButton />

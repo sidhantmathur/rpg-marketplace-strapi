@@ -69,8 +69,8 @@ export const sendWelcomeEmail = async (user: UserInfo) => {
   if (user.email) {
     await sendEmail({
       to: user.email,
-      subject: "Welcome to RPG Marketplace!",
-      html: `<p>Welcome to RPG Marketplace! We're excited to have you join our community.</p>`,
+      subject: "Welcome to Adarle 20!",
+      html: `<p>Welcome to Adarle 20! We're excited to have you join our community.</p>`,
     });
   }
 };

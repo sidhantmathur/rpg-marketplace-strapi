@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RPG Marketplace",
+  title: "Adarle 20",
   description: "A marketplace for tabletop RPG sessions",
 };
 
@@ -63,7 +63,7 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <Link href="/" className="text-xl font-bold text-primary">
-                RPG Marketplace
+                Adarle 20
               </Link>
               <div className="flex items-center gap-4">
                 <nav className="flex items-center gap-4">

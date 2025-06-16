@@ -1,4 +1,4 @@
-# RPG Marketplace Development Plan
+# Adarle 20 Development Plan
 
 ## Month 1 (MVP - Current to End of Month)
 
@@ -58,7 +58,7 @@
 
 ### Milestone 3 - Due June 23, 2025
 
-- [ ] Enhanced DM profiles (2 days)
+- [x] Enhanced DM profiles (2 days)
   - DM portfolio - done
   - Session history - done
   - Player reviews - done
