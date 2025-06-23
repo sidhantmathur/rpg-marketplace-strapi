@@ -10,11 +10,12 @@ const supabase = createClient(
 
 export async function POST(
   req: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const sessionId = parseInt(params.sessionId);
-    console.log("[Book API] Starting booking process for session:", sessionId);
+    const { sessionId } = await params;
+    const sessionIdNum = parseInt(sessionId);
+    console.log("[Book API] Starting booking process for session:", sessionIdNum);
 
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
@@ -47,7 +48,7 @@ export async function POST(
 
     // Check if session exists and has capacity
     const session = await prisma.session.findUnique({
-      where: { id: sessionId },
+      where: { id: sessionIdNum },
       include: {
         bookings: true,
       },
@@ -88,7 +89,7 @@ export async function POST(
     try {
       await prisma.booking.create({
         data: {
-          sessionId: sessionId,
+          sessionId: sessionIdNum,
           userId: user.id,
         },
       });
@@ -103,7 +104,7 @@ export async function POST(
 
     // Create session chat if it doesn't exist
     try {
-      await createSessionChat(sessionId, user.id);
+      await createSessionChat(sessionIdNum, user.id);
       console.log("[Book API] Session chat created successfully");
     } catch (chatError) {
       console.error("[Book API] Failed to create session chat:", chatError);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { createDirectChat } from "@/lib/chat";
 import { createClient } from "@supabase/supabase-js";
 import { MessageCircle } from "lucide-react";
@@ -11,18 +11,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function DMProfilePage({
-  params,
-}: {
-  params: { dmId: string };
-}) {
+export default function DMProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const dmId = params?.dmId as string;
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStartChat = async () => {
     try {
       setIsLoading(true);
-      const chat = await createDirectChat(params.dmId);
+      const chat = await createDirectChat(dmId);
       router.push(`/chat?chatId=${chat.id}`);
     } catch (error) {
       console.error("Failed to start chat:", error);

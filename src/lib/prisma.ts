@@ -39,3 +39,33 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export default prisma;
+
+// Function to check active sessions
+export async function checkActiveSessions() {
+  try {
+    const sessions = await prisma.session.findMany({
+      where: {
+        date: {
+          gte: new Date(),
+        },
+      },
+      include: {
+        bookings: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+    
+    return sessions;
+  } catch (error) {
+    console.error("[Prisma] Error checking active sessions:", error);
+    throw error;
+  }
+}
