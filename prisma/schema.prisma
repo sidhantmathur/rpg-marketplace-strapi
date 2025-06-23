@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -37,6 +38,7 @@ model Session {
   experienceLevel String? // e.g., "Beginner", "Intermediate", "Advanced"
   tags            Tag[]         @relation("SessionTags")
   status          String        @default("upcoming") // "upcoming", "in-progress", "completed", "cancelled"
+  chat            Chat?         @relation("SessionChat")
 }
 
 model Profile {
@@ -55,6 +57,8 @@ model Profile {
   reviewsReceived Review[]       @relation("ReviewTarget")
   reviewReports   ReviewReport[]
   waitlist        Waitlist[]
+  chatMemberships ChatMember[]
+  messages        Message[]
 }
 
 model Booking {
@@ -112,4 +116,37 @@ model Waitlist {
   user      Profile  @relation(fields: [userId], references: [id])
 
   @@unique([sessionId, userId])
+}
+
+model Chat {
+  id        Int       @id @default(autoincrement())
+  type      String    // "session" or "direct"
+  sessionId Int?      @unique // Optional, only for session chats, must be unique for 1-1
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+  session   Session?  @relation("SessionChat", fields: [sessionId], references: [id])
+  members   ChatMember[]
+}
+
+model ChatMember {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  userId    String
+  joinedAt  DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  user      Profile  @relation(fields: [userId], references: [id])
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  senderId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  sender    Profile  @relation(fields: [senderId], references: [id])
 }

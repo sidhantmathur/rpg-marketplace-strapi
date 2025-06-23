@@ -94,6 +94,21 @@
   - Error logging
   - Basic error pages
   - User feedback forms
+- [ ] Image management system (2 days)
+  - Image upload functionality
+  - Auto-moderation tools
+  - Image optimization
+  - Storage management
+- [ ] Enhanced social features (2 days)
+  - Friend system
+  - Common connections discovery
+  - Shared game history
+  - Social recommendations
+- [ ] Advanced chat system (2 days)
+  - DM-to-player chat
+  - Session group chat
+  - Chat history
+  - File sharing
 
 ### Milestone 4 - Due June 30, 2025
 

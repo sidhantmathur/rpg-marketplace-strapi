@@ -34,31 +34,44 @@ export default function BookingConfirmation({ session }: BookingConfirmationProp
 
     setIsJoining(true);
     try {
-      const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+      console.log("[Booking] Starting booking process for session:", session.id);
+      
+      const { data: { session: supabaseSession }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("[Booking] Error getting session:", sessionError);
+        throw new Error("Failed to get session");
+      }
+      
       if (!supabaseSession?.access_token) {
+        console.error("[Booking] No access token available");
         throw new Error("No access token available");
       }
 
-      const res = await fetch("/api/bookings", {
+      console.log("[Booking] Attempting to join session:", session.id);
+      const res = await fetch(`/api/sessions/${session.id}/book`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${supabaseSession.access_token}`,
         },
         body: JSON.stringify({
-          sessionId: session.id,
           userId: user.id,
         }),
       });
 
+      const data = await res.json();
+      console.log("[Booking] Response data:", data);
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to join session");
+        console.error("[Booking] Failed to join session:", data);
+        throw new Error(data.error || "Failed to join session");
       }
 
+      console.log("[Booking] Successfully joined session:", session.id);
       router.push(`/session/${session.id}`);
     } catch (error) {
-      console.error("Error joining session:", error);
+      console.error("[Booking] Error joining session:", error);
+      alert(error instanceof Error ? error.message : "Failed to join session");
     } finally {
       setIsJoining(false);
     }

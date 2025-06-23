@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
+import { supabase } from "@/lib/supabaseClient";
 import type { Session, Profile, DungeonMaster, Review } from "@prisma/client";
 
 interface SessionWithDetails extends Session {
@@ -156,14 +157,22 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center">
+        <div className="flex justify-center space-x-4">
           {isJoined ? (
-            <button
-              onClick={() => router.push(`/profile/${user?.id}`)}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-            >
-              View in Profile
-            </button>
+            <>
+              <button
+                onClick={() => router.push(`/profile/${user?.id}`)}
+                className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+              >
+                View in Profile
+              </button>
+              <button
+                onClick={() => router.push(`/chat?sessionId=${session.id}`)}
+                className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+              >
+                Start Chat
+              </button>
+            </>
           ) : (
             <button
               onClick={handleJoinSession}
