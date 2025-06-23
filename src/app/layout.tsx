@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ThemeToggle from "@/components/ThemeToggle";
-import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -59,32 +58,7 @@ export default function RootLayout({
             },
           }}
         />
-        <header className="border-b border-gray-200 dark:border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="text-xl font-bold text-primary">
-                Adarle 20
-              </Link>
-              <div className="flex items-center gap-4">
-                <nav className="flex items-center gap-4">
-                  <Link 
-                    href="/" 
-                    className="text-ink hover:text-ink-light font-bold"
-                  >
-                    Home
-                  </Link>
-                  <Link 
-                    href="/dms" 
-                    className="text-ink hover:text-ink-light font-bold"
-                  >
-                    Browse DMs
-                  </Link>
-                </nav>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </header>
+        <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
       </body>
     </html>
