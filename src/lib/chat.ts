@@ -132,50 +132,58 @@ export async function createDirectChat(userId: string) {
     const { data: currentUser } = await supabase.auth.getUser();
     if (!currentUser.user) throw new Error("Not authenticated");
 
-    // Check if chat already exists
-    const { data: existingChats, error: existingError } = await supabase
-      .from("Chat")
-      .select(`
-        *,
-        members:ChatMember(
-          userId
-        )
-      `)
-      .eq("type", "direct")
-      .eq("members.userId", currentUser.user.id);
-
-    if (existingError) throw existingError;
-
-    // Check if there's already a direct chat between these users
-    const existingChat = existingChats?.find((chat) =>
-      chat.members.some((member: ChatMember) => member.userId === userId)
-    );
+    // Check if a direct chat already exists between these users using Prisma
+    const existingChat = await prisma.chat.findFirst({
+      where: {
+        type: "direct",
+        members: {
+          every: {
+            userId: {
+              in: [currentUser.user.id, userId],
+            },
+          },
+        },
+      },
+      include: {
+        members: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
 
     if (existingChat) {
+      console.log("[Chat] Existing direct chat found:", existingChat.id);
       return existingChat;
     }
 
-    // Create new chat
-    const { data: chat, error: chatError } = await supabase
-      .from("Chat")
-      .insert({
+    // Create new chat using Prisma
+    const chat = await prisma.chat.create({
+      data: {
         type: "direct",
-      })
-      .select()
-      .single();
+      },
+    });
 
-    if (chatError) throw chatError;
+    console.log("[Chat] Created new direct chat:", chat.id);
 
-    // Add both users as members
-    const memberPromises = [currentUser.user.id, userId].map((memberId) =>
-      supabase.from("ChatMember").insert({
-        chatId: chat.id,
-        userId: memberId,
-      })
-    );
+    // Add both users as members using Prisma
+    await Promise.all([
+      prisma.chatMember.create({
+        data: {
+          chatId: chat.id,
+          userId: currentUser.user.id,
+        },
+      }),
+      prisma.chatMember.create({
+        data: {
+          chatId: chat.id,
+          userId: userId,
+        },
+      }),
+    ]);
 
-    await Promise.all(memberPromises);
-
+    console.log("[Chat] Added members to direct chat:", [currentUser.user.id, userId]);
     return chat;
   } catch (error) {
     console.error("Error creating direct chat:", error);

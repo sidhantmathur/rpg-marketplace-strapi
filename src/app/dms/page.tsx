@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { MessageCircle } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@/hooks/useUser";
 
 interface DM {
   id: number;
@@ -26,11 +29,13 @@ interface DM {
 
 export default function DMsPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [dms, setDms] = useState<DM[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"rating" | "sessions">("rating");
+  const [chatLoading, setChatLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDMs = async () => {
@@ -52,6 +57,44 @@ export default function DMsPage() {
 
     void fetchDMs();
   }, [search, sortBy]);
+
+  const handleStartChat = async (dmUserId: string) => {
+    if (!user) {
+      setError("You must be logged in to start a chat");
+      return;
+    }
+
+    try {
+      setChatLoading(dmUserId);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
+      const response = await fetch("/api/chat/create-direct-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ targetUserId: dmUserId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create chat");
+      }
+
+      const { chat } = await response.json();
+      router.push(`/chat?chatId=${chat.id}`);
+    } catch (error) {
+      console.error("Failed to start chat:", error);
+      setError(error instanceof Error ? error.message : "Failed to start chat");
+    } finally {
+      setChatLoading(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -108,48 +151,64 @@ export default function DMsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dms.map((dm) => (
-            <Link
-              key={dm.id}
-              href={`/profile/${dm.userId}`}
-              className="card hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start gap-4">
-                <div className="relative w-16 h-16 flex-shrink-0">
-                  <Image
-                    src={dm.profile.avatarUrl || "/placeholder.png"}
-                    alt="DM Avatar"
-                    fill
-                    className="rounded-full object-cover border-2 border-amber"
-                  />
+            <div key={dm.id} className="card hover:shadow-lg transition-shadow">
+              <Link href={`/profile/${dm.userId}`} className="block">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-16 h-16 flex-shrink-0">
+                    <Image
+                      src={dm.profile.avatarUrl || "/placeholder.png"}
+                      alt="DM Avatar"
+                      fill
+                      className="rounded-full object-cover border-2 border-amber"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-semibold text-primary truncate">{dm.name}</h2>
+                    <div className="flex items-center gap-1">
+                      <span className="text-amber">★</span>
+                      <span className="text-muted">
+                        {dm.averageRating.toFixed(1)} ({dm.ratingCount} reviews)
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-xl font-semibold text-primary truncate">{dm.name}</h2>
-                  <div className="flex items-center gap-1">
-                    <span className="text-amber">★</span>
-                    <span className="text-muted">
-                      {dm.averageRating.toFixed(1)} ({dm.ratingCount} reviews)
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Active Sessions:</span>
+                    <span className="text-primary font-semibold">{dm.activeSessions}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Total Sessions:</span>
+                    <span className="text-primary font-semibold">{dm.totalSessions}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Member Since:</span>
+                    <span className="text-primary font-semibold">
+                      {new Date(dm.memberSince).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted">Active Sessions:</span>
-                  <span className="text-primary font-semibold">{dm.activeSessions}</span>
+              {/* Start Chat Button */}
+              {user && user.id !== dm.userId && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void handleStartChat(dm.userId);
+                    }}
+                    disabled={chatLoading === dm.userId}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {chatLoading === dm.userId ? "Starting chat..." : "Message DM"}
+                  </button>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted">Total Sessions:</span>
-                  <span className="text-primary font-semibold">{dm.totalSessions}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted">Member Since:</span>
-                  <span className="text-primary font-semibold">
-                    {new Date(dm.memberSince).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            </Link>
+              )}
+            </div>
           ))}
         </div>
 

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 import UpcomingSessions from "@/components/UpcomingSessions";
 import PastSessions from "@/components/PastSessions";
 import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -38,7 +40,9 @@ interface Profile {
 
 export default function ProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
+  const { user } = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +51,7 @@ export default function ProfilePage() {
   const [bio, setBio] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
   console.log("[Profile Page] Params:", params);
   console.log("[Profile Page] ID:", id);
@@ -114,6 +119,44 @@ export default function ProfilePage() {
       isMounted = false;
     };
   }, [id]);
+
+  const handleStartChat = async () => {
+    if (!user) {
+      setError("You must be logged in to start a chat");
+      return;
+    }
+
+    try {
+      setChatLoading(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token available");
+      }
+
+      const response = await fetch("/api/chat/create-direct-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ targetUserId: id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create chat");
+      }
+
+      const { chat } = await response.json();
+      router.push(`/chat?chatId=${chat.id}`);
+    } catch (error) {
+      console.error("Failed to start chat:", error);
+      setError(error instanceof Error ? error.message : "Failed to start chat");
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -221,6 +264,18 @@ export default function ProfilePage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-primary">Profile</h1>
         <div className="flex gap-4">
+          {/* Message DM Button - Show if viewing a DM's profile and not the current user */}
+          {profile.roles.includes("dm") && user && user.id !== id && (
+            <Button
+              onClick={handleStartChat}
+              disabled={chatLoading}
+              className="flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              {chatLoading ? "Starting chat..." : "Message DM"}
+            </Button>
+          )}
+          
           {isCurrentUser && (
             <Button
               variant="outline"
