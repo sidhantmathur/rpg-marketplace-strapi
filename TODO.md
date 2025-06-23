@@ -63,7 +63,7 @@
   - Session history - done
   - Player reviews - done
   - Availability calendar
-- [ ] Basic chat functionality (2 days)
+- [x] Basic chat functionality (2 days)
   - Direct messaging
   - Session group chat
   - Basic notifications
