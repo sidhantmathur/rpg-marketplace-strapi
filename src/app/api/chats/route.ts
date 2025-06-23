@@ -124,6 +124,13 @@ export async function GET(request: Request) {
                 },
               },
             },
+            session: {
+              select: {
+                id: true,
+                title: true,
+                date: true,
+              },
+            },
           },
         },
       },
@@ -139,7 +146,9 @@ export async function GET(request: Request) {
       id: membership.chat.id,
       type: membership.chat.type,
       name: membership.chat.type === "session" 
-        ? `Session Chat` 
+        ? membership.chat.session 
+          ? `${membership.chat.session.title} - ${new Date(membership.chat.session.date).toLocaleDateString()}`
+          : "Session Chat"
         : membership.chat.members
             .filter((m) => m.userId !== user.id)
             .map((m) => m.user.email)
@@ -151,6 +160,7 @@ export async function GET(request: Request) {
       })),
       createdAt: membership.chat.createdAt,
       updatedAt: membership.chat.updatedAt,
+      session: membership.chat.session,
     }));
 
     console.log("[Chats API] Found chats:", chats);

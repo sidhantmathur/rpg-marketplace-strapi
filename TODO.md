@@ -67,7 +67,7 @@
   - Direct messaging
   - Session group chat
   - Basic notifications
-- [ ] Profile customization (1 day)
+- [x] Profile customization (1 day)
   - Avatar upload
   - Bio editing
   - Game preferences

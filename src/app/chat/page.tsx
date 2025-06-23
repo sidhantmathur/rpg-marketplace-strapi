@@ -6,11 +6,13 @@ import ChatList from "@/components/chat/ChatList";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
+import { Chat } from "@/lib/chat";
 
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const [selectedChatId, setSelectedChatId] = useState<string | undefined>();
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +60,23 @@ function ChatPageContent() {
           const { chat } = await response.json();
           console.log("[ChatPage] Chat created/found:", chat);
           setSelectedChatId(String(chat.id));
+          
+          // Get the full chat information with session details
+          const chatResponse = await fetch("/api/chats", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          
+          if (chatResponse.ok) {
+            const { chats: allChats } = await chatResponse.json();
+            const fullChat = allChats.find((c: Chat) => c.id === chat.id);
+            if (fullChat) {
+              setSelectedChat(fullChat);
+            }
+          }
         } catch (err) {
           console.error("[ChatPage] Error creating/getting session chat:", err instanceof Error ? err.message : err);
           setError("Failed to load chat. You may not have permission to access this session.");
@@ -95,7 +114,10 @@ function ChatPageContent() {
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-3">
           <ChatList
-            onSelectChat={(chat) => setSelectedChatId(String(chat.id))}
+            onSelectChat={(chat) => {
+              setSelectedChatId(String(chat.id));
+              setSelectedChat(chat);
+            }}
             selectedChatId={selectedChatId}
           />
         </div>
@@ -103,7 +125,7 @@ function ChatPageContent() {
           {selectedChatId ? (
             <ChatWindow
               chatId={selectedChatId}
-              chatName="Session Chat"
+              chatName={selectedChat?.name || "Chat"}
             />
           ) : (
             <div className="h-[600px] flex items-center justify-center bg-gray-50 rounded-lg">

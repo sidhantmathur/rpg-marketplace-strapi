@@ -25,6 +25,11 @@ export interface Chat {
   }[];
   createdAt: Date;
   updatedAt: Date;
+  session?: {
+    id: number;
+    title: string;
+    date: Date;
+  };
 }
 
 export async function createSessionChat(sessionId: number, currentUserId?: string) {
