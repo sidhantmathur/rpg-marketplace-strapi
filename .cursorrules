@@ -194,6 +194,170 @@
           "github": true
         }
       }
+    },
+    "architecture": {
+      "patterns": {
+        "dataAccess": {
+          "client": "Client → API Route → Prisma → Database",
+          "forbidden": "Client → Supabase Client → Database",
+          "description": "All database operations must go through API routes using Prisma"
+        },
+        "authentication": {
+          "pattern": "Extract JWT → Verify with Supabase → Use authenticated context",
+          "required": ["Authorization header", "Token validation", "User context"]
+        },
+        "storage": {
+          "pattern": "Create authenticated client → Upload with JWT → Update database",
+          "forbidden": "Use shared Supabase client for storage uploads"
+        }
+      },
+      "rules": {
+        "apiRoutes": {
+          "required": [
+            "JWT extraction from Authorization header",
+            "Supabase auth verification",
+            "Prisma for all database operations",
+            "Comprehensive error handling",
+            "Detailed logging"
+          ],
+          "forbidden": [
+            "Direct Supabase database queries",
+            "Client-side database access",
+            "Service role keys in client code"
+          ]
+        },
+        "clientComponents": {
+          "allowed": [
+            "Supabase auth (login/signup)",
+            "Supabase realtime subscriptions",
+            "API route calls with JWT",
+            "Session management"
+          ],
+          "forbidden": [
+            "Direct database queries",
+            "Supabase.from() calls",
+            "Prisma usage"
+          ]
+        },
+        "storage": {
+          "required": [
+            "Authenticated Supabase client",
+            "JWT in Authorization header",
+            "Proper file path structure",
+            "File validation"
+          ],
+          "forbidden": [
+            "Shared Supabase client",
+            "Anonymous uploads",
+            "Insecure file paths"
+          ]
+        }
+      },
+      "antiPatterns": {
+        "mixedDatabaseAccess": {
+          "description": "Using both Prisma and Supabase for database operations",
+          "location": "src/lib/chat.ts",
+          "fix": "Replace all Supabase.from() calls with Prisma queries"
+        },
+        "clientSideDatabase": {
+          "description": "Direct database access from client components",
+          "fix": "Use API routes for all data operations"
+        },
+        "unauthenticatedStorage": {
+          "description": "Storage uploads without proper JWT",
+          "fix": "Create authenticated Supabase client with JWT"
+        }
+      },
+      "bestPractices": {
+        "errorHandling": {
+          "required": [
+            "Try-catch blocks in all async operations",
+            "Detailed error logging with context",
+            "User-friendly error messages",
+            "Proper HTTP status codes"
+          ]
+        },
+        "logging": {
+          "required": [
+            "API route entry/exit logging",
+            "Authentication success/failure",
+            "Database operation results",
+            "Error details with stack traces"
+          ]
+        },
+        "security": {
+          "required": [
+            "JWT validation in all API routes",
+            "User authorization checks",
+            "Input validation with Zod",
+            "RLS policy compliance"
+          ]
+        }
+      }
+    },
+    "database": {
+      "prisma": {
+        "required": true,
+        "usage": "All server-side database operations",
+        "patterns": {
+          "queries": "Use Prisma client for all database queries",
+          "transactions": "Use Prisma transactions for multi-step operations",
+          "relations": "Use Prisma relations for joins and includes"
+        }
+      },
+      "supabase": {
+        "auth": {
+          "usage": "User authentication and session management",
+          "patterns": {
+            "login": "supabase.auth.signInWithPassword()",
+            "signup": "supabase.auth.signUp()",
+            "session": "supabase.auth.getSession()",
+            "user": "supabase.auth.getUser()"
+          }
+        },
+        "realtime": {
+          "usage": "Live updates and subscriptions",
+          "patterns": {
+            "subscriptions": "supabase.channel().on().subscribe()",
+            "cleanup": "supabase.removeChannel()"
+          }
+        },
+        "storage": {
+          "usage": "File uploads and storage",
+          "patterns": {
+            "authenticatedClient": "createClient with JWT in headers",
+            "upload": "storage.from().upload()",
+            "publicUrl": "storage.from().getPublicUrl()"
+          }
+        }
+      }
+    },
+    "codeQuality": {
+      "naming": {
+        "conventions": {
+          "components": "PascalCase",
+          "functions": "camelCase",
+          "constants": "UPPER_SNAKE_CASE",
+          "files": "kebab-case"
+        }
+      },
+      "structure": {
+        "apiRoutes": {
+          "location": "src/app/api/",
+          "pattern": "route.ts for endpoints",
+          "required": ["authentication", "validation", "error handling"]
+        },
+        "components": {
+          "location": "src/components/",
+          "pattern": "functional components with TypeScript",
+          "required": ["props interface", "error boundaries"]
+        },
+        "lib": {
+          "location": "src/lib/",
+          "pattern": "utility functions and shared code",
+          "required": ["type safety", "error handling"]
+        }
+      }
     }
   }
 } 
