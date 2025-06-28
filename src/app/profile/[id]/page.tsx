@@ -293,21 +293,23 @@ export default function ProfilePage() {
       <div className="bg-card p-6 rounded-lg shadow-md border border-border mb-8">
         <div className="flex items-center mb-6">
           <div className="mr-4 relative">
-            {profile?.avatarUrl ? (
-              <Image
-                src={profile.avatarUrl}
-                alt="Profile Avatar"
-                width={100}
-                height={100}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="w-[100px] h-[100px] bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-2xl text-primary">
-                  {profile?.email?.[0].toUpperCase()}
-                </span>
-              </div>
-            )}
+            <div className="w-24 h-24 rounded-lg border-2 border-border overflow-hidden">
+              {profile?.avatarUrl ? (
+                <Image
+                  src={profile.avatarUrl}
+                  alt="Profile Avatar"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-2xl text-primary">
+                    {profile?.email?.[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
             {isCurrentUser && (
               <div className="absolute bottom-0 right-0">
                 <Label

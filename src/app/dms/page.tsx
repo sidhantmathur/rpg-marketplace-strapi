@@ -159,7 +159,7 @@ export default function DMsPage() {
                       src={dm.profile.avatarUrl || "/placeholder.png"}
                       alt="DM Avatar"
                       fill
-                      className="rounded-full object-cover border-2 border-amber"
+                      className="rounded-lg object-cover border-2 border-border"
                     />
                   </div>
                   <div className="flex-1 min-w-0">

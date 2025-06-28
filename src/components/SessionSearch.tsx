@@ -519,25 +519,26 @@ export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = 
         {sessions.map((session) => (
           <div
             key={session.id}
-            className="bg-card rounded-lg shadow-md border border-border overflow-hidden"
+            className="bg-card rounded-lg shadow-lg border border-border overflow-hidden hover:shadow-xl transition-shadow duration-200"
           >
-            <div className="aspect-w-16 aspect-h-9">
-              {session.imageUrl ? (
-                <Image
-                  src={session.imageUrl || "/placeholder.png"}
-                  alt={session.title}
-                  width={400}
-                  height={400}
-                  quality={100}
-                  className="w-full h-full object-cover rounded"
-                />
-              ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <span className="text-muted">No image</span>
-                </div>
-              )}
-            </div>
             <div className="p-4">
+              <div className="relative w-full h-64 overflow-hidden rounded-lg">
+                {session.imageUrl ? (
+                  <Image
+                    src={session.imageUrl || "/placeholder.png"}
+                    alt={session.title}
+                    fill
+                    quality={100}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-muted">No image</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="p-4 pt-0">
               <h3 className="text-xl font-semibold text-primary mb-2">{session.title}</h3>
               <p className="text-secondary mb-4 line-clamp-2">{session.description}</p>
               <div className="grid grid-cols-2 gap-2 text-sm text-muted mb-4">
