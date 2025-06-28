@@ -73,6 +73,7 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
                 alt={session.title}
                 fill
                 className="object-cover rounded-lg"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
           )}
@@ -139,14 +140,19 @@ export default function SessionDetails({ session }: SessionDetailsProps) {
                 href={`/profile/${booking.userId}`}
                 className="flex items-center space-x-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
               >
-                {booking.user.avatarUrl && (
+                {booking.user.avatarUrl ? (
                   <Image
                     src={booking.user.avatarUrl}
                     alt="Participant"
                     width={32}
                     height={32}
                     className="rounded-full"
+                    sizes="32px"
                   />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                    {booking.user.email.charAt(0).toUpperCase()}
+                  </div>
                 )}
                 <div className="text-sm">
                   {booking.user.email}

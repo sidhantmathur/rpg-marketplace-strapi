@@ -116,6 +116,7 @@ export default function ChatList({ onSelectChat, selectedChatId }: ChatListProps
                   alt={chat.name}
                   fill
                   className="object-cover"
+                  sizes="40px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-500">

@@ -546,14 +546,16 @@ export default function CreateSessionForm({
           className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-primary bg-input"
         />
         {imagePreview && (
-          <Image
-            src={imagePreview}
-            alt="Preview"
-            width={400}
-            height={400}
-            quality={100}
-            className="w-full h-full object-cover rounded"
-          />
+          <div className="mt-2 relative w-full h-64 overflow-hidden rounded-lg">
+            <Image
+              src={imagePreview}
+              alt="Preview"
+              fill
+              quality={100}
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 400px"
+            />
+          </div>
         )}
       </div>
 

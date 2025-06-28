@@ -155,12 +155,21 @@ export default function DMsPage() {
               <Link href={`/profile/${dm.userId}`} className="block">
                 <div className="flex items-start gap-4">
                   <div className="relative w-16 h-16 flex-shrink-0">
-                    <Image
-                      src={dm.profile.avatarUrl || "/placeholder.png"}
-                      alt="DM Avatar"
-                      fill
-                      className="rounded-lg object-cover border-2 border-border"
-                    />
+                    {dm.profile.avatarUrl ? (
+                      <Image
+                        src={dm.profile.avatarUrl}
+                        alt="DM Avatar"
+                        fill
+                        className="rounded-lg object-cover border-2 border-border"
+                        sizes="64px"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-lg border-2 border-border bg-primary/10 flex items-center justify-center">
+                        <span className="text-xl text-primary font-semibold">
+                          {dm.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-semibold text-primary truncate">{dm.name}</h2>

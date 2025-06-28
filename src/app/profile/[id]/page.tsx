@@ -301,6 +301,7 @@ export default function ProfilePage() {
                   width={96}
                   height={96}
                   className="w-full h-full object-cover"
+                  sizes="96px"
                 />
               ) : (
                 <div className="w-full h-full bg-primary/10 flex items-center justify-center">

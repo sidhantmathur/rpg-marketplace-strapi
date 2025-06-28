@@ -88,14 +88,19 @@ export default function BookingConfirmation({ session }: BookingConfirmationProp
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Session Details</h2>
           
-          {session.imageUrl && (
+          {session.imageUrl ? (
             <div className="relative w-full h-48 mb-4">
               <Image
                 src={session.imageUrl}
                 alt={session.title}
                 fill
                 className="object-cover rounded-lg"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
+            </div>
+          ) : (
+            <div className="w-full h-48 mb-4 bg-primary/10 flex items-center justify-center rounded-lg">
+              <span className="text-primary">No image</span>
             </div>
           )}
 

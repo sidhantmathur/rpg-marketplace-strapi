@@ -129,14 +129,19 @@ export default function PastSessions({ className = "" }: PastSessionsProps) {
               key={session.id}
               className="border rounded-lg overflow-hidden bg-card hover:shadow-md transition-shadow"
             >
-              {session.imageUrl && (
+              {session.imageUrl ? (
                 <div className="relative h-48 w-full">
                   <Image
                     src={session.imageUrl}
                     alt={session.title}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
                   />
+                </div>
+              ) : (
+                <div className="h-48 w-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary">No image</span>
                 </div>
               )}
               <div className="p-4">

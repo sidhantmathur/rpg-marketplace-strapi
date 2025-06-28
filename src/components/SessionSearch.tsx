@@ -525,16 +525,21 @@ export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = 
               <div className="relative w-full h-64 overflow-hidden rounded-lg">
                 {session.imageUrl ? (
                   <Image
-                    src={session.imageUrl || "/placeholder.png"}
+                    src={session.imageUrl}
                     alt={session.title}
                     fill
                     quality={100}
                     className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <span className="text-muted">No image</span>
-                  </div>
+                  <Image
+                    src="/placeholder.svg"
+                    alt="No image available"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
                 )}
               </div>
             </div>

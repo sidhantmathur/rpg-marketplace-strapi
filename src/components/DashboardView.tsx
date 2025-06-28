@@ -564,13 +564,15 @@ export default function Home() {
             className="border p-2 rounded"
           />
           {sessionPreview && (
-            <Image
-              src={sessionPreview}
-              alt="Preview"
-              width={100}
-              height={100}
-              className="w-24 h-24 object-cover rounded"
-            />
+            <div className="relative w-24 h-24 overflow-hidden rounded">
+              <Image
+                src={sessionPreview}
+                alt="Preview"
+                fill
+                className="object-cover"
+                sizes="96px"
+              />
+            </div>
           )}
           <input
             type="date"
@@ -618,14 +620,21 @@ export default function Home() {
           return (
             <div key={session.id} className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center gap-4 mb-4">
-                <Image
-                  src={session.imageUrl || "/placeholder.png"}
-                  alt={session.title}
-                  width={400}
-                  height={400}
-                  quality={100}
-                  className="w-full h-full object-cover rounded"
-                />
+                {session.imageUrl ? (
+                  <Image
+                    src={session.imageUrl}
+                    alt={session.title}
+                    width={400}
+                    height={400}
+                    quality={100}
+                    className="w-full h-full object-cover rounded"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-primary/10 flex items-center justify-center rounded">
+                    <span className="text-primary">No image</span>
+                  </div>
+                )}
               </div>
               <h3 className="text-xl font-bold mb-2">{session.title}</h3>
               <p className="text-gray-600 mb-2">{session.description}</p>
@@ -663,15 +672,20 @@ export default function Home() {
               .filter((session) => joinedSessionIds.includes(session.id))
               .map((session) => (
                 <li key={session.id} className="border p-2 rounded">
-                  {session.imageUrl && (
+                  {session.imageUrl ? (
                     <Image
-                      src={session.imageUrl || "/placeholder.png"}
+                      src={session.imageUrl}
                       alt={session.title}
                       width={400}
                       height={400}
                       quality={100}
                       className="w-full h-full object-cover rounded"
+                      sizes="(max-width: 768px) 100vw, 400px"
                     />
+                  ) : (
+                    <div className="w-full h-32 bg-primary/10 flex items-center justify-center rounded">
+                      <span className="text-primary">No image</span>
+                    </div>
                   )}
                   <div className="font-semibold">{session.title}</div>
                   <div className="text-sm text-gray-600">
@@ -696,15 +710,20 @@ export default function Home() {
               .filter((session) => session.userId === user.id)
               .map((session) => (
                 <li key={session.id} className="border p-2 rounded">
-                  {session.imageUrl && (
+                  {session.imageUrl ? (
                     <Image
-                      src={session.imageUrl || "/placeholder.png"}
+                      src={session.imageUrl}
                       alt={session.title}
                       width={400}
                       height={400}
                       quality={100}
                       className="w-full h-full object-cover rounded"
+                      sizes="(max-width: 768px) 100vw, 400px"
                     />
+                  ) : (
+                    <div className="w-full h-32 bg-primary/10 flex items-center justify-center rounded">
+                      <span className="text-primary">No image</span>
+                    </div>
                   )}
                   <div className="font-semibold">{session.title}</div>
                   <div className="text-sm text-gray-600">

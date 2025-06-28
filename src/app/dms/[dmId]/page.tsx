@@ -161,12 +161,21 @@ export default function DMProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start gap-6">
             <div className="relative w-24 h-24 flex-shrink-0">
-              <Image
-                src={dmProfile.avatarUrl || "/placeholder.png"}
-                alt="DM Avatar"
-                fill
-                className="rounded-full object-cover border-2 border-amber"
-              />
+              {dmProfile.avatarUrl ? (
+                <Image
+                  src={dmProfile.avatarUrl}
+                  alt="DM Avatar"
+                  fill
+                  className="rounded-full object-cover border-2 border-amber"
+                  sizes="96px"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full border-2 border-amber bg-primary/10 flex items-center justify-center">
+                  <span className="text-2xl text-primary font-semibold">
+                    {dm.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-primary mb-2">{dm.name}</h1>
