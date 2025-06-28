@@ -2,6 +2,86 @@
 
 ## 🎯 Key Learnings from Recent Bug Fixes
 
+### **Bug #3: Prisma + Supabase Deployment Connection Issues**
+
+#### **What Went Wrong?**
+- Database connection errors on deployed site: `Can't reach database server at aws-0-ca-central-1.pooler.supabase.com:5432`
+- Local development worked fine, but production failed
+- Prisma schema required both `DATABASE_URL` and `DIRECT_URL` but only `DATABASE_URL` was configured in Vercel
+- Custom Prisma client output path caused import conflicts
+
+#### **The Root Cause**
+```typescript
+// ❌ Problematic Prisma schema configuration
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"  // Custom path caused issues
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // Pooled connection
+  directUrl = env("DIRECT_URL")         // Direct connection (missing in Vercel)
+}
+```
+
+```typescript
+// ❌ Problematic import
+import { PrismaClient } from "../generated/prisma";  // Custom path import
+```
+
+#### **The Fix**
+```typescript
+// ✅ Correct Prisma schema configuration
+generator client {
+  provider = "prisma-client-js"
+  // No custom output path - use standard location
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // Pooled connection
+  directUrl = env("DIRECT_URL")         // Direct connection
+}
+```
+
+```typescript
+// ✅ Correct import
+import { PrismaClient, Prisma } from "@prisma/client";  // Standard import
+```
+
+#### **Environment Variables Required**
+```bash
+# Supabase Connection Pooling (for most operations)
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-ca-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+# Supabase Direct Connection (for migrations, introspection)
+DIRECT_URL=postgresql://postgres.[project-ref]:[password]@aws-0-ca-central-1.supabase.com:5432/postgres
+```
+
+#### **Why This Works**
+- **Standard Prisma Client**: Uses the default location in `node_modules/@prisma/client`
+- **Both URLs Required**: Supabase needs both pooled and direct connections
+- **Proper Import Path**: Standard import path works reliably in all environments
+- **Retry Logic**: Added robust retry logic for connection resilience
+
+#### **Vercel Configuration**
+```json
+{
+  "buildCommand": "prisma generate && next build",
+  "framework": "nextjs"
+}
+```
+
+#### **Key Learnings**
+1. **Never use custom Prisma output paths** in production - stick to defaults
+2. **Always configure both DATABASE_URL and DIRECT_URL** for Supabase
+3. **Use standard imports** from `@prisma/client`, not custom paths
+4. **Add retry logic** for production resilience
+5. **Test builds locally** before deploying
+
+---
+
 ### **Bug #1: Supabase Storage RLS Policy Issues**
 
 #### **What Went Wrong?**
@@ -315,6 +395,23 @@ causing RLS failures. This change ensures file uploads work securely and
 as expected.
 ```
 
+### **For Deployment Fixes**
+```
+fix(deployment): resolve Prisma + Supabase connection issues
+
+- Remove custom Prisma output path from schema
+- Use standard @prisma/client import instead of custom path
+- Add robust retry logic for database connections
+- Ensure both DATABASE_URL and DIRECT_URL are configured
+- Simplify Vercel build configuration
+
+The deployment was failing due to custom Prisma client generation and
+missing DIRECT_URL environment variable. This change restores the working
+configuration from commit 84d07de and adds production resilience.
+
+Fixes: #deployment-connection-errors
+```
+
 ---
 
 ## 🔍 **Debugging RLS Issues**
@@ -343,6 +440,135 @@ as expected.
 
 ---
 
+## 🚀 **Deployment Best Practices**
+
+### **Prisma + Supabase Deployment Checklist**
+
+#### **Pre-Deployment**
+- [ ] **Test build locally**: `npm run build` should complete without errors
+- [ ] **Verify Prisma schema**: No custom output paths
+- [ ] **Check imports**: Use `@prisma/client`, not custom paths
+- [ ] **Generate Prisma client**: `npx prisma generate` works locally
+
+#### **Environment Variables**
+- [ ] **DATABASE_URL**: Supabase pooled connection (Vercel)
+- [ ] **DIRECT_URL**: Supabase direct connection (Vercel)
+- [ ] **NEXT_PUBLIC_SUPABASE_URL**: Public Supabase URL
+- [ ] **NEXT_PUBLIC_SUPABASE_ANON_KEY**: Public Supabase key
+- [ ] **SUPABASE_SERVICE_ROLE_KEY**: Service role key (if needed)
+
+#### **Vercel Configuration**
+```json
+{
+  "buildCommand": "prisma generate && next build",
+  "framework": "nextjs"
+}
+```
+
+#### **Post-Deployment Verification**
+- [ ] **Database connections**: Check Vercel logs for connection success
+- [ ] **API routes**: Test key endpoints
+- [ ] **Authentication**: Verify login/signup works
+- [ ] **Database operations**: Test CRUD operations
+
+### **Common Deployment Issues**
+
+#### **1. Database Connection Errors**
+```
+Can't reach database server at aws-0-ca-central-1.pooler.supabase.com:5432
+```
+
+**Causes:**
+- Missing `DIRECT_URL` environment variable
+- Incorrect `DATABASE_URL` format
+- Network connectivity issues
+
+**Solutions:**
+- Add `DIRECT_URL` to Vercel environment variables
+- Verify both URLs are correct in Supabase dashboard
+- Check Supabase project status
+
+#### **2. Prisma Import Errors**
+```
+Cannot find module '../generated/prisma'
+```
+
+**Causes:**
+- Custom Prisma output path in schema
+- Missing Prisma client generation
+- Incorrect import paths
+
+**Solutions:**
+- Remove custom output path from schema
+- Use standard `@prisma/client` import
+- Ensure `prisma generate` runs in build
+
+#### **3. Build Failures**
+```
+Error: DATABASE_URL environment variable is not set
+```
+
+**Causes:**
+- Missing environment variables in Vercel
+- Incorrect variable names
+- Build-time environment access issues
+
+**Solutions:**
+- Add all required environment variables to Vercel
+- Use correct variable names (case-sensitive)
+- Test environment variable access in build
+
+### **Production Monitoring**
+
+#### **Key Metrics to Watch**
+- **Database connection success rate**
+- **API response times**
+- **Error rates by endpoint**
+- **Authentication success rate**
+
+#### **Log Analysis**
+```bash
+# Check for database connection issues
+grep -i "database\|prisma\|connection" vercel-logs.txt
+
+# Check for authentication issues
+grep -i "auth\|jwt\|token" vercel-logs.txt
+
+# Check for build issues
+grep -i "build\|generate\|import" vercel-logs.txt
+```
+
+#### **Health Check Endpoints**
+Create health check endpoints to monitor:
+- Database connectivity
+- Authentication service
+- Key API functionality
+
+```typescript
+// /api/health/route.ts
+export async function GET() {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    return NextResponse.json({
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    return NextResponse.json({
+      status: 'unhealthy',
+      database: 'disconnected',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
+  }
+}
+```
+
+---
+
 ## 🎓 **Lessons Learned**
 
 1. **Security systems are your friend** - RLS errors are warnings, not bugs
@@ -352,6 +578,11 @@ as expected.
 5. **Documentation saves time** - These patterns should be documented and shared
 6. **Storage is special** - Requires authenticated clients, not shared clients
 7. **One anti-pattern can slip through** - Always review for consistency
+8. **Prisma defaults are best** - Never use custom output paths in production
+9. **Supabase needs both URLs** - Always configure DATABASE_URL and DIRECT_URL
+10. **Test builds locally** - If it doesn't build locally, it won't deploy
+11. **Environment variables are critical** - Missing variables cause silent failures
+12. **Retry logic saves deployments** - Add resilience for production environments
 
 ---
 
