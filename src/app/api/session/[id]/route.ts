@@ -4,12 +4,6 @@ import prisma from "@/lib/prisma";
 import { sendSessionModification, sendSessionCancellation } from "@/utils/emailTemplates";
 import type { Session } from "@prisma/client";
 
-interface SessionInfo {
-  title: string;
-  date: Date;
-  id: number;
-}
-
 interface SessionUpdateRequest {
   title?: string;
   description?: string;

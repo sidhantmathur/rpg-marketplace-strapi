@@ -8,7 +8,6 @@ import { Session as PrismaSession } from "@prisma/client";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 const GAME_OPTIONS = [
   "D&D 5e",
@@ -242,32 +241,6 @@ export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = 
     setEditingSession(session);
   };
 
-  const joinSession = async (sessionId: number) => {
-    if (!user) return;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("No access token available");
-      }
-
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ sessionId, userId: user.id }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to join session");
-      }
-      setJoinedSessionIds((prev) => [...prev, sessionId]);
-      await fetchSessions();
-    } catch (error) {
-      console.error("Error joining session:", error);
-    }
-  };
-
   const leaveSession = async (sessionId: number) => {
     if (!user) return;
     try {
@@ -382,6 +355,56 @@ export default function SessionSearch({ initialFilters = {}, skipAuthRedirect = 
     } catch (error) {
       console.error("Error removing from waitlist:", error);
       alert(error instanceof Error ? error.message : "Failed to remove from waitlist");
+    }
+  };
+
+  const handleSearch = async () => {
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token && !skipAuthRedirect) {
+        router.push("/login?redirect=/sessions");
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+      if (filters.game) params.append("game", filters.game);
+      if (filters.genre) params.append("genre", filters.genre);
+      if (filters.experienceLevel) params.append("experienceLevel", filters.experienceLevel);
+      if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+      if (filters.dateTo) params.append("dateTo", filters.dateTo);
+      if (filters.tags.length > 0) params.append("tags", filters.tags.join(","));
+      if (filters.type) params.append("type", filters.type);
+      if (filters.groupSize) params.append("minSpots", filters.groupSize.toString());
+
+      const response = await fetch(`/api/session/search?${params.toString()}`, {
+        headers: {
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch sessions");
+      }
+
+      let sessions = (await response.json()) as Session[];
+      
+      // Filter sessions based on group size if specified
+      if (filters.groupSize) {
+        sessions = sessions.filter(
+          session => (session.maxParticipants - session.bookings.length) >= filters.groupSize!
+        );
+      }
+
+      setSessions(sessions);
+      setError(null);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : "Failed to load sessions";
+      console.error("Error fetching sessions:", error);
+      setError(error);
+      setSessions([]);
     }
   };
 

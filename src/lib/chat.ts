@@ -1,18 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/lib/prisma";
+import type { Message, Profile } from "@prisma/client";
 
-const supabase = createClient(
+const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-interface Booking {
-  userId: string;
-}
-
-interface ChatMember {
-  userId: string;
-}
 
 export interface Chat {
   id: number;
@@ -129,7 +122,7 @@ export async function createSessionChat(sessionId: number, currentUserId?: strin
 
 export async function createDirectChat(userId: string) {
   try {
-    const { data: currentUser } = await supabase.auth.getUser();
+    const { data: currentUser } = await supabaseClient.auth.getUser();
     if (!currentUser.user) throw new Error("Not authenticated");
 
     // Check if a direct chat already exists between these users using Prisma

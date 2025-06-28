@@ -105,6 +105,14 @@ export default function SignupPage() {
     }
   };
 
+  const handlePasswordChange = (_e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState((prev) => ({ ...prev, error: null }));
+  };
+
+  const handleConfirmPasswordChange = (_e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState((prev) => ({ ...prev, error: null }));
+  };
+
   return (
     <main className="p-6 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-4">Sign Up</h1>

@@ -61,11 +61,9 @@ describe("BookingForm", () => {
 
   it("shows error message when required fields are empty", async () => {
     render(<BookingForm onSubmit={mockOnSubmit} />);
-
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /book now/i }));
     });
-
     expect(screen.getByText(/name is required/i)).toBeInTheDocument();
     expect(screen.getByText(/email is required/i)).toBeInTheDocument();
     expect(screen.getByText(/number of players is required/i)).toBeInTheDocument();

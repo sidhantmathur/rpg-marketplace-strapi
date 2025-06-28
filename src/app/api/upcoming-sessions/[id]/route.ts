@@ -2,38 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { Session } from "@prisma/client";
 
-interface SessionWithRelations extends Session {
-  dm: {
-    id: number;
-    name: string;
-    createdAt: Date;
-    userId: string;
-  };
-  bookings: Array<{
-    id: number;
-    createdAt: Date;
-    userId: string;
-    sessionId: number;
-    user: {
-      id: string;
-      email: string;
-    };
-  }>;
-  reviews: Array<{
-    id: number;
-    rating: number;
-    comment: string | null;
-    createdAt: Date;
-    authorId: string;
-    sessionId: number;
-    deleted: boolean;
-    author: {
-      id: string;
-      email: string;
-    };
-  }>;
-}
-
 function handleError(err: unknown): NextResponse<{ error: string }> {
   console.error("[Upcoming Sessions] Error:", err);
   const message =

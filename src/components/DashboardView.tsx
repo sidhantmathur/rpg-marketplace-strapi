@@ -119,30 +119,6 @@ export default function Home() {
     }
   }, [user?.id, fetchJoinedSessions]);
 
-  // Fix useCallback dependencies
-  const joinSession = useCallback(
-    async (sessionId: number) => {
-      if (!user?.id) return;
-      try {
-        const res = await fetch(`/api/session/${sessionId}/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id }),
-        });
-        if (!res.ok) {
-          throw new Error(`Failed to join session: ${res.status}`);
-        }
-        await Promise.all([fetchSessions(), fetchJoinedSessions()]);
-      } catch (err) {
-        console.error(
-          "Error joining session:",
-          err instanceof Error ? err.message : "Unknown error"
-        );
-      }
-    },
-    [user?.id, fetchSessions, fetchJoinedSessions]
-  );
-
   const leaveSession = useCallback(
     async (sessionId: number) => {
       if (!user?.id) return;
@@ -233,13 +209,6 @@ export default function Home() {
   );
 
   // Handle session actions
-  const handleJoinSession = useCallback(
-    async (sessionId: number) => {
-      await joinSession(sessionId);
-    },
-    [joinSession]
-  );
-
   const handleLeaveSession = useCallback(
     async (sessionId: number) => {
       await leaveSession(sessionId);
@@ -453,20 +422,22 @@ export default function Home() {
 
   // Handle session status
   const getSessionStatus = (session: Session): { text: string; color: string } => {
-    const isJoined = joinedSessionIds.includes(session.id);
-    const isOnWaitlist = session.waitlist?.some((w) => w.userId === user?.id) ?? false;
-    const isFull = (session.bookings?.length ?? 0) >= session.maxParticipants;
+    const now = new Date();
+    const sessionDate = new Date(session.date);
+    const timeDiff = sessionDate.getTime() - now.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    if (isJoined) {
-      return { text: "✓ You've joined this session", color: "text-green-600" };
+    if (daysDiff < 0) {
+      return { text: "Past", color: "text-gray-500" };
+    } else if (daysDiff === 0) {
+      return { text: "Today", color: "text-green-600" };
+    } else if (daysDiff === 1) {
+      return { text: "Tomorrow", color: "text-blue-600" };
+    } else if (daysDiff <= 7) {
+      return { text: "This Week", color: "text-orange-600" };
+    } else {
+      return { text: "Upcoming", color: "text-gray-600" };
     }
-    if (isOnWaitlist) {
-      return { text: "✓ You're on the waitlist", color: "text-yellow-600" };
-    }
-    if (isFull) {
-      return { text: "Session is full", color: "text-red-600" };
-    }
-    return { text: "", color: "" };
   };
 
   // Loading or not authenticated

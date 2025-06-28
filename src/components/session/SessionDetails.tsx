@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
-import { supabase } from "@/lib/supabaseClient";
-import type { Session, Profile, DungeonMaster, Review } from "@prisma/client";
+import type { Session, DungeonMaster, Review } from "@prisma/client";
 
 interface SessionWithDetails extends Session {
   dm: DungeonMaster & {

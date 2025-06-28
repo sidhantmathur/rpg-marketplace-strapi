@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import type { Session } from "@prisma/client";
 import { supabase } from "@/lib/supabaseClient";
 
 function handleError(err: unknown): NextResponse<{ error: string }> {

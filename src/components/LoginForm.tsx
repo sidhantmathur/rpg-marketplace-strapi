@@ -4,7 +4,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AuthError } from "@supabase/supabase-js";
 import { toast } from "react-hot-toast";
 
 interface LoginFormState {

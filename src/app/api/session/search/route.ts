@@ -20,15 +20,14 @@ export async function GET(req: NextRequest) {
   try {
     // Get the authorization header if it exists
     const authHeader = req.headers.get("Authorization");
-    let userId: string | undefined;
 
     // If auth header exists, verify the user
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
-      if (!authError && user) {
-        userId = user.id;
+      if (authError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 

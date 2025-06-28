@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -93,8 +92,7 @@ const questions: Question[] = [
 ];
 
 export function OnboardingQuiz() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<string>("");
@@ -105,8 +103,8 @@ export function OnboardingQuiz() {
     
     // Auto-advance to next question after a short delay
     setTimeout(() => {
-      if (currentStep < questions.length - 1) {
-        setCurrentStep((prev) => prev + 1);
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion((prev) => prev + 1);
         setSelectedFeedback("");
       } else {
         setShowRecommendations(true);
@@ -115,8 +113,8 @@ export function OnboardingQuiz() {
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+    if (currentQuestion > 0) {
+      setCurrentQuestion((prev) => prev - 1);
       setSelectedFeedback("");
     }
   };
@@ -208,7 +206,7 @@ export function OnboardingQuiz() {
     <div className="relative min-h-[400px]">
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentStep}
+          key={currentQuestion}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
@@ -218,25 +216,25 @@ export function OnboardingQuiz() {
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-ink mb-4">
-                {questions[currentStep].text}
+                {questions[currentQuestion].text}
               </h2>
               <div className="w-full max-w-md mx-auto h-1 bg-ink-light/20 rounded-full">
                 <div
                   className="h-full bg-forest transition-all duration-300 rounded-full"
                   style={{
-                    width: `${((currentStep + 1) / questions.length) * 100}%`,
+                    width: `${((currentQuestion + 1) / questions.length) * 100}%`,
                   }}
                 />
               </div>
             </div>
 
             <div className="grid gap-4">
-              {questions[currentStep].options.map((option) => (
+              {questions[currentQuestion].options.map((option) => (
                 <motion.button
                   key={option.value}
-                  onClick={() => handleAnswer(questions[currentStep].id, option.value, option.feedback)}
+                  onClick={() => handleAnswer(questions[currentQuestion].id, option.value, option.feedback)}
                   className={`p-4 text-left rounded-lg border-2 transition-all ${
-                    answers[questions[currentStep].id] === option.value
+                    answers[questions[currentQuestion].id] === option.value
                       ? "border-forest bg-forest/10"
                       : "border-ink-light hover:border-forest/50"
                   }`}
@@ -258,7 +256,7 @@ export function OnboardingQuiz() {
               </motion.p>
             )}
 
-            {currentStep > 0 && (
+            {currentQuestion > 0 && (
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

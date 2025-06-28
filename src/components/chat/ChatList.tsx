@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/lib/supabaseClient";
 import { Chat } from "@/lib/chat";
@@ -13,7 +12,6 @@ interface ChatListProps {
 }
 
 export default function ChatList({ onSelectChat, selectedChatId }: ChatListProps) {
-  const router = useRouter();
   const { user } = useUser();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);

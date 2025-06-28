@@ -1,5 +1,5 @@
 // src/lib/prisma.ts
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 // Prevent multiple instances of Prisma Client in development
 declare global {
@@ -19,7 +19,6 @@ console.log(`[DB] Attempting to connect to database: ${maskedUrl}`);
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
-const CONNECTION_LIMIT = 5; // Limit concurrent connections
 
 // Helper function to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
