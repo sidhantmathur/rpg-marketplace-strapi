@@ -6,10 +6,16 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// Ensure we have a database URL
+// Ensure we have required environment variables
 const dbUrl = process.env.DATABASE_URL;
+const directUrl = process.env.DIRECT_URL;
+
 if (!dbUrl) {
   throw new Error("DATABASE_URL environment variable is not set");
+}
+
+if (!directUrl) {
+  console.warn("[DB] DIRECT_URL environment variable is not set. This may cause issues in production.");
 }
 
 // Log the connection attempt (with masked credentials)
@@ -23,6 +29,11 @@ if (!global.prisma) {
       { level: 'error', emit: 'stdout' },
       { level: 'info', emit: 'stdout' },
     ],
+    datasources: {
+      db: {
+        url: dbUrl,
+      },
+    },
   });
 }
 
