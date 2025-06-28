@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { Calendar } from "react-calendar";
 import type { CalendarProps } from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 

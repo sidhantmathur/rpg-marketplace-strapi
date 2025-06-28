@@ -31,63 +31,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
 
-    // Get the user's profile to check roles
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: { roles: true },
-    });
-
-    if (!profile) {
-      console.error("[Past Sessions API] Profile not found for user:", user.id);
-      return NextResponse.json({ error: "User profile not found" }, { status: 404 });
-    }
-
     const now = new Date();
 
-    // If user is a DM, fetch their hosted past sessions
-    if (profile.roles.includes("dm")) {
-      try {
-        const sessions = await prisma.session.findMany({
-          where: {
-            userId: user.id,
-            date: {
-              lt: now,
-            },
-          },
-          include: {
-            dm: true,
-            bookings: {
-              include: {
-                user: true,
-              },
-            },
-            reviews: {
-              where: { deleted: false },
-              orderBy: { createdAt: "desc" },
-              include: { author: true },
-            },
-          },
-          orderBy: {
-            date: "desc",
-          },
-        });
-
-        return NextResponse.json(sessions);
-      } catch (dbError) {
-        console.error("[Past Sessions API] Database error:", dbError);
-        return NextResponse.json({ error: "Database error", details: "Failed to fetch sessions" }, { status: 500 });
-      }
-    }
-
-    // If user is a regular user, fetch their joined past sessions
+    // Fetch all sessions where the user was a participant (either as DM or as a player)
     try {
       const sessions = await prisma.session.findMany({
         where: {
-          bookings: {
-            some: {
-              userId: user.id,
+          OR: [
+            // Sessions where user was the DM
+            { userId: user.id },
+            // Sessions where user was a player (in bookings)
+            {
+              bookings: {
+                some: {
+                  userId: user.id,
+                },
+              },
             },
-          },
+          ],
           date: {
             lt: now,
           },
@@ -110,6 +71,7 @@ export async function GET(request: Request) {
         },
       });
 
+      console.log(`[Past Sessions API] Found ${sessions.length} past sessions for user ${user.id}`);
       return NextResponse.json(sessions);
     } catch (dbError) {
       console.error("[Past Sessions API] Database error:", dbError);

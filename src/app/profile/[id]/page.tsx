@@ -277,12 +277,19 @@ export default function ProfilePage() {
           )}
           
           {isCurrentUser && (
-            <Button
-              variant="outline"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? "Cancel" : "Edit Profile"}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Cancel" : "Edit Profile"}
+              </Button>
+              <Link href="/calendar">
+                <Button variant="default" className="ml-2">
+                  View Calendar
+                </Button>
+              </Link>
+            </>
           )}
           <Link href="/" className="text-primary hover:text-primary/90">
             Back to Home
