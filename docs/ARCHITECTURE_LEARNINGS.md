@@ -457,6 +457,13 @@ Fixes: #deployment-connection-errors
 - [ ] **NEXT_PUBLIC_SUPABASE_ANON_KEY**: Public Supabase key
 - [ ] **SUPABASE_SERVICE_ROLE_KEY**: Service role key (if needed)
 
+#### **Database Environment Verification**
+- [ ] **Compare database URLs**: Local `.env` vs Vercel environment variables
+- [ ] **Verify production database has data**: Check Supabase dashboard for production DB
+- [ ] **Run migrations on production**: Ensure schema is up to date
+- [ ] **Seed production data**: If needed, populate with initial data
+- [ ] **Test data access**: Verify API routes return data in production
+
 #### **Vercel Configuration**
 ```json
 {
@@ -517,6 +524,28 @@ Error: DATABASE_URL environment variable is not set
 - Add all required environment variables to Vercel
 - Use correct variable names (case-sensitive)
 - Test environment variable access in build
+
+#### **4. Empty Production Database**
+```
+Login works but no data shows up in production
+```
+
+**Causes:**
+- Production database is empty (no migrations or seed data)
+- Production pointing to wrong/empty Supabase project
+- Local dev uses different database than production
+
+**Symptoms:**
+- Development works perfectly with data
+- Production login works but all queries return empty
+- No errors in logs, just no data returned
+
+**Solutions:**
+- Compare `DATABASE_URL` in local `.env` vs Vercel environment variables
+- Check Supabase dashboard for production database data
+- Run `npx prisma db push` or `npx prisma migrate deploy` on production
+- Seed production database with initial data if needed
+- Verify both environments point to intended databases
 
 ### **Production Monitoring**
 
@@ -583,6 +612,8 @@ export async function GET() {
 10. **Test builds locally** - If it doesn't build locally, it won't deploy
 11. **Environment variables are critical** - Missing variables cause silent failures
 12. **Retry logic saves deployments** - Add resilience for production environments
+13. **Environment-specific databases matter** - Dev and prod can point to different databases
+14. **Empty production databases are common** - Always verify production DB has data and correct schema
 
 ---
 
