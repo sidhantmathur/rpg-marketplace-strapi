@@ -1,0 +1,28 @@
+# Development files
+.env.local
+.env.development
+.env.test
+
+# Test files
+__tests__
+*.test.*
+*.spec.*
+coverage/
+cypress/
+
+# Build artifacts
+.next/
+out/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db 
