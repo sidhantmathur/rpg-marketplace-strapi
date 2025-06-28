@@ -19,6 +19,7 @@
     "test:e2e": "cypress run",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:vision": "ts-node scripts/test-vision-api.ts",
     "analyze": "ANALYZE=true next build",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "@chatscope/chat-ui-kit-react": "^2.1.1",
+    "@google-cloud/vision": "^5.2.0",
     "@prisma/client": "^6.6.0",
     "@supabase/supabase-js": "^2.49.4",
     "date-fns": "^4.1.0",
