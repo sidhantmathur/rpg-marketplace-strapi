@@ -39,6 +39,7 @@ This marketplace allows:
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Supabase
 - **Email**: Resend
+- **CMS**: Strapi (Headless CMS for content management)
 - **Payments**: Coming soon
 
 ## Project Structure
@@ -56,6 +57,8 @@ rpg-marketplace/
 └── public/               # Static assets
 ```
 
+**Note**: This project uses a separate Strapi CMS repository for content management. See the [Content Management](#-content-management-strapi-cms) section below.
+
 ## 🚀 Getting Started
 
 1. Clone the repository
@@ -67,7 +70,8 @@ rpg-marketplace/
    ```bash
    cp .env.example .env.local
    ```
-4. Run the development server:
+4. Set up Strapi CMS integration (see [Content Management](#-content-management-strapi-cms) section)
+5. Run the development server:
    ```bash
    npm run dev
    ```
@@ -77,6 +81,27 @@ rpg-marketplace/
 - **Month 1**: MVP Development (Current)
 - **Month 2**: Feature Enhancement
 - **Month 3**: Polish and Scale
+
+## 📝 Content Management (Strapi CMS)
+
+This project uses [Strapi](https://strapi.io/) as a headless CMS for managing homepage hero banners, event banners, and blog content.
+
+- The Strapi CMS is maintained in a **separate repository**: [`rpg-marketplace-strapi`](https://github.com/sidhantmathur/rpg-marketplace-strapi)
+- Content editors and admins can log in to the Strapi Cloud admin panel to manage content
+- The Next.js frontend fetches published content from Strapi via its REST API
+
+### Integration
+
+- The frontend uses environment variables to connect to the Strapi API (see `.env.example`)
+- Example usage:
+  - Hero section, event banners, and blog posts are fetched from Strapi endpoints
+- For local development, run Strapi locally or use the Strapi Cloud URL
+
+### Useful Links
+
+- [Strapi Cloud Admin Panel](https://rpg-marketplace-strapi-a61fd07467.strapiapp.com/admin)
+- [Strapi API Documentation](https://docs.strapi.io/dev-docs/api/rest)
+- [Strapi CMS Repository](https://github.com/sidhantmathur/rpg-marketplace-strapi)
 
 ## Key Features
 
